@@ -1,0 +1,63 @@
+version: '3.8'
+services:
+  frontend:
+    container_name: clientapp-frontend
+    build:
+      context: ./client
+      dockerfile: client.Dockerfile
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+    # Можно запускать отдельно: docker compose up frontend
+
+  backend:
+    container_name: clientapp-backend
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - LOG_DIR=/data/logs
+      - CERTS_DIR=/data/certs
+      - CHAT_IMAGES_DIR=/data/chat_images
+    volumes:
+      - ./server:/app:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.m2:/root/.m2
+      - ./server/data/logs:/data/logs
+      - ./server/data/certs:/data/certs
+      - ./server/data/chat_images:/data/chat_images
+      - ./server/src/main/resources/application.properties:/app/src/main/resources/application.properties:ro
+    depends_on:
+      - db
+    #command: ["sleep", "3600"]
+    restart: unless-stopped
+    # Можно запускать отдельно: docker compose up backend
+
+  db:
+    image: postgres:15
+    container_name: clientapp-db
+    environment:
+      POSTGRES_DB: clientapp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./server/data/postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+    # Можно запускать отдельно: docker compose up db
+
+# Теперь можно запускать/перезапускать/останавливать сервисы по отдельности:
+# docker-compose up frontend
+# docker-compose up backend
+# docker-compose up db
+# docker-compose restart frontend
+# docker-compose stop backend

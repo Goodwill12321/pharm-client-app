@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    container_name: pharma-client-app
+    ports:
+      - "8080:8080"
+    environment:
+      - LOG_DIR=/data/logs
+      - CERTS_DIR=/data/certs
+      - CHAT_IMAGES_DIR=/data/chat_images
+    volumes:
+      # Монтируем весь проект в контейнер для работы без пересборки
+      - ./:/app:cached
+      # Docker socket для Testcontainers
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Maven cache для ускорения сборки и тестов
+      - ~/.m2:/root/.m2
+      - ./data/logs:/data/logs
+      - ./data/certs:/data/certs
+      - ./data/chat_images:/data/chat_images
+      - ./src/main/resources/application.properties:/app/src/main/resources/application.properties:ro
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    container_name: pharma-db
+    environment:
+      POSTGRES_DB: clientapp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    restart: unless-stopped

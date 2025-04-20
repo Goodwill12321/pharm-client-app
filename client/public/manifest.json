@@ -1,0 +1,21 @@
+{
+  "short_name": "ClientApp",
+  "name": "Client App PWA",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "474x474",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1976d2",
+  "description": "PWA клиент для работы с системой заказов, задолженностями, накладными и сертификатами."
+}

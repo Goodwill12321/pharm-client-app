@@ -1,0 +1,52 @@
+# Java/Spring Boot
+server/target/
+*.iml
+*.class
+*.jar
+*.war
+*.log
+
+# Maven/Gradle wrapper logs
+.mvn/wrapper/maven-wrapper.jar
+.gradle/
+build/
+out/
+
+# Node/Vite/React
+client/node_modules/
+client/dist/
+client/.env*
+client/.cache/
+client/.turbo/
+client/.next/
+
+# OS/system
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDEs
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Docker
+**/.env
+docker-compose.override.yml
+
+# Logs
+*.log
+
+# Misc
+.env
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test/report outputs
+coverage/
+lcov-report/
+*.lcov
