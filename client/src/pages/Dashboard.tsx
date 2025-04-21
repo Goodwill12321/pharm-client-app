@@ -3,6 +3,8 @@ import { Box, Typography, Grid, Modal, CircularProgress, Alert } from '@mui/mate
 import { useEffect } from 'react';
 import { fetchOverdueSummary } from '../api/debts';
 import { OverdueBadgeButton } from '../components/OverdueBadgeButton';
+import { SummaryBadgeButton } from '../components/SummaryBadgeButton';
+import { useNavigate } from 'react-router-dom';
 
 // Тип для одной записи дебиторки
 type Debitorka = {
@@ -19,12 +21,16 @@ type Debitorka = {
 };
 
 const Dashboard: React.FC = () => {
-  const [open, setOpen] = useState(false);
-  const [overdue, setOverdue] = useState<Debitorka[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const handleTileClick = (type: 'all' | 'overdue' | 'today' | 'notdue') => {
+    navigate(`/debts?type=${type}`);
+  };
   const [overdueSummary, setOverdueSummary] = useState<{ doc_count: number; sum: number } | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [allDebts, setAllDebts] = useState<Debitorka[]>([]);
+  const [allLoading, setAllLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setSummaryLoading(true);
@@ -34,75 +40,74 @@ const Dashboard: React.FC = () => {
       .finally(() => setSummaryLoading(false));
   }, []);
 
-  const handleOverdueClick = async () => {
-    setOpen(true);
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/debitorka/overdue');
-      if (!response.ok) throw new Error('Ошибка при запросе');
-      const data = await response.json();
-      setOverdue(data);
-    } catch (e: any) {
-      setError(e.message || 'Неизвестная ошибка');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Загружаем всю дебиторку для бейджей
+  useEffect(() => {
+    setAllLoading(true);
+    fetch('/api/debitorka')
+      .then(res => res.ok ? res.json() : [])
+      .then(setAllDebts)
+      .catch(() => setAllDebts([]))
+      .finally(() => setAllLoading(false));
+  }, []);
+
+  // Суммы для бейджей
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const sumAll = allDebts.reduce((acc, d) => acc + (d.sumDoc || 0), 0);
+  const countAll = allDebts.length;
+  const todayDebts = allDebts.filter(d => {
+    if (!d.payDate) return false;
+    const payDate = new Date(d.payDate);
+    payDate.setHours(0,0,0,0);
+    return payDate.getTime() === today.getTime() && d.prosrochkaDay <= 0;
+  });
+  const sumToday = todayDebts.reduce((acc, d) => acc + (d.sumDoc || 0), 0);
+  const countToday = todayDebts.length;
+  const notDueDebts = allDebts.filter(d => {
+    if (!d.payDate) return false;
+    const payDate = new Date(d.payDate);
+    payDate.setHours(0,0,0,0);
+    return payDate.getTime() > today.getTime() && d.prosrochkaDay <= 0;
+  });
+  const sumNotDue = notDueDebts.reduce((acc, d) => acc + (d.sumDoc || 0), 0);
+  const countNotDue = notDueDebts.length;
 
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Главная</Typography>
-      {/* Кнопка-бейдж ПДЗ */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', mb: 2 }}>
-       {  <OverdueBadgeButton
+      {/* Блок с бейджами в одну линию */}
+      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3 }}>
+        <SummaryBadgeButton
+          label="Общая задолженность"
+          sum={sumAll}
+          docCount={countAll}
+          color="#1976d2"
+          loading={allLoading}
+          onClick={() => handleTileClick('all')}
+        />
+        <OverdueBadgeButton
           sum={overdueSummary?.sum || 0}
           docCount={overdueSummary?.doc_count || 0}
-          onClick={handleOverdueClick}
           loading={summaryLoading}
-        /> 
-         /*  <div style={{ background: 'red', color: 'white', padding: 16 }}>
-            TEST ПДЗ: {overdueSummary?.sum} / {overdueSummary?.doc_count}
-          </div> */
-        }
+          onClick={() => handleTileClick('overdue')}
+        />
+        <SummaryBadgeButton
+          label="Подошедшие платежи (сегодня)"
+          sum={sumToday}
+          docCount={countToday}
+          color="#ffa000"
+          loading={allLoading}
+          onClick={() => handleTileClick('today')}
+        />
+        <SummaryBadgeButton
+          label="Не просроченная задолженность"
+          sum={sumNotDue}
+          docCount={countNotDue}
+          color="#388e3c"
+          loading={allLoading}
+          onClick={() => handleTileClick('notdue')}
+        />
       </Box>
-      {/* Блок с 3 интерактивными плитками задолженности */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={4}>
-          <Box sx={{ bgcolor: '#1976d2', color: '#fff', p: 2, borderRadius: 2, cursor: 'pointer' }}>Общая задолженность</Box>
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <Box sx={{ bgcolor: '#388e3c', color: '#fff', p: 2, borderRadius: 2, cursor: 'pointer' }}>Не просроченная задолженность</Box>
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <Box sx={{ bgcolor: '#ffa000', color: '#fff', p: 2, borderRadius: 2, cursor: 'pointer' }}>Подошедшие платежи</Box>
-        </Grid>
-      </Grid>
-
-      {/* Модальное окно для отображения просроченной задолженности */}
-      <Modal open={open} onClose={() => setOpen(false)}>
-        <Box sx={{
-          position: 'absolute', top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)', bgcolor: 'background.paper',
-          boxShadow: 24, p: 4, borderRadius: 2, minWidth: 320, maxHeight: 400, overflow: 'auto'
-        }}>
-          <Typography variant="h6" gutterBottom>Просроченная задолженность</Typography>
-          {loading && <CircularProgress />}
-          {error && <Alert severity="error">{error}</Alert>}
-          {!loading && !error && overdue.length === 0 && (
-            <Typography>Нет просроченной задолженности</Typography>
-          )}
-          {!loading && !error && overdue.length > 0 && (
-            <ul>
-              {overdue.map((item) => (
-                <li key={item.id}>
-                  Документ: {item.docUid}, Сумма: {item.sumDolg} ₽, Дата оплаты: {item.payDate}, Просрочено дней: {item.prosrochkaDay}
-                </li>
-              ))}
-            </ul>
-          )}
-        </Box>
-      </Modal>
 
       {/* TODO: Новостная лента ЛК */}
       <Typography variant="h5" gutterBottom>Новости</Typography>

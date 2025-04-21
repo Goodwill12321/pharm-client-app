@@ -79,6 +79,7 @@ export const UpdatePWAButton: React.FC = () => {
         } catch (e: any) {
           setError('Ошибка при обновлении');
           setChecking(false);
+          console.error('Service Worker update error:', e);
         }
       } else {
         setError('Service worker не зарегистрирован');
