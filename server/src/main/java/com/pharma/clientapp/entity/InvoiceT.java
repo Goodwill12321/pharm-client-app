@@ -2,6 +2,7 @@ package com.pharma.clientapp.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
 @Data
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 public class InvoiceT {
     @Id
     @Column(name = "uid_line", length = 36)
+    @Schema(hidden = true)
     private String uidLine;
 
     @Column(name = "uid", length = 36)

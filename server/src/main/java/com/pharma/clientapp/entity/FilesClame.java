@@ -2,6 +2,7 @@ package com.pharma.clientapp.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Data
 @Entity
@@ -9,6 +10,7 @@ import lombok.Data;
 public class FilesClame {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(hidden = true)
     private Long id;
 
     @Column(name = "uid_clame", length = 36)

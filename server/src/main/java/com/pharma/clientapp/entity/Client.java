@@ -3,6 +3,7 @@ package com.pharma.clientapp.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Data
 @Entity
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 public class Client {
     @Id
     @Column(length = 36)
+    @Schema(hidden = true)
     private String uid;
 
     @Column(length = 20)
@@ -46,9 +48,11 @@ public class Client {
     private Boolean constraintFlag;
 
     @Column(name = "create_time")
+    @Schema(hidden = true)
     private LocalDateTime createTime;
 
     @Column(name = "update_time")
+    @Schema(hidden = true)
     private LocalDateTime updateTime;
 
     @Column(name = "is_del")

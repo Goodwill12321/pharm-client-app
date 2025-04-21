@@ -3,6 +3,7 @@ package com.pharma.clientapp.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Data
 @Entity
@@ -10,6 +11,7 @@ import java.time.LocalDate;
 public class Debitorka {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(hidden = true)
     private Long id;
 
     @Column(name = "doc_uid", length = 36)

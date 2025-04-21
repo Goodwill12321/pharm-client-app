@@ -2,21 +2,23 @@ package com.pharma.clientapp.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
 @Data
 @Entity
 @Table(name = "clame_h")
 public class ClameH {
-    @Id
-    @Column(length = 36, insertable = false, updatable = false)
-    private String uid;
-
     @Column(name = "uid_us", length = 36)
     private String uidUs;
 
     @Column(name = "uid_doc_osn", length = 36)
     private String uidDocOsn;
+
+    @Id
+    @Column(length = 36, insertable = false, updatable = false)
+    @Schema(hidden = true)
+    private String uid;
 
     @Column(length = 20)
     private String code;

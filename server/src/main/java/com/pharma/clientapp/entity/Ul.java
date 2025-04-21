@@ -3,6 +3,7 @@ package com.pharma.clientapp.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Data
 @Entity
@@ -34,9 +35,11 @@ public class Ul {
     private Boolean constraintFlag;
 
     @Column(name = "create_time")
+    @Schema(hidden = true)
     private LocalDateTime createTime;
 
     @Column(name = "update_time")
+    @Schema(hidden = true)
     private LocalDateTime updateTime;
 
     @Column(name = "is_del")

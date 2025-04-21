@@ -2,6 +2,7 @@ package com.pharma.clientapp.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Data
 @Entity
@@ -9,6 +10,7 @@ import lombok.Data;
 public class ClameT {
     @Id
     @Column(name = "uid_line", length = 36, insertable = false, updatable = false)
+    @Schema(hidden = true)
     private String uidLine;
 
     @Column(name = "uid", length = 36)

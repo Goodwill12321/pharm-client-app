@@ -2,6 +2,7 @@ package com.pharma.clientapp.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
 @Data
@@ -43,9 +44,11 @@ public class Contact {
     private String salt;
 
     @Column(name = "create_time")
+    @Schema(hidden = true)
     private LocalDateTime createTime;
 
     @Column(name = "update_time")
+    @Schema(hidden = true)
     private LocalDateTime updateTime;
 
     @Column(name = "is_del")
