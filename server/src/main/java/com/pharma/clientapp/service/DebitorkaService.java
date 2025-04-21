@@ -36,4 +36,15 @@ public class DebitorkaService {
         LocalDate today = LocalDate.now();
         return debitorkaRepository.findByPayDateBefore(today);
     }
+
+    public int countOverdue() {
+        LocalDate today = LocalDate.now();
+        return (int) debitorkaRepository.countOverdue(today);
+    }
+
+    public double sumOverdue() {
+        LocalDate today = LocalDate.now();
+        Double sum = debitorkaRepository.sumOverdue(today);
+        return sum != null ? sum : 0.0;
+    }
 }

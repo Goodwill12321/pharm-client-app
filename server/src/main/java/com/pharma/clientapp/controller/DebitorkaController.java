@@ -5,7 +5,9 @@ import com.pharma.clientapp.service.DebitorkaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/debitorka")
@@ -36,6 +38,16 @@ public class DebitorkaController {
     @GetMapping("/overdue")
     public List<Debitorka> getOverdueDebitorka() {
         return debitorkaService.findOverdue();
+    }
+
+    @GetMapping("/overdue/summary")
+    public Map<String, Object> getOverdueSummary() {
+        int docCount = debitorkaService.countOverdue();
+        double sum = debitorkaService.sumOverdue();
+        Map<String, Object> result = new HashMap<>();
+        result.put("doc_count", docCount);
+        result.put("sum", sum);
+        return result;
     }
 
     @DeleteMapping("/{id}")

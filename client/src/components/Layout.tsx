@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
+import { UpdatePWAButton } from './UpdatePWAButton';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -14,6 +15,8 @@ import ListItemText from '@mui/material/ListItemText';
 import MenuIcon from '@mui/icons-material/Menu';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
+import Badge from '@mui/material/Badge';
+import { fetchOverdueSummary } from '../api/debts';
 
 const navLinks = [
   { to: '/', label: 'Главная' },
@@ -25,6 +28,18 @@ const navLinks = [
 ];
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [overdueSummary, setOverdueSummary] = useState<{ doc_count: number; sum: number } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchOverdueSummary()
+      .then(setOverdueSummary)
+      .catch(() => setError('Ошибка при загрузке задолженности'))
+      .finally(() => setLoading(false));
+  }, []);
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -38,10 +53,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <Toolbar sx={{ minHeight: { xs: 56, sm: 64 }, px: { xs: 1, sm: 2 } }}>
           <Typography
             variant="h6"
-            sx={{ flexGrow: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' }, whiteSpace: 'nowrap', minWidth: 0 }}
+            sx={{ flexGrow: 0, fontSize: { xs: '1.1rem', sm: '1.25rem' }, whiteSpace: 'nowrap', minWidth: 0 }}
           >
             ClientApp
           </Typography>
+          <UpdatePWAButton />
 
           {isMobile ? (
             <>
@@ -58,13 +74,24 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   <List>
                     {navLinks.map((item) => (
                       <ListItem key={item.to} disablePadding>
-                        <ListItemButton
-                          component={Link}
-                          to={item.to}
-                          onClick={handleDrawerClose}
+                        <Badge
+                          color="error"
+                          badgeContent={
+                            item.label === 'Задолженности' && overdueSummary && overdueSummary.sum > 0
+                              ? `${overdueSummary.sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} ₽`
+                              : null
+                          }
+                          overlap="rectangular"
+                          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                         >
-                          <ListItemText primary={item.label} />
-                        </ListItemButton>
+                          <ListItemButton
+                            component={Link}
+                            to={item.to}
+                            onClick={handleDrawerClose}
+                          >
+                            <ListItemText primary={item.label} />
+                          </ListItemButton>
+                        </Badge>
                       </ListItem>
                     ))}
                   </List>
@@ -74,16 +101,40 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           ) : (
             <Box sx={{ display: 'flex', gap: 1 }}>
               {navLinks.map((item) => (
-                <Button
-                  key={item.to}
-                  color="inherit"
-                  component={Link}
-                  to={item.to}
-                  size="medium"
-                  sx={{ minWidth: 100 }}
-                >
-                  {item.label}
-                </Button>
+                item.label === 'Задолженности' ? (
+                  <Badge
+                    key={item.to}
+                    color="error"
+                    badgeContent={
+                      overdueSummary && overdueSummary.sum > 0
+                        ? `${overdueSummary.sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} ₽`
+                        : null
+                    }
+                    overlap="rectangular"
+                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  >
+                    <Button
+                      color="inherit"
+                      component={Link}
+                      to={item.to}
+                      size="medium"
+                      sx={{ minWidth: 100 }}
+                    >
+                      {item.label}
+                    </Button>
+                  </Badge>
+                ) : (
+                  <Button
+                    key={item.to}
+                    color="inherit"
+                    component={Link}
+                    to={item.to}
+                    size="medium"
+                    sx={{ minWidth: 100 }}
+                  >
+                    {item.label}
+                  </Button>
+                )
               ))}
             </Box>
           )}

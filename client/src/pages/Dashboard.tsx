@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Box, Typography, Grid, Modal, CircularProgress, Alert } from '@mui/material';
+import { useEffect } from 'react';
+import { fetchOverdueSummary } from '../api/debts';
+import { OverdueBadgeButton } from '../components/OverdueBadgeButton';
 
 // Тип для одной записи дебиторки
 type Debitorka = {
@@ -20,6 +23,16 @@ const Dashboard: React.FC = () => {
   const [overdue, setOverdue] = useState<Debitorka[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [overdueSummary, setOverdueSummary] = useState<{ doc_count: number; sum: number } | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+
+  useEffect(() => {
+    setSummaryLoading(true);
+    fetchOverdueSummary()
+      .then(setOverdueSummary)
+      .catch(() => setOverdueSummary({ doc_count: 0, sum: 0 }))
+      .finally(() => setSummaryLoading(false));
+  }, []);
 
   const handleOverdueClick = async () => {
     setOpen(true);
@@ -40,23 +53,28 @@ const Dashboard: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Главная</Typography>
-      {/* Блок с 4 интерактивными плитками задолженности */}
+      {/* Кнопка-бейдж ПДЗ */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', mb: 2 }}>
+       {  <OverdueBadgeButton
+          sum={overdueSummary?.sum || 0}
+          docCount={overdueSummary?.doc_count || 0}
+          onClick={handleOverdueClick}
+          loading={summaryLoading}
+        /> 
+         /*  <div style={{ background: 'red', color: 'white', padding: 16 }}>
+            TEST ПДЗ: {overdueSummary?.sum} / {overdueSummary?.doc_count}
+          </div> */
+        }
+      </Box>
+      {/* Блок с 3 интерактивными плитками задолженности */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4}>
           <Box sx={{ bgcolor: '#1976d2', color: '#fff', p: 2, borderRadius: 2, cursor: 'pointer' }}>Общая задолженность</Box>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4}>
           <Box sx={{ bgcolor: '#388e3c', color: '#fff', p: 2, borderRadius: 2, cursor: 'pointer' }}>Не просроченная задолженность</Box>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Box
-            sx={{ bgcolor: '#d32f2f', color: '#fff', p: 2, borderRadius: 2, cursor: 'pointer' }}
-            onClick={handleOverdueClick}
-          >
-            Просроченная задолженность
-          </Box>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4}>
           <Box sx={{ bgcolor: '#ffa000', color: '#fff', p: 2, borderRadius: 2, cursor: 'pointer' }}>Подошедшие платежи</Box>
         </Grid>
       </Grid>
