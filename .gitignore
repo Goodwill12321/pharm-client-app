@@ -12,6 +12,9 @@ server/target/
 build/
 out/
 
+# Исключить папку с данными postgres
+/server/data/postgres/
+
 # Node/Vite/React
 client/node_modules/
 client/dist/
@@ -34,7 +37,7 @@ Thumbs.db
 
 # Docker
 **/.env
-docker-compose.override.yml
+#docker-compose.override.yml
 
 # Logs
 *.log

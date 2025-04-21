@@ -9,6 +9,7 @@ import ClaimForm from './pages/ClaimForm';
 import InvoiceForm from './pages/InvoiceForm';
 import NewsFeed from './pages/NewsFeed';
 import Layout from './components/Layout';
+import InstallPWAButton from './components/InstallPWAButton';
 
 const App = () => (
   <BrowserRouter>
@@ -26,6 +27,7 @@ const App = () => (
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Layout>
+    <InstallPWAButton />
   </BrowserRouter>
 );
 

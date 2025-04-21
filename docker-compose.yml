@@ -5,16 +5,17 @@ services:
     build:
       context: ./client
       dockerfile: client.Dockerfile
-    volumes:
-      - ./client:/app
-      - /app/node_modules
+    
+    # volumes:
+    #  - ./client/src:/app/src
+    #  - ./client/public:/app/public
     ports:
       - "5173:5173"
     environment:
       - CHOKIDAR_USEPOLLING=true
     depends_on:
       - backend
-    # Можно запускать отдельно: docker compose up frontend
+    
 
   backend:
     container_name: clientapp-backend
@@ -39,7 +40,7 @@ services:
       - db
     #command: ["sleep", "3600"]
     restart: unless-stopped
-    # Можно запускать отдельно: docker compose up backend
+   
 
   db:
     image: postgres:15
@@ -53,9 +54,9 @@ services:
     volumes:
       - ./server/data/postgres:/var/lib/postgresql/data
     restart: unless-stopped
-    # Можно запускать отдельно: docker compose up db
+    
 
-# Теперь можно запускать/перезапускать/останавливать сервисы по отдельности:
+
 # docker-compose up frontend
 # docker-compose up backend
 # docker-compose up db
