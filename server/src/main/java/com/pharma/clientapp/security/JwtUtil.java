@@ -9,7 +9,8 @@ import java.security.Key;
 
 @Component
 public class JwtUtil {
-    private final long EXPIRATION = 1000 * 60 * 60 * 10; // 10 часов
+    private final long EXPIRATION = 1000 * 60 * 60 * 10; // 10 часов (access token)
+    private final long REFRESH_EXPIRATION = 1000L * 60 * 60 * 24 * 365 * 10; // 10 лет
 
     private Key getSigningKey() {
         String secret = System.getenv("JWT_SECRET");
@@ -26,6 +27,26 @@ public class JwtUtil {
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    // Генерация refresh token (10 лет)
+    public String generateRefreshToken(String contactUid) {
+        return Jwts.builder()
+                .setSubject(contactUid)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRATION))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    // Валидация refresh token
+    public boolean validateRefreshToken(String token) {
+        try {
+            getClaims(token); // Проверяет подпись и срок действия
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public String extractContactUid(String token) {
