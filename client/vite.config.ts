@@ -43,6 +43,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/auth': {
+        target: 'http://backend:8080',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   build: {

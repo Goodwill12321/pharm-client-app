@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, Grid, Modal, CircularProgress, Alert } from '@mui/material';
 import { useEffect } from 'react';
-import { fetchOverdueSummary } from '../api/debts';
+import { fetchOverdueSummary, fetchDebts } from '../api/debts';
 import { OverdueBadgeButton } from '../components/OverdueBadgeButton';
 import { SummaryBadgeButton } from '../components/SummaryBadgeButton';
 import { useNavigate } from 'react-router-dom';
@@ -43,8 +43,7 @@ const Dashboard: React.FC = () => {
   // Загружаем всю дебиторку для бейджей
   useEffect(() => {
     setAllLoading(true);
-    fetch('/api/debitorka')
-      .then(res => res.ok ? res.json() : [])
+    fetchDebts()
       .then(setAllDebts)
       .catch(() => setAllDebts([]))
       .finally(() => setAllLoading(false));

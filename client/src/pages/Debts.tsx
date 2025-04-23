@@ -3,6 +3,7 @@ import { Box, Typography, CircularProgress, Alert } from '@mui/material';
 import { PdzTable, Debitorka } from '../components/PdzTable';
 import { PdzFilterTiles, FILTERS, PdzFilterKey } from '../components/PdzFilterTiles';
 import { useLocation } from 'react-router-dom';
+import { fetchDebts } from '../api/debts';
 
 const filterByTiles = (data: Debitorka[], tiles: PdzFilterKey[], type?: string) => {
   if (tiles.length === 0) return data;
@@ -58,15 +59,7 @@ const Debts: React.FC = () => {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    let url = '/api/debitorka/overdue';
-    if (!type || type === 'all' || type === 'today' || type === 'notdue') {
-      url = '/api/debitorka';
-    }
-    fetch(url)
-      .then(res => {
-        if (!res.ok) throw new Error('Ошибка при получении данных');
-        return res.json();
-      })
+    fetchDebts(type || undefined)
       .then(setData)
       .catch(e => setError(e.message || 'Неизвестная ошибка'))
       .finally(() => setLoading(false));

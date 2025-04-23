@@ -37,10 +37,21 @@ export const SummaryBadgeButton: React.FC<SummaryBadgeButtonProps> = ({ label, s
     <Button
       size="small"
       variant="contained"
-      color="primary"
       onClick={onClick}
       disabled={loading}
-      sx={{ alignSelf: 'stretch', mt: 0.5, fontWeight: 600, fontSize: '1rem', letterSpacing: 0.5 }}
+      sx={{
+        alignSelf: 'stretch',
+        mt: 0.5,
+        fontWeight: 600,
+        fontSize: '1rem',
+        letterSpacing: 0.5,
+        backgroundColor: color,
+        color: '#fff',
+        '&:hover': {
+          backgroundColor: color,
+          opacity: 0.9,
+        },
+      }}
     >
       Подробнее
     </Button>

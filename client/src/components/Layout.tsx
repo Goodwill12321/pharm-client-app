@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import AuthMenu from './AuthMenu';
 import { Link } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -29,15 +31,15 @@ const navLinks = [
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [overdueSummary, setOverdueSummary] = useState<{ doc_count: number; sum: number } | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingOverdue, setLoadingOverdue] = useState(false);
+  const [errorOverdue, setErrorOverdue] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
+    setLoadingOverdue(true);
     fetchOverdueSummary()
       .then(setOverdueSummary)
-      .catch(() => setError('Ошибка при загрузке задолженности'))
-      .finally(() => setLoading(false));
+      .catch(() => setErrorOverdue('Ошибка при загрузке задолженности'))
+      .finally(() => setLoadingOverdue(false));
   }, []);
 
   const theme = useTheme();
@@ -46,6 +48,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
   const handleDrawerClose = () => setDrawerOpen(false);
+
+  const { isAuthenticated, login, loading, error, logout } = useAuth();
+  // Показываем AuthMenu, если не авторизован
+  if (!isAuthenticated) {
+    return (
+      <AuthMenu open={true} onLogin={login} loading={loading} error={error} />
+    );
+  }
 
   return (
     <>
@@ -58,6 +68,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             ClientApp
           </Typography>
           <UpdatePWAButton />
+
+          {/* Кнопка выхода */}
+          <Button color="inherit" onClick={logout} sx={{ ml: 2 }}>
+            Выйти
+          </Button>
 
           {isMobile ? (
             <>
