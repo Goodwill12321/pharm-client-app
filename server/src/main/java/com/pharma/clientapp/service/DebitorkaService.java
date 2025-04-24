@@ -51,4 +51,11 @@ public class DebitorkaService {
     public List<DebtWithAddressDto> findDebtsForContact(String contactUid, String address) {
         return debitorkaRepository.findDebtsForContact(contactUid, address);
     }
+
+    public List<DebtWithAddressDto> findDebtsForContact(String contactUid, List<String> addresses) {
+        if (addresses == null || addresses.isEmpty()) {
+            return debitorkaRepository.findDebtsForContact(contactUid, (List<String>) null);
+        }
+        return debitorkaRepository.findDebtsForContact(contactUid, addresses);
+    }
 }

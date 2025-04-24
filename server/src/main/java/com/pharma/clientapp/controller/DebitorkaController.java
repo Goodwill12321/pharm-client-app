@@ -26,11 +26,11 @@ public class DebitorkaController {
     @GetMapping("/filtered")
     public List<DebtWithAddressDto> getFilteredDebitorka(
             @AuthenticationPrincipal com.pharma.clientapp.entity.Contact contact,
-            @RequestParam(value = "address", required = false) String address
+            @RequestParam(value = "addresses", required = false) List<String> addresses
     ) {
         String contactUid = contact != null ? contact.getUid() : null;
-        logger.info("contactUid = {}, address = {}", contactUid, address);
-        return debitorkaService.findDebtsForContact(contactUid, address);
+        logger.info("contactUid = {}, addresses = {}", contactUid, addresses);
+        return debitorkaService.findDebtsForContact(contactUid, addresses);
     }
 
     @GetMapping

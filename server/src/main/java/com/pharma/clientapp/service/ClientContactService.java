@@ -3,16 +3,19 @@ package com.pharma.clientapp.service;
 import com.pharma.clientapp.entity.ClientContact;
 import com.pharma.clientapp.repository.ClientContactRepository;
 import org.springframework.stereotype.Service;
-
+import com.pharma.clientapp.dto.ClientAddressDto;
+import com.pharma.clientapp.repository.ClientRepository;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ClientContactService {
     private final ClientContactRepository clientContactRepository;
+    private final ClientRepository clientRepository;
 
-    public ClientContactService(ClientContactRepository clientContactRepository) {
+    public ClientContactService(ClientContactRepository clientContactRepository, ClientRepository clientRepository) {
         this.clientContactRepository = clientContactRepository;
+        this.clientRepository = clientRepository;
     }
 
     public List<ClientContact> findAll() {
@@ -29,5 +32,9 @@ public class ClientContactService {
 
     public void deleteById(Long id) {
         clientContactRepository.deleteById(id);
+    }
+
+    public List<ClientAddressDto> getAvailableAddresses(String contactUid) {
+        return clientRepository.findAvailableAddressesByContactUid(contactUid);
     }
 }

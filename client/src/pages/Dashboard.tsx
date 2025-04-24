@@ -1,11 +1,14 @@
 import React from 'react';
 import { useDebts } from '../hooks/useDebtsQuery';
-import { Box, Typography, Grid, Modal, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, Grid, Modal, CircularProgress, Alert, Chip } from '@mui/material';
 import { useEffect } from 'react';
 import { fetchDebtsWithFilter } from '../api/debts';
 import { OverdueBadgeButton } from '../components/OverdueBadgeButton';
 import { SummaryBadgeButton } from '../components/SummaryBadgeButton';
 import { useNavigate } from 'react-router-dom';
+import { useClientsQuery } from '../hooks/useClientsQuery';
+import { AddressFilter } from '../components/AddressFilter';
+import { useAddressFilter } from '../context/AddressFilterContext';
 
 // Тип для одной записи дебиторки
 type Debitorka = {
@@ -24,6 +27,10 @@ type Debitorka = {
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { data: allDebts = [], isLoading: allLoading, error: allError } = useDebts();
+  const { data: clients = [], isLoading: loadingClients, error: errorClients } = useClientsQuery();
+  const { selectedAddresses, setSelectedAddresses } = useAddressFilter();
+  const selected = clients.filter(c => selectedAddresses.includes(c.id));
+
   const handleTileClick = (type: 'all' | 'overdue' | 'today' | 'notdue') => {
     navigate(`/debts?type=${type}`);
   };
@@ -79,6 +86,25 @@ const Dashboard: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Главная</Typography>
+      {/* AddressFilter и чипсы выбранных адресов */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+        <Box>
+          <AddressFilter addresses={clients.map(c => ({ id: c.id, name: c.name }))} />
+        </Box>
+        {selected.length > 0 && (
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            {selected.map(addr => (
+              <Chip
+                key={addr.id}
+                label={addr.name}
+                size="small"
+                onDelete={() => setSelectedAddresses(selectedAddresses.filter(id => id !== addr.id))}
+                sx={{ bgcolor: 'background.paper', fontSize: '0.8rem' }}
+              />
+            ))}
+          </Box>
+        )}
+      </Box>
       {/* Блок с бейджами в одну линию */}
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3 }}>
         <SummaryBadgeButton

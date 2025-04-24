@@ -21,6 +21,10 @@ import { useTheme } from '@mui/material/styles';
 import Badge from '@mui/material/Badge';
 import { useDebts } from '../hooks/useDebtsQuery';
 import { Debitorka } from './PdzTable';
+import { useClientsQuery } from '../hooks/useClientsQuery';
+import { AddressFilter } from './AddressFilter';
+import { useAddressFilter } from '../context/AddressFilterContext';
+import Chip from '@mui/material/Chip';
 const navLinks = [
   { to: '/', label: 'Главная' },
   { to: '/debts', label: 'Задолженности' },
@@ -33,6 +37,10 @@ const navLinks = [
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Получаем данные о задолженностях через React Query
   const { data: debts = [], isLoading: loadingOverdue, error: errorOverdue, refetch } = useDebts();
+
+  const { data: clients = [], isLoading: loadingClients, error: errorClients } = useClientsQuery();
+  const { selectedAddresses, setSelectedAddresses } = useAddressFilter();
+  const selected = clients.filter(c => selectedAddresses.includes(c.id));
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -207,6 +215,31 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
             </Box>
           )}
+          {/* AddressFilter — глобальный фильтр по адресам */}
+          <Box sx={{ ml: 2, display: { xs: 'none', sm: 'flex' }, alignItems: 'center' }}>
+            {loadingClients ? (
+              <Typography variant="caption" sx={{ color: 'white' }}>Загрузка адресов...</Typography>
+            ) : errorClients ? (
+              <Typography variant="caption" sx={{ color: 'error.main' }}>Ошибка загрузки адресов</Typography>
+            ) : clients.length === 0 ? null : (
+              <>
+                <AddressFilter addresses={clients.map(c => ({ id: c.id, name: c.name }))} />
+                {selected.length > 0 && (
+                  <Box sx={{ display: 'flex', gap: 0.5, ml: 1 }}>
+                    {selected.map(addr => (
+                      <Chip
+                        key={addr.id}
+                        label={addr.name}
+                        size="small"
+                        onDelete={() => setSelectedAddresses(selectedAddresses.filter(id => id !== addr.id))}
+                        sx={{ bgcolor: 'background.paper', fontSize: '0.8rem' }}
+                      />
+                    ))}
+                  </Box>
+                )}
+              </>
+            )}
+          </Box>
         </Toolbar>
       </AppBar>
       <Box sx={{ p: { xs: 1, sm: 2 } }}>{children}</Box>

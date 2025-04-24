@@ -36,8 +36,11 @@ const useQuery = () => {
   return new URLSearchParams(useLocation().search);
 };
 
+import { useAddressFilter } from '../context/AddressFilterContext';
+
 const Debts: React.FC = () => {
-  const { data = [], isLoading, error, refetch } = useDebts('');
+  const { selectedAddresses } = useAddressFilter();
+  const { data = [], isLoading, error, refetch } = useDebts(selectedAddresses.length > 0 ? selectedAddresses : undefined);
   const query = useQuery();
   const type = query.get('type');
   const [tiles, setTiles] = useState<PdzFilterKey[]>([]);
@@ -136,14 +139,7 @@ const Debts: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Задолженности</Typography>
-      <Box sx={{ mb: 2 }}>
-        <TextField
-          label="Фильтр по адресу"
-          value={address}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)}
-          size="small"
-        />
-      </Box>
+
       {filterOptions.length > 0 && (
         <PdzFilterTiles selected={tiles} onChange={setTiles} hideToday={type !== 'all'} />
       )}
@@ -170,22 +166,12 @@ const Debts: React.FC = () => {
       )}
       {isLoading && <CircularProgress sx={{ my: 4 }} />}
       {error && <Alert severity="error">{typeof error === 'string' ? error : (error instanceof Error ? error.message : String(error))}</Alert>}
-      {/* Фильтрация по адресу */}
-      {(() => {
-        const filteredByAddress = !address ? filteredData : filteredData.filter((d: Debitorka) =>
-          (d.ulUid || '').toLowerCase().includes(address.toLowerCase())
-        );
-        return (
-          <>
-            {!isLoading && !error && (
-              <PdzTable data={filteredByAddress} />
-            )}
-            {!isLoading && !error && filteredByAddress.length === 0 && (
-              <Typography sx={{ mt: 3 }}>Нет документов по выбранным фильтрам</Typography>
-            )}
-          </>
-        );
-      })()}
+      {!isLoading && !error && (
+        <PdzTable data={filteredData} />
+      )}
+      {!isLoading && !error && filteredData.length === 0 && (
+        <Typography sx={{ mt: 3 }}>Нет документов по выбранным фильтрам</Typography>
+      )}
 
     </Box>
   );
