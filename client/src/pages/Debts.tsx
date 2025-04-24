@@ -5,33 +5,23 @@ import { PdzFilterTiles, FILTERS, PdzFilterKey } from '../components/PdzFilterTi
 import { useLocation } from 'react-router-dom';
 import { fetchDebtsWithFilter } from '../api/debts';
 
-const filterByTiles = (data: Debitorka[], tiles: PdzFilterKey[], type?: string) => {
+const filterByTiles = (data: Debitorka[], tiles: PdzFilterKey[]) => {
   if (tiles.length === 0) return data;
   return data.filter(d => {
     return tiles.some(tile => {
       switch (tile) {
         case 'today':
-          return d.ostatokDay === 0 && d.prosrochkaDay <= 0;
+          return d.ostatokDay === 0 && d.prosrochkaDay === 0;
         case '3days':
-          return type === 'overdue'
-            ? d.prosrochkaDay >= 1 && d.prosrochkaDay <= 3
-            : d.ostatokDay >= 1 && d.ostatokDay <= 3 && d.prosrochkaDay <= 0;
+          return (d.prosrochkaDay >= 1 && d.prosrochkaDay <= 3) ;
         case '7days':
-          return type === 'overdue'
-            ? d.prosrochkaDay >= 4 && d.prosrochkaDay <= 7
-            : d.ostatokDay >= 4 && d.ostatokDay <= 7 && d.prosrochkaDay <= 0;
+          return (d.prosrochkaDay >= 4 && d.prosrochkaDay <= 7) ;
         case '14days':
-          return type === 'overdue'
-            ? d.prosrochkaDay >= 8 && d.prosrochkaDay <= 14
-            : d.ostatokDay >= 8 && d.ostatokDay <= 14 && d.prosrochkaDay <= 0;
+          return (d.prosrochkaDay >= 8 && d.prosrochkaDay <= 14) ;
         case '21days':
-          return type === 'overdue'
-            ? d.prosrochkaDay >= 15 && d.prosrochkaDay <= 21
-            : d.ostatokDay >= 15 && d.ostatokDay <= 21 && d.prosrochkaDay <= 0;
+          return (d.prosrochkaDay >= 15 && d.prosrochkaDay <= 21) ;
         case 'gt21days':
-          return type === 'overdue'
-            ? d.prosrochkaDay > 21
-            : d.ostatokDay > 21 && d.prosrochkaDay <= 0;
+          return (d.prosrochkaDay > 21) ;
         default:
           return false;
       }
@@ -65,60 +55,88 @@ const Debts: React.FC = () => {
       .finally(() => setLoading(false));
   }, [address]);
 
-  // Получаем сегодняшнюю дату в формате yyyy-mm-dd
-  const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0,0,0,0);
-    return d;
-  }, []);
-
-  // Фильтрация по плиткам (без type)
-  const filtered = useMemo(() => {
-    if (tiles.length > 0) {
-      return filterByTiles(data, tiles, 'overdue');
+  // Функция для получения строки даты в формате YYYY-MM-DD (локальная зона)
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  const todayDate = new Date();
+  const todayString = `${todayDate.getFullYear()}-${pad(todayDate.getMonth() + 1)}-${pad(todayDate.getDate())}`;
+  const getDateString = (date: Date | string) => {
+    if (typeof date === 'string') {
+      return date.slice(0, 10);
     }
-    return data;
-  }, [data, tiles]);
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  };
 
-  // Суммарные значения по всем типам задолженности
+  // Типизированная функция фильтрации по типу задолженности
+  const filterByType = (docs: Debitorka[], t: string | null): Debitorka[] => {
+    switch (t) {
+      case 'overdue':
+        return docs.filter((d: Debitorka) =>
+          (d.payDate && getDateString(d.payDate) < todayString) ||
+          (typeof d.prosrochkaDay === 'number' && d.prosrochkaDay > 0)
+        );
+      case 'today':
+        return docs.filter((d: Debitorka) =>
+          d.payDate && getDateString(d.payDate) === todayString && d.prosrochkaDay === 0
+        );
+      case 'notdue':
+        return docs.filter((d: Debitorka) =>
+          (d.payDate && getDateString(d.payDate) > todayString) ||
+          (typeof d.prosrochkaDay === 'number' && d.prosrochkaDay < 0)
+        );
+      default:
+        return docs;
+    }
+  };
+
+  // Сначала фильтруем по типу задолженности
+  const filteredByType = useMemo(() => filterByType(data, type), [data, type, todayString]);
+
+  // Затем фильтруем по плиткам (если есть)
+  const filteredByTiles = useMemo(() => {
+    if (tiles.length > 0 && (type === 'overdue' || type === 'all')) {
+      return filterByTiles(filteredByType, tiles, type || undefined);
+    }
+    return filteredByType;
+  }, [filteredByType, tiles, type]);
+
+  // Для summary, таблицы и фильтрации по адресу используем filteredByTiles
+  const filteredData = filteredByTiles;
+
+
+
+  // Определяем, какие фильтры показывать
+  let filterOptions: string[] = [];
+  if (type === 'all') {
+    filterOptions = ['overdue', 'notdue', 'today', 'all'];
+  } else if (type === 'overdue') {
+    filterOptions = ['overdue', 'notdue', 'all'];
+  }
+  // Для today и notdue фильтры не отображаем
+
+  // summary только по отфильтрованным данным
   const summary = useMemo(() => {
-    const overdue = data.filter(d => {
-      if (!d.payDate) return false;
-      const payDate = new Date(d.payDate);
-      payDate.setHours(0,0,0,0);
-      return payDate < today;
-    });
-    const todayDebts = data.filter(d => {
-      if (!d.payDate) return false;
-      const payDate = new Date(d.payDate);
-      payDate.setHours(0,0,0,0);
-      return payDate.getTime() === today.getTime();
-    });
-    const notDue = data.filter(d => {
-      if (!d.payDate) return false;
-      const payDate = new Date(d.payDate);
-      payDate.setHours(0,0,0,0);
-      return payDate > today;
-    });
+    const overdue = filteredData.filter((d: Debitorka) => d.payDate && getDateString(d.payDate) < todayString);
+    const todayDebts = filteredData.filter((d: Debitorka) => d.payDate && getDateString(d.payDate) === todayString && d.prosrochkaDay === 0);
+    const notDue = filteredData.filter((d: Debitorka) => d.payDate && getDateString(d.payDate) > todayString);
     return {
       overdue: {
         docCount: overdue.length,
-        sum: overdue.reduce((acc, d) => acc + (d.sumDolg || 0), 0)
+        sum: overdue.reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0)
       },
       today: {
         docCount: todayDebts.length,
-        sum: todayDebts.reduce((acc, d) => acc + (d.sumDolg || 0), 0)
+        sum: todayDebts.reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0)
       },
       notDue: {
         docCount: notDue.length,
-        sum: notDue.reduce((acc, d) => acc + (d.sumDolg || 0), 0)
+        sum: notDue.reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0)
       },
       all: {
-        docCount: data.length,
-        sum: data.reduce((acc, d) => acc + (d.sumDolg || 0), 0)
+        docCount: filteredData.length,
+        sum: filteredData.reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0)
       }
     };
-  }, [data, today]);
+  }, [filteredData, todayString]);
 
   return (
     <Box>
@@ -131,7 +149,10 @@ const Debts: React.FC = () => {
           size="small"
         />
       </Box>
-      <PdzFilterTiles selected={tiles} onChange={setTiles} hideToday={false} />
+      {filterOptions.length > 0 && (
+        <PdzFilterTiles selected={tiles} onChange={setTiles} hideToday={type !== 'all'} />
+      )}
+
       {type === 'overdue' && (
         <Typography sx={{ mb: 2 }}>
           Всего просроченных документов: <b>{summary.overdue.docCount}</b> &nbsp; | &nbsp; Сумма: <b>{summary.overdue.sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}</b>
@@ -154,12 +175,21 @@ const Debts: React.FC = () => {
       )}
       {loading && <CircularProgress sx={{ my: 4 }} />}
       {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}
-      {!loading && !error && (
-        <PdzTable data={filtered} />
-      )}
-      {!loading && !error && filtered.length === 0 && (
-        <Typography sx={{ mt: 3 }}>Нет документов по выбранным фильтрам</Typography>
-      )}
+      {/* Фильтрация по адресу */}
+      {(() => {
+        const filteredByAddress = !address ? filteredData : filteredData.filter((d: Debitorka) =>
+          (d.ulUid || '').toLowerCase().includes(address.toLowerCase())
+        );
+        return <>
+          {!loading && !error && (
+            <PdzTable data={filteredByAddress} />
+          )}
+          {!loading && !error && filteredByAddress.length === 0 && (
+            <Typography sx={{ mt: 3 }}>Нет документов по выбранным фильтрам</Typography>
+          )}
+        </>;
+      })()}
+
     </Box>
   );
 };
