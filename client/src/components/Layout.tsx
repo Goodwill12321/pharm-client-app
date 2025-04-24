@@ -19,8 +19,8 @@ import MenuIcon from '@mui/icons-material/Menu';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import Badge from '@mui/material/Badge';
-import { fetchDebtsWithFilter } from '../api/debts';
-
+import { useDebts } from '../hooks/useDebtsQuery';
+import { Debitorka } from './PdzTable';
 const navLinks = [
   { to: '/', label: 'Главная' },
   { to: '/debts', label: 'Задолженности' },
@@ -31,17 +31,8 @@ const navLinks = [
 ];
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [debts, setDebts] = useState<any[]>([]);
-  const [loadingOverdue, setLoadingOverdue] = useState(false);
-  const [errorOverdue, setErrorOverdue] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLoadingOverdue(true);
-    fetchDebtsWithFilter()
-      .then(setDebts)
-      .catch(() => setErrorOverdue('Ошибка при загрузке задолженности'))
-      .finally(() => setLoadingOverdue(false));
-  }, []);
+  // Получаем данные о задолженностях через React Query
+  const { data: debts = [], isLoading: loadingOverdue, error: errorOverdue, refetch } = useDebts();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -107,12 +98,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         {item.label === 'Задолженности' ? (() => {
   const today = new Date();
   today.setHours(0,0,0,0);
-  const sum = debts.filter(d => {
-    if (!d.payDate) return false;
-    const payDate = new Date(d.payDate);
-    payDate.setHours(0,0,0,0);
-    return payDate < today;
-  }).reduce((acc, d) => acc + (d.sumDolg || 0), 0);
+  const sum = debts.filter((d: Debitorka) => {
+  if (!d.payDate) return false;
+  const payDate = new Date(d.payDate);
+  payDate.setHours(0,0,0,0);
+  return payDate < today;
+}).reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0);
   if (sum > 0) {
     return (
       <Badge
@@ -162,12 +153,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (item.label === 'Задолженности') {
     const today = new Date();
     today.setHours(0,0,0,0);
-    const sum = debts.filter(d => {
+    const sum = debts.filter((d: Debitorka) => {
       if (!d.payDate) return false;
       const payDate = new Date(d.payDate);
       payDate.setHours(0,0,0,0);
       return payDate < today;
-    }).reduce((acc, d) => acc + (d.sumDolg || 0), 0);
+    }).reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0);
     return sum > 0 ? (
       <Badge
         key={item.to}

@@ -4,7 +4,6 @@ import com.pharma.clientapp.entity.Debitorka;
 import com.pharma.clientapp.service.DebitorkaService;
 import com.pharma.clientapp.dto.DebtWithAddressDto;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

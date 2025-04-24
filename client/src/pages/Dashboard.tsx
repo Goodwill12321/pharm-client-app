@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useDebts } from '../hooks/useDebtsQuery';
 import { Box, Typography, Grid, Modal, CircularProgress, Alert } from '@mui/material';
 import { useEffect } from 'react';
 import { fetchDebtsWithFilter } from '../api/debts';
@@ -21,53 +22,58 @@ type Debitorka = {
 };
 
 const Dashboard: React.FC = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { data: allDebts = [], isLoading: allLoading, error: allError } = useDebts();
   const handleTileClick = (type: 'all' | 'overdue' | 'today' | 'notdue') => {
     navigate(`/debts?type=${type}`);
   };
 
-  const [allDebts, setAllDebts] = useState<Debitorka[]>([]);
-  const [allLoading, setAllLoading] = useState(false);
-  const navigate = useNavigate();
+  if (allLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-  // Загружаем всю дебиторку для бейджей (только доступную для контакта)
-  useEffect(() => {
-    setAllLoading(true);
-    fetchDebtsWithFilter()
-      .then(setAllDebts)
-      .catch(() => setAllDebts([]))
-      .finally(() => setAllLoading(false));
-  }, []);
+  if (allError) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+        <Alert severity="error">
+          {typeof allError === 'string' ? allError : (allError instanceof Error ? allError.message : String(allError))}
+        </Alert>
+      </Box>
+    );
+  }
 
   // Суммы для бейджей
   const today = new Date();
   today.setHours(0,0,0,0);
-  const sumAll = allDebts.reduce((acc, d) => acc + (d.sumDolg || 0), 0);
+  const sumAll = allDebts.reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0);
   const countAll = allDebts.length;
-  const overdueDebts = allDebts.filter(d => {
+  const overdueDebts = allDebts.filter((d: Debitorka) => {
     if (!d.payDate) return false;
     const payDate = new Date(d.payDate);
     payDate.setHours(0,0,0,0);
     return payDate < today;
   });
-  const sumOverdue = overdueDebts.reduce((acc, d) => acc + (d.sumDolg || 0), 0);
+  const sumOverdue = overdueDebts.reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0);
   const countOverdue = overdueDebts.length;
-  const todayDebts = allDebts.filter(d => {
+  const todayDebts = allDebts.filter((d: Debitorka) => {
     if (!d.payDate) return false;
     const payDate = new Date(d.payDate);
     payDate.setHours(0,0,0,0);
     return payDate.getTime() === today.getTime();
   });
-  const sumToday = todayDebts.reduce((acc, d) => acc + (d.sumDolg || 0), 0);
+  const sumToday = todayDebts.reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0);
   const countToday = todayDebts.length;
-  const notDueDebts = allDebts.filter(d => {
+  const notDueDebts = allDebts.filter((d: Debitorka) => {
     if (!d.payDate) return false;
     const payDate = new Date(d.payDate);
     payDate.setHours(0,0,0,0);
     return payDate > today;
   });
-  const sumNotDue = notDueDebts.reduce((acc, d) => acc + (d.sumDolg || 0), 0);
+  const sumNotDue = notDueDebts.reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0);
   const countNotDue = notDueDebts.length;
 
   return (
