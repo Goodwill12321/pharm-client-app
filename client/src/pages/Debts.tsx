@@ -54,6 +54,18 @@ const Debts: React.FC = () => {
     setTiles([]);
   }, [address]);
 
+  // tiles выставляем по type при изменении type
+  useEffect(() => {
+    if (type === 'today') {
+      setTiles(['today']);
+    } else if (type === 'overdue') {
+      setTiles(['3days', '7days', '14days', '21days', 'gt21days']);
+    } else if (type === 'notdue') {
+      setTiles([]); // или другой ключ, если нужен
+    } else if (type === 'all') {
+      setTiles([]);
+    }
+  }, [type]);
 
   // Функция для получения строки даты в формате YYYY-MM-DD (локальная зона)
   const pad = (n: number): string => n.toString().padStart(2, '0');
@@ -68,16 +80,26 @@ const Debts: React.FC = () => {
 
   // Затем фильтруем по плиткам (если есть)
   const filteredData = useMemo(() => {
-    if (tiles.length > 0 && (type === 'overdue' || type === 'all')) {
+    if (tiles.length > 0) {
       return filterByTiles(data, tiles);
     }
+    // Если плитки не выбраны, но есть type, фильтруем по нему
+    if (type === 'overdue') {
+      return data.filter((d: Debitorka) => d.prosrochkaDay > 0);
+    }
+    if (type === 'today') {
+      return data.filter((d: Debitorka) => d.prosrochkaDay === 0);
+    }
+    if (type === 'notdue') {
+      return data.filter((d: Debitorka) => d.prosrochkaDay < 0);
+    }
+    // all или не задан — возвращаем все
     return data;
   }, [data, tiles, type]);
 
   // Summary для всех плиток и категорий (рассчитывается по data)
-  // Summary для всех плиток и категорий (рассчитывается по data)
   const summary = useMemo(() => {
-    const today = data.filter((d: Debitorka) => d.ostatokDay === 0 && d.prosrochkaDay === 0);
+    const today = data.filter((d: Debitorka) => d.prosrochkaDay === 0);
     const overdue3 = data.filter((d: Debitorka) => d.prosrochkaDay >= 1 && d.prosrochkaDay <= 3);
     const overdue7 = data.filter((d: Debitorka) => d.prosrochkaDay >= 4 && d.prosrochkaDay <= 7);
     const overdue14 = data.filter((d: Debitorka) => d.prosrochkaDay >= 8 && d.prosrochkaDay <= 14);
@@ -142,7 +164,7 @@ const Debts: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Задолженности</Typography>
-      <Typography variant="h6" sx={{ mb: 1 }}>Отбор по адресам</Typography>
+
       <AddressFilter addresses={clients.map(c => ({ id: c.id, name: c.name }))} />
 
       {filterOptions.length > 0 && (

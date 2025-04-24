@@ -8,7 +8,6 @@ const InvoiceForm: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Форма накладной</Typography>
-      <Typography variant="h6" sx={{ mb: 1 }}>Отбор по адресам</Typography>
       <AddressFilter addresses={clients.map(c => ({ id: c.id, name: c.name }))} />
       {/* TODO: Шапка, фильтры, кнопки, таблица товаров */}
       <Typography>Форма накладной (будет реализовано согласно ТЗ)</Typography>

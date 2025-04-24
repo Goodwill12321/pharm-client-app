@@ -86,7 +86,6 @@ const Dashboard: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Главная</Typography>
-      <Typography variant="h6" sx={{ mb: 1 }}>Отбор по адресам</Typography>
       <AddressFilter addresses={clients.map(c => ({ id: c.id, name: c.name }))} />
       {/* AddressFilter и чипсы выбранных адресов */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
