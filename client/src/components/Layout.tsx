@@ -22,7 +22,7 @@ import Badge from '@mui/material/Badge';
 import { useDebts } from '../hooks/useDebtsQuery';
 import { Debitorka } from './PdzTable';
 import { useClientsQuery } from '../hooks/useClientsQuery';
-import { AddressFilter } from './AddressFilter';
+
 import { useAddressFilter } from '../context/AddressFilterContext';
 import Chip from '@mui/material/Chip';
 const navLinks = [
@@ -223,7 +223,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <Typography variant="caption" sx={{ color: 'error.main' }}>Ошибка загрузки адресов</Typography>
             ) : clients.length === 0 ? null : (
               <>
-                <AddressFilter addresses={clients.map(c => ({ id: c.id, name: c.name }))} />
+
                 {selected.length > 0 && (
                   <Box sx={{ display: 'flex', gap: 0.5, ml: 1 }}>
                     {selected.map(addr => (

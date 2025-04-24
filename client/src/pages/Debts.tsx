@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useClientsQuery } from '../hooks/useClientsQuery';
+import { AddressFilter } from '../components/AddressFilter';
 import { useDebts } from '../hooks/useDebtsQuery';
 import { Box, Typography, CircularProgress, Alert, TextField } from '@mui/material';
 import { PdzTable, Debitorka } from '../components/PdzTable';
@@ -39,6 +41,7 @@ const useQuery = () => {
 import { useAddressFilter } from '../context/AddressFilterContext';
 
 const Debts: React.FC = () => {
+  const { data: clients = [], isLoading: loadingClients, error: errorClients } = useClientsQuery();
   const { selectedAddresses } = useAddressFilter();
   const { data = [], isLoading, error, refetch } = useDebts(selectedAddresses.length > 0 ? selectedAddresses : undefined);
   const query = useQuery();
@@ -139,6 +142,8 @@ const Debts: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Задолженности</Typography>
+      <Typography variant="h6" sx={{ mb: 1 }}>Отбор по адресам</Typography>
+      <AddressFilter addresses={clients.map(c => ({ id: c.id, name: c.name }))} />
 
       {filterOptions.length > 0 && (
         <PdzFilterTiles selected={tiles} onChange={setTiles} hideToday={type !== 'all'} />

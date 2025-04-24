@@ -25,9 +25,9 @@ type Debitorka = {
 };
 
 const Dashboard: React.FC = () => {
+  const { data: clients = [], isLoading: loadingClients, error: errorClients } = useClientsQuery();
   const navigate = useNavigate();
   const { data: allDebts = [], isLoading: allLoading, error: allError } = useDebts();
-  const { data: clients = [], isLoading: loadingClients, error: errorClients } = useClientsQuery();
   const { selectedAddresses, setSelectedAddresses } = useAddressFilter();
   const selected = clients.filter(c => selectedAddresses.includes(c.id));
 
@@ -86,24 +86,14 @@ const Dashboard: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Главная</Typography>
+      <Typography variant="h6" sx={{ mb: 1 }}>Отбор по адресам</Typography>
+      <AddressFilter addresses={clients.map(c => ({ id: c.id, name: c.name }))} />
       {/* AddressFilter и чипсы выбранных адресов */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
         <Box>
-          <AddressFilter addresses={clients.map(c => ({ id: c.id, name: c.name }))} />
+          
         </Box>
-        {selected.length > 0 && (
-          <Box sx={{ display: 'flex', gap: 0.5 }}>
-            {selected.map(addr => (
-              <Chip
-                key={addr.id}
-                label={addr.name}
-                size="small"
-                onDelete={() => setSelectedAddresses(selectedAddresses.filter(id => id !== addr.id))}
-                sx={{ bgcolor: 'background.paper', fontSize: '0.8rem' }}
-              />
-            ))}
-          </Box>
-        )}
+        
       </Box>
       {/* Блок с бейджами в одну линию */}
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3 }}>
