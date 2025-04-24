@@ -12,21 +12,26 @@ import { fetchDebtsWithFilter } from '../api/debts';
 
 const filterByTiles = (data: Debitorka[], tiles: PdzFilterKey[]): Debitorka[] => {
   if (tiles.length === 0) return data;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   return data.filter((d: Debitorka) => {
+    const payDate = new Date(d.payDate);
+    payDate.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today.getTime() - payDate.getTime()) / (1000 * 60 * 60 * 24));
     return tiles.some((tile: PdzFilterKey) => {
       switch (tile) {
         case 'today':
-          return d.ostatokDay === 0 && d.prosrochkaDay === 0;
+          return diffDays === 0;
         case '3days':
-          return (d.prosrochkaDay >= 1 && d.prosrochkaDay <= 3) ;
+          return diffDays >= 1 && diffDays <= 3;
         case '7days':
-          return (d.prosrochkaDay >= 4 && d.prosrochkaDay <= 7) ;
+          return diffDays >= 4 && diffDays <= 7;
         case '14days':
-          return (d.prosrochkaDay >= 8 && d.prosrochkaDay <= 14) ;
+          return diffDays >= 8 && diffDays <= 14;
         case '21days':
-          return (d.prosrochkaDay >= 15 && d.prosrochkaDay <= 21) ;
+          return diffDays >= 15 && diffDays <= 21;
         case 'gt21days':
-          return (d.prosrochkaDay > 21) ;
+          return diffDays > 21;
         default:
           return false;
       }
@@ -80,18 +85,32 @@ const Debts: React.FC = () => {
 
   // Затем фильтруем по плиткам (если есть)
   const filteredData = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     if (tiles.length > 0) {
       return filterByTiles(data, tiles);
     }
     // Если плитки не выбраны, но есть type, фильтруем по нему
     if (type === 'overdue') {
-      return data.filter((d: Debitorka) => d.prosrochkaDay > 0);
+      return data.filter((d: Debitorka) => {
+        const payDate = new Date(d.payDate);
+        payDate.setHours(0, 0, 0, 0);
+        return payDate < today;
+      });
     }
     if (type === 'today') {
-      return data.filter((d: Debitorka) => d.prosrochkaDay === 0);
+      return data.filter((d: Debitorka) => {
+        const payDate = new Date(d.payDate);
+        payDate.setHours(0, 0, 0, 0);
+        return payDate.getTime() === today.getTime();
+      });
     }
     if (type === 'notdue') {
-      return data.filter((d: Debitorka) => d.prosrochkaDay < 0);
+      return data.filter((d: Debitorka) => {
+        const payDate = new Date(d.payDate);
+        payDate.setHours(0, 0, 0, 0);
+        return payDate > today;
+      });
     }
     // all или не задан — возвращаем все
     return data;
@@ -99,14 +118,53 @@ const Debts: React.FC = () => {
 
   // Summary для всех плиток и категорий (рассчитывается по data)
   const summary = useMemo(() => {
-    const today = data.filter((d: Debitorka) => d.prosrochkaDay === 0);
-    const overdue3 = data.filter((d: Debitorka) => d.prosrochkaDay >= 1 && d.prosrochkaDay <= 3);
-    const overdue7 = data.filter((d: Debitorka) => d.prosrochkaDay >= 4 && d.prosrochkaDay <= 7);
-    const overdue14 = data.filter((d: Debitorka) => d.prosrochkaDay >= 8 && d.prosrochkaDay <= 14);
-    const overdue21 = data.filter((d: Debitorka) => d.prosrochkaDay >= 15 && d.prosrochkaDay <= 21);
-    const overdueGt21 = data.filter((d: Debitorka) => d.prosrochkaDay > 21);
-    const overdueAll = data.filter((d: Debitorka) => d.prosrochkaDay > 0);
-    const notDue = data.filter((d: Debitorka) => d.prosrochkaDay < 0);
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    const today = data.filter((d: Debitorka) => {
+      const payDate = new Date(d.payDate);
+      payDate.setHours(0, 0, 0, 0);
+      return payDate.getTime() === todayDate.getTime();
+    });
+    const overdue3 = data.filter((d: Debitorka) => {
+      const payDate = new Date(d.payDate);
+      payDate.setHours(0, 0, 0, 0);
+      const diff = Math.floor((todayDate.getTime() - payDate.getTime()) / (1000 * 60 * 60 * 24));
+      return diff >= 1 && diff <= 3;
+    });
+    const overdue7 = data.filter((d: Debitorka) => {
+      const payDate = new Date(d.payDate);
+      payDate.setHours(0, 0, 0, 0);
+      const diff = Math.floor((todayDate.getTime() - payDate.getTime()) / (1000 * 60 * 60 * 24));
+      return diff >= 4 && diff <= 7;
+    });
+    const overdue14 = data.filter((d: Debitorka) => {
+      const payDate = new Date(d.payDate);
+      payDate.setHours(0, 0, 0, 0);
+      const diff = Math.floor((todayDate.getTime() - payDate.getTime()) / (1000 * 60 * 60 * 24));
+      return diff >= 8 && diff <= 14;
+    });
+    const overdue21 = data.filter((d: Debitorka) => {
+      const payDate = new Date(d.payDate);
+      payDate.setHours(0, 0, 0, 0);
+      const diff = Math.floor((todayDate.getTime() - payDate.getTime()) / (1000 * 60 * 60 * 24));
+      return diff >= 15 && diff <= 21;
+    });
+    const overdueGt21 = data.filter((d: Debitorka) => {
+      const payDate = new Date(d.payDate);
+      payDate.setHours(0, 0, 0, 0);
+      const diff = Math.floor((todayDate.getTime() - payDate.getTime()) / (1000 * 60 * 60 * 24));
+      return diff > 21;
+    });
+    const overdueAll = data.filter((d: Debitorka) => {
+      const payDate = new Date(d.payDate);
+      payDate.setHours(0, 0, 0, 0);
+      return payDate < todayDate;
+    });
+    const notDue = data.filter((d: Debitorka) => {
+      const payDate = new Date(d.payDate);
+      payDate.setHours(0, 0, 0, 0);
+      return payDate > todayDate;
+    });
     return {
       today: {
         docCount: today.length,
@@ -127,7 +185,6 @@ const Debts: React.FC = () => {
       overdue21: {
         docCount: overdue21.length,
         sum: overdue21.reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0)
-
       },
       overdueGt21: {
         docCount: overdueGt21.length,
