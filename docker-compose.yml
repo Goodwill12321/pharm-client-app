@@ -28,6 +28,7 @@ services:
     environment:
       - LOG_DIR=/data/logs
       - CERTS_DIR=/data/certs
+      - SPRING_PROFILES_ACTIVE=prod
       - CHAT_IMAGES_DIR=/data/chat_images
       - DEV=false
       - JWT_SECRET=Qv6rT8zj3Lw2Yx1B9dK4nV7eP5aS0fG6

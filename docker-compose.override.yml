@@ -10,4 +10,5 @@ services:
   backend:
     environment:
       - DEV=true
+      - SPRING_PROFILES_ACTIVE=dev
      
