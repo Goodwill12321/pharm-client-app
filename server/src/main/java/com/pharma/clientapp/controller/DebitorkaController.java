@@ -2,20 +2,36 @@ package com.pharma.clientapp.controller;
 
 import com.pharma.clientapp.entity.Debitorka;
 import com.pharma.clientapp.service.DebitorkaService;
+import com.pharma.clientapp.dto.DebtWithAddressDto;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/debitorka")
 public class DebitorkaController {
     private final DebitorkaService debitorkaService;
+    private static final Logger logger = LoggerFactory.getLogger(DebitorkaController.class);
 
     public DebitorkaController(DebitorkaService debitorkaService) {
         this.debitorkaService = debitorkaService;
+    }
+
+    @GetMapping("/filtered")
+    public List<DebtWithAddressDto> getFilteredDebitorka(
+            @AuthenticationPrincipal com.pharma.clientapp.entity.Contact contact,
+            @RequestParam(value = "address", required = false) String address
+    ) {
+        String contactUid = contact != null ? contact.getUid() : null;
+        logger.info("contactUid = {}, address = {}", contactUid, address);
+        return debitorkaService.findDebtsForContact(contactUid, address);
     }
 
     @GetMapping

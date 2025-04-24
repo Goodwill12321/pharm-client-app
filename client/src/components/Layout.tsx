@@ -7,8 +7,9 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { UpdatePWAButton } from './UpdatePWAButton';
 import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -18,7 +19,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import Badge from '@mui/material/Badge';
-import { fetchOverdueSummary } from '../api/debts';
+import { fetchDebtsWithFilter } from '../api/debts';
 
 const navLinks = [
   { to: '/', label: 'Главная' },
@@ -30,14 +31,14 @@ const navLinks = [
 ];
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [overdueSummary, setOverdueSummary] = useState<{ doc_count: number; sum: number } | null>(null);
+  const [debts, setDebts] = useState<any[]>([]);
   const [loadingOverdue, setLoadingOverdue] = useState(false);
   const [errorOverdue, setErrorOverdue] = useState<string | null>(null);
 
   useEffect(() => {
     setLoadingOverdue(true);
-    fetchOverdueSummary()
-      .then(setOverdueSummary)
+    fetchDebtsWithFilter()
+      .then(setDebts)
       .catch(() => setErrorOverdue('Ошибка при загрузке задолженности'))
       .finally(() => setLoadingOverdue(false));
   }, []);
@@ -49,13 +50,27 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
   const handleDrawerClose = () => setDrawerOpen(false);
 
-  const { isAuthenticated, login, loading, error, logout } = useAuth();
+  const { isAuthenticated, login, loading, error } = useAuth();
+  const [authMenuOpen, setAuthMenuOpen] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
+
   // Показываем AuthMenu, если не авторизован
   if (!isAuthenticated) {
     return (
       <AuthMenu open={true} onLogin={login} loading={loading} error={error} />
     );
   }
+
+  // Функция для повторного входа (смены пользователя)
+  const handleReAuth = (loginValue: string, password: string) => {
+    setAuthLoading(true);
+    setAuthError(null);
+    login(loginValue, password)
+      .then(() => setAuthMenuOpen(false))
+      .catch((e: any) => setAuthError(e?.message || 'Ошибка авторизации'))
+      .finally(() => setAuthLoading(false));
+  };
 
   return (
     <>
@@ -69,10 +84,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </Typography>
           <UpdatePWAButton />
 
-          {/* Кнопка выхода */}
-          <Button color="inherit" onClick={logout} sx={{ ml: 2 }}>
-            Выйти
-          </Button>
+          {/* Маленькая иконка пользователя для смены пользователя */}
+          <IconButton color="inherit" sx={{ ml: 1 }} onClick={() => setAuthMenuOpen(true)} size="small">
+            <AccountCircleIcon fontSize="medium" />
+          </IconButton>
 
           {isMobile ? (
             <>
@@ -89,24 +104,52 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   <List>
                     {navLinks.map((item) => (
                       <ListItem key={item.to} disablePadding>
-                        <Badge
-                          color="error"
-                          badgeContent={
-                            item.label === 'Задолженности' && overdueSummary && overdueSummary.sum > 0
-                              ? `${overdueSummary.sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} ₽`
-                              : null
-                          }
-                          overlap="rectangular"
-                          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                        >
-                          <ListItemButton
-                            component={Link}
-                            to={item.to}
-                            onClick={handleDrawerClose}
-                          >
-                            <ListItemText primary={item.label} />
-                          </ListItemButton>
-                        </Badge>
+                        {item.label === 'Задолженности' ? (() => {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const sum = debts.filter(d => {
+    if (!d.payDate) return false;
+    const payDate = new Date(d.payDate);
+    payDate.setHours(0,0,0,0);
+    return payDate < today;
+  }).reduce((acc, d) => acc + (d.sumDolg || 0), 0);
+  if (sum > 0) {
+    return (
+      <Badge
+        color="error"
+        badgeContent={`${sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} ₽`}
+        overlap="rectangular"
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <ListItemButton
+          component={Link}
+          to={item.to}
+          onClick={handleDrawerClose}
+        >
+          <ListItemText primary={item.label} />
+        </ListItemButton>
+      </Badge>
+    );
+  } else {
+    return (
+      <ListItemButton
+        component={Link}
+        to={item.to}
+        onClick={handleDrawerClose}
+      >
+        <ListItemText primary={item.label} />
+      </ListItemButton>
+    );
+  }
+})() : (
+  <ListItemButton
+    component={Link}
+    to={item.to}
+    onClick={handleDrawerClose}
+  >
+    <ListItemText primary={item.label} />
+  </ListItemButton>
+)}
                       </ListItem>
                     ))}
                   </List>
@@ -115,42 +158,62 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </>
           ) : (
             <Box sx={{ display: 'flex', gap: 1 }}>
-              {navLinks.map((item) => (
-                item.label === 'Задолженности' ? (
-                  <Badge
-                    key={item.to}
-                    color="error"
-                    badgeContent={
-                      overdueSummary && overdueSummary.sum > 0
-                        ? `${overdueSummary.sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} ₽`
-                        : null
-                    }
-                    overlap="rectangular"
-                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  >
-                    <Button
-                      color="inherit"
-                      component={Link}
-                      to={item.to}
-                      size="medium"
-                      sx={{ minWidth: 100 }}
-                    >
-                      {item.label}
-                    </Button>
-                  </Badge>
-                ) : (
-                  <Button
-                    key={item.to}
-                    color="inherit"
-                    component={Link}
-                    to={item.to}
-                    size="medium"
-                    sx={{ minWidth: 100 }}
-                  >
-                    {item.label}
-                  </Button>
-                )
-              ))}
+              {navLinks.map((item) => {
+  if (item.label === 'Задолженности') {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const sum = debts.filter(d => {
+      if (!d.payDate) return false;
+      const payDate = new Date(d.payDate);
+      payDate.setHours(0,0,0,0);
+      return payDate < today;
+    }).reduce((acc, d) => acc + (d.sumDolg || 0), 0);
+    return sum > 0 ? (
+      <Badge
+        key={item.to}
+        color="error"
+        badgeContent={`${sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} ₽`}
+        overlap="rectangular"
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Button
+          color="inherit"
+          component={Link}
+          to={item.to}
+          size="medium"
+          sx={{ minWidth: 100 }}
+        >
+          {item.label}
+        </Button>
+      </Badge>
+    ) : (
+      <Button
+        key={item.to}
+        color="inherit"
+        component={Link}
+        to={item.to}
+        size="medium"
+        sx={{ minWidth: 100 }}
+      >
+        {item.label}
+      </Button>
+    );
+  } else {
+    return (
+      <Button
+        key={item.to}
+        color="inherit"
+        component={Link}
+        to={item.to}
+        size="medium"
+        sx={{ minWidth: 100 }}
+      >
+        {item.label}
+      </Button>
+    );
+  }
+})}
+
             </Box>
           )}
         </Toolbar>

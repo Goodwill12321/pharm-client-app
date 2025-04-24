@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, Grid, Modal, CircularProgress, Alert } from '@mui/material';
 import { useEffect } from 'react';
-import { fetchOverdueSummary, fetchDebts } from '../api/debts';
+import { fetchDebtsWithFilter } from '../api/debts';
 import { OverdueBadgeButton } from '../components/OverdueBadgeButton';
 import { SummaryBadgeButton } from '../components/SummaryBadgeButton';
 import { useNavigate } from 'react-router-dom';
@@ -26,24 +26,15 @@ const Dashboard: React.FC = () => {
   const handleTileClick = (type: 'all' | 'overdue' | 'today' | 'notdue') => {
     navigate(`/debts?type=${type}`);
   };
-  const [overdueSummary, setOverdueSummary] = useState<{ doc_count: number; sum: number } | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(false);
+
   const [allDebts, setAllDebts] = useState<Debitorka[]>([]);
   const [allLoading, setAllLoading] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setSummaryLoading(true);
-    fetchOverdueSummary()
-      .then(setOverdueSummary)
-      .catch(() => setOverdueSummary({ doc_count: 0, sum: 0 }))
-      .finally(() => setSummaryLoading(false));
-  }, []);
-
-  // Загружаем всю дебиторку для бейджей
+  // Загружаем всю дебиторку для бейджей (только доступную для контакта)
   useEffect(() => {
     setAllLoading(true);
-    fetchDebts()
+    fetchDebtsWithFilter()
       .then(setAllDebts)
       .catch(() => setAllDebts([]))
       .finally(() => setAllLoading(false));
@@ -52,23 +43,31 @@ const Dashboard: React.FC = () => {
   // Суммы для бейджей
   const today = new Date();
   today.setHours(0,0,0,0);
-  const sumAll = allDebts.reduce((acc, d) => acc + (d.sumDoc || 0), 0);
+  const sumAll = allDebts.reduce((acc, d) => acc + (d.sumDolg || 0), 0);
   const countAll = allDebts.length;
+  const overdueDebts = allDebts.filter(d => {
+    if (!d.payDate) return false;
+    const payDate = new Date(d.payDate);
+    payDate.setHours(0,0,0,0);
+    return payDate < today;
+  });
+  const sumOverdue = overdueDebts.reduce((acc, d) => acc + (d.sumDolg || 0), 0);
+  const countOverdue = overdueDebts.length;
   const todayDebts = allDebts.filter(d => {
     if (!d.payDate) return false;
     const payDate = new Date(d.payDate);
     payDate.setHours(0,0,0,0);
-    return payDate.getTime() === today.getTime() && d.prosrochkaDay <= 0;
+    return payDate.getTime() === today.getTime();
   });
-  const sumToday = todayDebts.reduce((acc, d) => acc + (d.sumDoc || 0), 0);
+  const sumToday = todayDebts.reduce((acc, d) => acc + (d.sumDolg || 0), 0);
   const countToday = todayDebts.length;
   const notDueDebts = allDebts.filter(d => {
     if (!d.payDate) return false;
     const payDate = new Date(d.payDate);
     payDate.setHours(0,0,0,0);
-    return payDate.getTime() > today.getTime() && d.prosrochkaDay <= 0;
+    return payDate > today;
   });
-  const sumNotDue = notDueDebts.reduce((acc, d) => acc + (d.sumDoc || 0), 0);
+  const sumNotDue = notDueDebts.reduce((acc, d) => acc + (d.sumDolg || 0), 0);
   const countNotDue = notDueDebts.length;
 
   return (
@@ -85,9 +84,9 @@ const Dashboard: React.FC = () => {
           onClick={() => handleTileClick('all')}
         />
         <OverdueBadgeButton
-          sum={overdueSummary?.sum || 0}
-          docCount={overdueSummary?.doc_count || 0}
-          loading={summaryLoading}
+          sum={sumOverdue}
+          docCount={countOverdue}
+          loading={allLoading}
           onClick={() => handleTileClick('overdue')}
         />
         <SummaryBadgeButton

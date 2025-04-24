@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Box, Typography, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, TextField } from '@mui/material';
 import { PdzTable, Debitorka } from '../components/PdzTable';
 import { PdzFilterTiles, FILTERS, PdzFilterKey } from '../components/PdzFilterTiles';
 import { useLocation } from 'react-router-dom';
-import { fetchDebts } from '../api/debts';
+import { fetchDebtsWithFilter } from '../api/debts';
 
 const filterByTiles = (data: Debitorka[], tiles: PdzFilterKey[], type?: string) => {
   if (tiles.length === 0) return data;
@@ -44,26 +44,26 @@ const useQuery = () => {
 };
 
 const Debts: React.FC = () => {
+  const query = useQuery();
+  const type = query.get('type');
   const [data, setData] = useState<Debitorka[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tiles, setTiles] = useState<PdzFilterKey[]>([]);
-  const query = useQuery();
-  const type = query.get('type');
+  const [address, setAddress] = useState<string>('');
 
-  // Сброс выбранных плиток при смене фильтра type
   useEffect(() => {
     setTiles([]);
-  }, [type]);
+  }, [address]);
 
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetchDebts(type || undefined)
+    fetchDebtsWithFilter(address)
       .then(setData)
       .catch(e => setError(e.message || 'Неизвестная ошибка'))
       .finally(() => setLoading(false));
-  }, [type]);
+  }, [address]);
 
   // Получаем сегодняшнюю дату в формате yyyy-mm-dd
   const today = useMemo(() => {
@@ -72,65 +72,86 @@ const Debts: React.FC = () => {
     return d;
   }, []);
 
-  // Фильтрация по типу
+  // Фильтрация по плиткам (без type)
   const filtered = useMemo(() => {
-    // Для overdue и all плитки работают одинаково, только источник данных разный
-    if (!type || type === 'all') {
-      if (tiles.length > 0) {
-        // Для общей задолженности фильтры работают по prosrochkaDay так же, как и для ПДЗ
-        return filterByTiles(data, tiles, 'overdue');
-      }
-      return data;
-    }
-    if (type === 'overdue') {
-      if (tiles.length > 0) {
-        return filterByTiles(
-          data.filter(d => {
-            if (!d.payDate) return false;
-            const payDate = new Date(d.payDate);
-            payDate.setHours(0,0,0,0);
-            return payDate < today;
-          }),
-          tiles,
-          type
-        );
-      }
-      return data.filter(d => {
-        if (!d.payDate) return false;
-        const payDate = new Date(d.payDate);
-        payDate.setHours(0,0,0,0);
-        return payDate < today;
-      });
-    }
-    if (type === 'today') {
-      return data.filter(d => {
-        if (!d.payDate) return false;
-        const payDate = new Date(d.payDate);
-        payDate.setHours(0,0,0,0);
-        return payDate.getTime() === today.getTime() && d.prosrochkaDay === 0;
-      });
-    }
-    if (type === 'notdue') {
-      return data.filter(d => {
-        if (!d.payDate) return false;
-        const payDate = new Date(d.payDate);
-        payDate.setHours(0,0,0,0);
-        return payDate > today && d.prosrochkaDay <= 0;
-      });
+    if (tiles.length > 0) {
+      return filterByTiles(data, tiles, 'overdue');
     }
     return data;
-  }, [data, type, today, tiles]);
+  }, [data, tiles]);
+
+  // Суммарные значения по всем типам задолженности
+  const summary = useMemo(() => {
+    const overdue = data.filter(d => {
+      if (!d.payDate) return false;
+      const payDate = new Date(d.payDate);
+      payDate.setHours(0,0,0,0);
+      return payDate < today;
+    });
+    const todayDebts = data.filter(d => {
+      if (!d.payDate) return false;
+      const payDate = new Date(d.payDate);
+      payDate.setHours(0,0,0,0);
+      return payDate.getTime() === today.getTime();
+    });
+    const notDue = data.filter(d => {
+      if (!d.payDate) return false;
+      const payDate = new Date(d.payDate);
+      payDate.setHours(0,0,0,0);
+      return payDate > today;
+    });
+    return {
+      overdue: {
+        docCount: overdue.length,
+        sum: overdue.reduce((acc, d) => acc + (d.sumDolg || 0), 0)
+      },
+      today: {
+        docCount: todayDebts.length,
+        sum: todayDebts.reduce((acc, d) => acc + (d.sumDolg || 0), 0)
+      },
+      notDue: {
+        docCount: notDue.length,
+        sum: notDue.reduce((acc, d) => acc + (d.sumDolg || 0), 0)
+      },
+      all: {
+        docCount: data.length,
+        sum: data.reduce((acc, d) => acc + (d.sumDolg || 0), 0)
+      }
+    };
+  }, [data, today]);
 
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Задолженности</Typography>
-      {(!type || type === 'overdue' || type === 'all') && (
-        <PdzFilterTiles selected={tiles} onChange={setTiles} hideToday={type === 'overdue'} />
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          label="Фильтр по адресу"
+          value={address}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)}
+          size="small"
+        />
+      </Box>
+      <PdzFilterTiles selected={tiles} onChange={setTiles} hideToday={false} />
+      {type === 'overdue' && (
+        <Typography sx={{ mb: 2 }}>
+          Всего просроченных документов: <b>{summary.overdue.docCount}</b> &nbsp; | &nbsp; Сумма: <b>{summary.overdue.sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}</b>
+        </Typography>
       )}
-      {(type === undefined || type === 'all') && <Typography sx={{ mb: 2 }}>Показана вся задолженность</Typography>}
-      {type === 'overdue' && <Typography sx={{ mb: 2 }}>Показана только просроченная задолженность</Typography>}
-      {type === 'today' && <Typography sx={{ mb: 2 }}>Показаны платежи, которые нужно оплатить сегодня</Typography>}
-      {type === 'notdue' && <Typography sx={{ mb: 2 }}>Показана не просроченная задолженность</Typography>}
+      {type === 'today' && (
+        <Typography sx={{ mb: 2 }}>
+          Платежей на сегодня: <b>{summary.today.docCount}</b> &nbsp; | &nbsp; Сумма: <b>{summary.today.sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}</b>
+        </Typography>
+      )}
+      {type === 'notdue' && (
+        <Typography sx={{ mb: 2 }}>
+          Не просроченных документов: <b>{summary.notDue.docCount}</b> &nbsp; | &nbsp; Сумма: <b>{summary.notDue.sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}</b>
+        </Typography>
+      )}
+      {(!type || type === 'all') && (
+        <Typography sx={{ mb: 2 }}>
+          Всего документов: <b>{summary.all.docCount}</b> &nbsp; | &nbsp; Сумма: <b>{summary.all.sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}</b>
+        </Typography>
+      )}
       {loading && <CircularProgress sx={{ my: 4 }} />}
       {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}
       {!loading && !error && (
