@@ -21,7 +21,7 @@ public interface DebitorkaRepository extends JpaRepository<Debitorka, Long> {
     @Query("""
     SELECT new com.pharma.clientapp.dto.DebtWithAddressDto(
         d.id, d.docUid, d.ulUid, d.otsrochkaDay, d.payDate, d.ostatokDay, d.prosrochkaDay,
-        d.sumDoc, d.sumPaid, d.sumDolg, c.deliveryAddress
+        d.sumDoc, d.sumPaid, d.sumDolg, c.deliveryAddress, ih.docNum, c.name
     )
     FROM Debitorka d
     JOIN InvoiceH ih ON ih.uid = d.docUid
@@ -39,7 +39,7 @@ public interface DebitorkaRepository extends JpaRepository<Debitorka, Long> {
     @Query("""
     SELECT new com.pharma.clientapp.dto.DebtWithAddressDto(
         d.id, d.docUid, d.ulUid, d.otsrochkaDay, d.payDate, d.ostatokDay, d.prosrochkaDay,
-        d.sumDoc, d.sumPaid, d.sumDolg, c.deliveryAddress
+        d.sumDoc, d.sumPaid, d.sumDolg, c.deliveryAddress, ih.docNum, c.name
     )
     FROM Debitorka d
     JOIN InvoiceH ih ON ih.uid = d.docUid

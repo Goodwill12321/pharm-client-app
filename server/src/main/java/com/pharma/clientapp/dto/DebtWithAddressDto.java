@@ -14,8 +14,10 @@ public class DebtWithAddressDto {
     private Double sumPaid;
     private Double sumDolg;
     private String address;
+    private String docNum;
+    private String clientName; // название клиента
 
-    public DebtWithAddressDto(Long id, String docUid, String ulUid, Integer otsrochkaDay, LocalDate payDate, Integer ostatokDay, Integer prosrochkaDay, Double sumDoc, Double sumPaid, Double sumDolg, String address) {
+    public DebtWithAddressDto(Long id, String docUid, String ulUid, Integer otsrochkaDay, LocalDate payDate, Integer ostatokDay, Integer prosrochkaDay, Double sumDoc, Double sumPaid, Double sumDolg, String address, String docNum, String clientName) {
         this.id = id;
         this.docUid = docUid;
         this.ulUid = ulUid;
@@ -27,6 +29,8 @@ public class DebtWithAddressDto {
         this.sumPaid = sumPaid;
         this.sumDolg = sumDolg;
         this.address = address;
+        this.docNum = docNum;
+        this.clientName = clientName;
     }
 
     // getters and setters
@@ -52,4 +56,8 @@ public class DebtWithAddressDto {
     public void setSumDolg(Double sumDolg) { this.sumDolg = sumDolg; }
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
+    public String getDocNum() { return docNum; }
+    public void setDocNum(String docNum) { this.docNum = docNum; }
+    public String getClientName() { return clientName; }
+    public void setClientName(String clientName) { this.clientName = clientName; }
 }

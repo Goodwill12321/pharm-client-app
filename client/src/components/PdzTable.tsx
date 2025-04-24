@@ -13,6 +13,9 @@ export type Debitorka = {
   sumDoc: number;
   sumPaid: number;
   sumDolg: number;
+  docNum?: string; // номер документа
+  deliveryAddress?: string; // адрес доставки
+  clientName?: string; // название клиента
 };
 
 interface PdzTableProps {
@@ -21,17 +24,17 @@ interface PdzTableProps {
 
 type Order = 'asc' | 'desc';
 
-type SortField = 'docUid' | 'otsrochkaDay' | 'payDate' | 'ostatokDay' | 'prosrochkaDay' | 'sumDoc' | 'sumPaid' | 'ulUid';
+type SortField = 'docUid' | 'otsrochkaDay' | 'payDate' | 'ostatokDay' | 'prosrochkaDay' | 'sumDoc' | 'sumPaid' | 'ulUid' | 'docNum' | 'deliveryAddress';
 
 const columns: { key: SortField; label: string }[] = [
-  { key: 'docUid', label: 'Документ (номер + дата)' },
+  { key: 'docNum', label: 'Документ (номер + дата)' },
   { key: 'otsrochkaDay', label: 'Отсрочка' },
   { key: 'payDate', label: 'Дата оплаты' },
   { key: 'ostatokDay', label: 'Дней осталось' },
   { key: 'prosrochkaDay', label: 'Дней просрочки' },
   { key: 'sumDoc', label: 'Сумма' },
   { key: 'sumPaid', label: 'Оплачено' },
-  { key: 'ulUid', label: 'Адрес/контрагент' },
+  { key: 'deliveryAddress', label: 'Адрес доставки' },
 ];
 
 export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
@@ -51,10 +54,13 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
   };
 
   const filtered = useMemo(() => {
-    return data.filter(row =>
-      String(row.docUid ?? '').toLowerCase().includes(docFilter.toLowerCase()) &&
-      String(row.ulUid ?? '').toLowerCase().includes(ulFilter.toLowerCase())
-    );
+    return data.filter(row => {
+      const address = row.deliveryAddress || row.clientName || '';
+      return (
+        String(row.docUid ?? '').toLowerCase().includes(docFilter.toLowerCase()) &&
+        address.toLowerCase().includes(ulFilter.toLowerCase())
+      );
+    });
   }, [data, docFilter, ulFilter]);
 
   const sorted = useMemo(() => {
@@ -127,7 +133,7 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
                     underline="hover"
                     onClick={() => navigate(`/invoices/${row.docUid}`)}
                   >
-                    {row.docUid}
+                    {row.docNum || row.docUid}
                   </Link>
                   {row.payDate ? ` от ${new Date(row.payDate).toLocaleDateString('ru-RU')}` : ''}
                 </TableCell>
@@ -151,7 +157,7 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
 >{row.sumPaid.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}</TableCell>
                 <TableCell
   sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}
->{row.ulUid}</TableCell>
+>{row.deliveryAddress || row.clientName || row.ulUid}</TableCell>
               </TableRow>
             ))}
           </TableBody>
