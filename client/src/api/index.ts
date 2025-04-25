@@ -27,7 +27,7 @@ export async function apiFetch(input: RequestInfo, init: RequestInit = {}, retry
     }
   }
   let res = await fetch(input, { ...init, credentials: 'include' });
-  if (res.status === 401 && retry && !url.includes('/auth/login') && !url.includes('/auth/refresh')) {
+  if ((res.status === 401 || res.status === 403) && retry && !url.includes('/auth/login') && !url.includes('/auth/refresh')) {
     // Попробовать обновить access token
     const refreshRes = await fetch('/auth/refresh', { method: 'POST', credentials: 'include' });
     if (refreshRes.ok) {
