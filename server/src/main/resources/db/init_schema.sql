@@ -154,8 +154,8 @@ CREATE TABLE IF NOT EXISTS client_manager (
 CREATE TABLE IF NOT EXISTS contact (
     uid varchar(36) PRIMARY KEY,
     name varchar(150),
-    login varchar(30),
-    password varchar(30),
+    login varchar(100),
+    password varchar(200),
     debitorka boolean,
     claims boolean,
     fio varchar(200),
