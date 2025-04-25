@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS debitorka (
     Prosrocha_Day integer,
     Sum_Doc double precision,
     Sum_Paid double precision,
-    Som_dolg double precision,
+    Sum_Dolg double precision,
     CONSTRAINT fk_ul_uid FOREIGN KEY (ul_uid) REFERENCES ul(uid)
 );
 
