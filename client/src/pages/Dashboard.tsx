@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
-import { Box, Typography, Grid, Modal, CircularProgress, Alert } from '@mui/material';
+import React from 'react';
+import { useDebts } from '../hooks/useDebtsQuery';
+import { Box, Typography, Grid, Modal, CircularProgress, Alert, Chip } from '@mui/material';
 import { useEffect } from 'react';
-import { fetchOverdueSummary } from '../api/debts';
+import { fetchDebtsWithFilter } from '../api/debts';
 import { OverdueBadgeButton } from '../components/OverdueBadgeButton';
 import { SummaryBadgeButton } from '../components/SummaryBadgeButton';
 import { useNavigate } from 'react-router-dom';
+import { useClientsQuery } from '../hooks/useClientsQuery';
+import { AddressFilter } from '../components/AddressFilter';
+import { useAddressFilter } from '../context/AddressFilterContext';
 
 // Тип для одной записи дебиторки
 type Debitorka = {
@@ -21,60 +25,75 @@ type Debitorka = {
 };
 
 const Dashboard: React.FC = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data: clients = [], isLoading: loadingClients, error: errorClients } = useClientsQuery();
+  const navigate = useNavigate();
+  const { data: allDebts = [], isLoading: allLoading, error: allError } = useDebts();
+  const { selectedAddresses, setSelectedAddresses } = useAddressFilter();
+  const selected = clients.filter(c => selectedAddresses.includes(c.id));
+
   const handleTileClick = (type: 'all' | 'overdue' | 'today' | 'notdue') => {
     navigate(`/debts?type=${type}`);
   };
-  const [overdueSummary, setOverdueSummary] = useState<{ doc_count: number; sum: number } | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(false);
-  const [allDebts, setAllDebts] = useState<Debitorka[]>([]);
-  const [allLoading, setAllLoading] = useState(false);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    setSummaryLoading(true);
-    fetchOverdueSummary()
-      .then(setOverdueSummary)
-      .catch(() => setOverdueSummary({ doc_count: 0, sum: 0 }))
-      .finally(() => setSummaryLoading(false));
-  }, []);
+  if (allLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-  // Загружаем всю дебиторку для бейджей
-  useEffect(() => {
-    setAllLoading(true);
-    fetch('/api/debitorka')
-      .then(res => res.ok ? res.json() : [])
-      .then(setAllDebts)
-      .catch(() => setAllDebts([]))
-      .finally(() => setAllLoading(false));
-  }, []);
+  if (allError) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+        <Alert severity="error">
+          {typeof allError === 'string' ? allError : (allError instanceof Error ? allError.message : String(allError))}
+        </Alert>
+      </Box>
+    );
+  }
 
   // Суммы для бейджей
   const today = new Date();
   today.setHours(0,0,0,0);
-  const sumAll = allDebts.reduce((acc, d) => acc + (d.sumDoc || 0), 0);
+  const sumAll = allDebts.reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0);
   const countAll = allDebts.length;
-  const todayDebts = allDebts.filter(d => {
+  const overdueDebts = allDebts.filter((d: Debitorka) => {
     if (!d.payDate) return false;
     const payDate = new Date(d.payDate);
     payDate.setHours(0,0,0,0);
-    return payDate.getTime() === today.getTime() && d.prosrochkaDay <= 0;
+    return payDate < today;
   });
-  const sumToday = todayDebts.reduce((acc, d) => acc + (d.sumDoc || 0), 0);
+  const sumOverdue = overdueDebts.reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0);
+  const countOverdue = overdueDebts.length;
+  const todayDebts = allDebts.filter((d: Debitorka) => {
+    if (!d.payDate) return false;
+    const payDate = new Date(d.payDate);
+    payDate.setHours(0,0,0,0);
+    return payDate.getTime() === today.getTime();
+  });
+  const sumToday = todayDebts.reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0);
   const countToday = todayDebts.length;
-  const notDueDebts = allDebts.filter(d => {
+  const notDueDebts = allDebts.filter((d: Debitorka) => {
     if (!d.payDate) return false;
     const payDate = new Date(d.payDate);
     payDate.setHours(0,0,0,0);
-    return payDate.getTime() > today.getTime() && d.prosrochkaDay <= 0;
+    return payDate > today;
   });
-  const sumNotDue = notDueDebts.reduce((acc, d) => acc + (d.sumDoc || 0), 0);
+  const sumNotDue = notDueDebts.reduce((acc: number, d: Debitorka) => acc + (d.sumDolg || 0), 0);
   const countNotDue = notDueDebts.length;
 
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Главная</Typography>
+      <AddressFilter addresses={clients.map(c => ({ id: c.id, name: c.name }))} />
+      {/* AddressFilter и чипсы выбранных адресов */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+        <Box>
+          
+        </Box>
+        
+      </Box>
       {/* Блок с бейджами в одну линию */}
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3 }}>
         <SummaryBadgeButton
@@ -86,9 +105,9 @@ const Dashboard: React.FC = () => {
           onClick={() => handleTileClick('all')}
         />
         <OverdueBadgeButton
-          sum={overdueSummary?.sum || 0}
-          docCount={overdueSummary?.doc_count || 0}
-          loading={summaryLoading}
+          sum={sumOverdue}
+          docCount={countOverdue}
+          loading={allLoading}
           onClick={() => handleTileClick('overdue')}
         />
         <SummaryBadgeButton

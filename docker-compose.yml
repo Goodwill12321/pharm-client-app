@@ -6,9 +6,9 @@ services:
       context: ./client
       dockerfile: client.Dockerfile
     
-    # volumes:
-    #  - ./client/src:/app/src
-    #  - ./client/public:/app/public
+    volumes:
+      - ./client:/app
+      - ./client/wait-for-it.sh:/wait-for-it.sh:ro
     ports:
       - "5173:5173"
     environment:
@@ -24,10 +24,14 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+      - "5005:5005"
     environment:
       - LOG_DIR=/data/logs
       - CERTS_DIR=/data/certs
+      - SPRING_PROFILES_ACTIVE=prod
       - CHAT_IMAGES_DIR=/data/chat_images
+      - DEV=false
+      - JWT_SECRET=Qv6rT8zj3Lw2Yx1B9dK4nV7eP5aS0fG6
     volumes:
       - ./server:/app:cached
       - /var/run/docker.sock:/var/run/docker.sock

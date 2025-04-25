@@ -35,10 +35,20 @@ export const OverdueBadgeButton: React.FC<OverdueBadgeButtonProps> = ({ sum, doc
     <Button
       size="small"
       variant="contained"
-      color="error"
       onClick={onClick}
       disabled={loading}
-      sx={{ alignSelf: 'stretch', mt: 0.5, fontWeight: 600, fontSize: '1rem', letterSpacing: 0.5 }}
+      sx={{
+        alignSelf: 'stretch',
+        mt: 0.5,
+        fontWeight: 600,
+        fontSize: '1rem',
+        letterSpacing: 0.5,
+        backgroundColor: '#d32f2f',
+        color: '#fff',
+        '&:hover': {
+          backgroundColor: '#b71c1c',
+        },
+      }}
     >
       Подробнее
     </Button>

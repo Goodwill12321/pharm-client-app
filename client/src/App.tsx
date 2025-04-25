@@ -10,25 +10,28 @@ import InvoiceForm from './pages/InvoiceForm';
 import NewsFeed from './pages/NewsFeed';
 import Layout from './components/Layout';
 import InstallPWAButton from './components/InstallPWAButton';
+import { AddressFilterProvider } from './context/AddressFilterContext';
 
 const App = () => (
-  <BrowserRouter>
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/debts" element={<Debts />} />
-        <Route path="/invoices" element={<Invoices />} />
-        <Route path="/invoices/:id" element={<InvoiceForm />} />
-        <Route path="/certificates" element={<Certificates />} />
-        <Route path="/claims" element={<Claims />} />
-        <Route path="/claims/new" element={<ClaimForm />} />
-        <Route path="/claims/:id" element={<ClaimForm />} />
-        <Route path="/news" element={<NewsFeed />} />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Layout>
-    <InstallPWAButton />
-  </BrowserRouter>
+  <AddressFilterProvider>
+    <BrowserRouter>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/debts" element={<Debts />} />
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/invoices/:id" element={<InvoiceForm />} />
+          <Route path="/certificates" element={<Certificates />} />
+          <Route path="/claims" element={<Claims />} />
+          <Route path="/claims/new" element={<ClaimForm />} />
+          <Route path="/claims/:id" element={<ClaimForm />} />
+          <Route path="/news" element={<NewsFeed />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Layout>
+      <InstallPWAButton />
+    </BrowserRouter>
+  </AddressFilterProvider>
 );
 
 export default App;

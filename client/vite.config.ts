@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  preview: {
+    allowedHosts: ['localhost', '127.0.0.1', 'dockerserver05'],
+  },
   plugins: [
     react(),
     VitePWA({
@@ -39,6 +42,11 @@ export default defineConfig({
     open: false,
     proxy: {
       '/api': {
+        target: 'http://backend:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/auth': {
         target: 'http://backend:8080',
         changeOrigin: true,
         secure: false,

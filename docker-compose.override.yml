@@ -7,3 +7,8 @@ services:
     volumes:
       - ./client/src:/app/src
       - ./client/public:/app/public
+  backend:
+    environment:
+      - DEV=true
+      - SPRING_PROFILES_ACTIVE=dev
+     

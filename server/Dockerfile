@@ -21,4 +21,6 @@ ENV CERTS_DIR=/data/certs
 ENV CHAT_IMAGES_DIR=/data/chat_images
 
 # By default, expect sources to be mounted via volume for hot reload
-CMD ["mvn", "spring-boot:run"]
+
+
+CMD sh -c 'if [ "$DEV" = "true" ]; then mvn spring-boot:run -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"; else mvn spring-boot:run; fi'
