@@ -3,10 +3,9 @@ services:
   frontend:
     environment:
       - FRONT_MODE=dev
-    # For develope with hot reload (vite dev)
+    # Для разработки с hot-reload (vite dev)
     volumes:
-      - ./client/src:/app/src
-      - ./client/public:/app/public
+      - ./client:/app
   backend:
     environment:
       - DEV=true

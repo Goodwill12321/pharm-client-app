@@ -11,14 +11,30 @@ import java.util.List;
 @RequestMapping("/api/invoiceh")
 public class InvoiceHController {
     private final InvoiceHService invoiceHService;
+    private final com.pharma.clientapp.service.ClientContactService clientContactService;
 
-    public InvoiceHController(InvoiceHService invoiceHService) {
+    public InvoiceHController(InvoiceHService invoiceHService, com.pharma.clientapp.service.ClientContactService clientContactService) {
         this.invoiceHService = invoiceHService;
+        this.clientContactService = clientContactService;
     }
+
+
 
     @GetMapping
     public List<InvoiceH> getAllInvoiceH() {
         return invoiceHService.findAll();
+    }
+
+    // Единый эндпоинт: фильтрация по доступным client_uid, возвращает список InvoiceHFilteredDto (DTO только во внутренней структуре)
+    @GetMapping("/filtered")
+    public List<com.pharma.clientapp.dto.InvoiceHFilteredDto> getFilteredInvoiceH(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal com.pharma.clientapp.entity.Contact contact,
+            @RequestParam(value = "clientUids", required = false) List<String> clientUids,
+            @RequestParam(value = "dateFrom", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate dateFrom,
+            @RequestParam(value = "dateTo", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate dateTo
+    ) {
+        String contactUid = contact != null ? contact.getUid() : null;
+        return invoiceHService.findFilteredForContact(contactUid, clientUids, dateFrom, dateTo);
     }
 
     @GetMapping("/{uid}")

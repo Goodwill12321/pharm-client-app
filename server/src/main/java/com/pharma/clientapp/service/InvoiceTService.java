@@ -19,6 +19,16 @@ public class InvoiceTService {
         return invoiceTRepository.findAll();
     }
 
+    public List<InvoiceT> findByUid(String uid) {
+        return invoiceTRepository.findByUid(uid);
+    }
+
+    public java.util.List<com.pharma.clientapp.dto.InvoiceTWithNamesDto> findWithNamesByUid(String uid) {
+        java.util.List<com.pharma.clientapp.dto.InvoiceTWithNamesDto> list = invoiceTRepository.findWithNamesByUid(uid);
+        list.sort(java.util.Comparator.comparing(com.pharma.clientapp.dto.InvoiceTWithNamesDto::getUidLine, java.util.Comparator.nullsLast(String::compareTo)));
+        return list;
+    }
+
     public Optional<InvoiceT> findById(String uidLine) {
         return invoiceTRepository.findById(uidLine);
     }
