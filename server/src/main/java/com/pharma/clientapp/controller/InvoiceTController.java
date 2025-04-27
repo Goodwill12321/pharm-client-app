@@ -21,6 +21,12 @@ public class InvoiceTController {
         return invoiceTService.findAll();
     }
 
+    // Эндпоинт: получить строки по UID документа (шапки) с наименованиями справочников
+    @GetMapping("/by-uid/{uid}")
+    public List<com.pharma.clientapp.dto.InvoiceTWithNamesDto> getInvoiceTByUid(@PathVariable String uid) {
+        return invoiceTService.findWithNamesByUid(uid);
+    }
+
     @GetMapping("/{uidLine}")
     public ResponseEntity<InvoiceT> getInvoiceTById(@PathVariable String uidLine) {
         return invoiceTService.findById(uidLine)

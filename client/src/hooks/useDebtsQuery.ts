@@ -10,7 +10,7 @@ export function useDebts(addressIds?: string[]) {
     queryFn: () => fetchDebtsWithFilter(effectiveAddresses),
     staleTime: 30_000,
     refetchOnWindowFocus: true,
-    refetchInterval: 60_000,
+    refetchInterval: 600_000,
   });
 }
 // Для React Query 5 синтаксис useQuery({ ... }) остался валиден, но можно и так:
