@@ -6,32 +6,14 @@ import { InvoiceHeader, InvoiceLine } from '../types/invoice';
 
 export const API_BASE_URL = '/api';
 
-export async function fetchInvoices(filters: any): Promise<InvoiceHeader[]> {
-  const { search, status, dateFrom, dateTo, clientUids } = filters || {};
-  const params: any = {};
-  if (search) params.search = search;
-  if (status) params.status = status;
-  if (dateFrom) params.dateFrom = dateFrom;
-  if (dateTo) params.dateTo = dateTo;
-  if (clientUids) params.clientUids = clientUids;
-
-  const query = new URLSearchParams(params).toString();
-  const res = await apiFetch(`${API_BASE_URL}/invoiceh/filtered${query ? `?${query}` : ''}`);
-  if (!res.ok) throw new Error('Failed to fetch invoices');
-  return await res.json();
-}
-
-export async function fetchInvoiceLines(uid: string): Promise<InvoiceLine[]> {
-  const res = await apiFetch(`${API_BASE_URL}/invoicet/by-uid/${uid}`);
-  if (!res.ok) throw new Error('Failed to fetch invoice lines');
-  return await res.json();
-}
 
 /**
  * Универсальная функция для fetch-запросов с автоматическим добавлением JWT-токена
  * @param input URL или Request
  * @param init параметры fetch
  */
+let isRefreshing = false; // глобальный флаг для предотвращения зацикливания
+
 export async function apiFetch(input: RequestInfo, init: RequestInit = {}, retry = true): Promise<Response> {
   let url = typeof input === 'string' ? input : input.url;
   // Не добавлять токен для запроса авторизации/refresh
@@ -49,7 +31,7 @@ export async function apiFetch(input: RequestInfo, init: RequestInit = {}, retry
       }
     }
   }
-  let res = await fetch(input, { ...init, credentials: 'include' });
+  let res = await fetch(input, { ...init, credentials: 'include' }); 
   if ((res.status === 401 || res.status === 403) && retry && !url.includes('/auth/login') && !url.includes('/auth/refresh')) {
     // Попробовать обновить access token
     const refreshRes = await fetch('/auth/refresh', { method: 'POST', credentials: 'include' });
@@ -68,8 +50,9 @@ export async function apiFetch(input: RequestInfo, init: RequestInit = {}, retry
     } else {
       // refresh не сработал — разлогиниваем
       localStorage.removeItem('jwt');
-      window.location.reload();
-      throw new Error('Session expired');
+      // Диспатчим глобальное событие logout для реактивного разлогинивания
+      window.dispatchEvent(new Event('logout'));
+      return Promise.reject();
     }
   }
   return res;

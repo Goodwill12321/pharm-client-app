@@ -19,6 +19,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const stored = localStorage.getItem('jwt');
     if (stored) setToken(stored);
+
+    // Подписка на глобальное событие logout
+    const handler = () => logout();
+    window.addEventListener('logout', handler);
+    return () => window.removeEventListener('logout', handler);
   }, []);
 
   const login = async (login: string, password: string) => {
