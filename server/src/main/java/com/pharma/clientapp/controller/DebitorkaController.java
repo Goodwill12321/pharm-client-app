@@ -28,13 +28,13 @@ public class DebitorkaController {
     }
 
     /**
-     * Полная замена всех записей Debitorka по docUid
+     * Замена (upsert) одной записи Debitorka по docUid
      */
     @PutMapping("/replace-by-doc/{docUid}")
-    public List<Debitorka> replaceAllByDocUid(
+    public Debitorka replaceByDocUid(
             @PathVariable String docUid,
-            @RequestBody List<Debitorka> items) {
-        return debitorkaService.replaceAllByDocUid(docUid, items);
+            @RequestBody Debitorka item) {
+        return debitorkaService.replaceByDocUid(docUid, item);
     }
 
     public DebitorkaController(DebitorkaService debitorkaService) {
