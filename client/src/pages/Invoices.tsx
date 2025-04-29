@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, IconButton, TextField, Select, MenuItem, Button, Tooltip, Chip, TableSortLabel } from '@mui/material';
+import { AddressFilter } from '../components/AddressFilter';
+import { useClientsQuery } from '../hooks/useClientsQuery';
+import { useAddressFilter } from '../context/AddressFilterContext';
 import GetAppIcon from '@mui/icons-material/GetApp';
 import PrintIcon from '@mui/icons-material/Print';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -10,6 +13,8 @@ import InvoiceForm from './InvoiceForm';
 import { useInvoicesQuery } from '../hooks/useInvoicesQuery';
 
 const Invoices: React.FC = () => {
+  const { data: clients = [], isLoading: loadingClients, error: errorClients } = useClientsQuery();
+  const { selectedAddresses } = useAddressFilter();
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceHeader | null>(null);
   const [statusFilter, setStatusFilter] = useState('');
   // Значения по умолчанию: последние 7 дней
@@ -35,6 +40,7 @@ const Invoices: React.FC = () => {
     status: statusFilter,
     dateFrom,
     dateTo,
+    addresses: selectedAddresses.length > 0 ? selectedAddresses : undefined,
     // clientUids: ... // если потребуется
   });
 
@@ -47,9 +53,11 @@ const Invoices: React.FC = () => {
   // Фильтрация по номеру и части адреса (филиал или клиент)
   const filteredInvoices = invoices.filter(inv => {
     const docNumMatch = docNumFilter === '' || inv.docNum?.toLowerCase().includes(docNumFilter.toLowerCase());
-    const addressMatch = addressFilter === '' ||
+    const addressMatch = addressFilter === '' || 
       inv.clientName?.toLowerCase().includes(addressFilter.toLowerCase());
-    return docNumMatch && addressMatch;
+    // Если выбран фильтр адресов, оставляем только те, чей clientUid входит в выбранные адреса
+    const addressSelected = selectedAddresses.length === 0 || selectedAddresses.includes(inv.clientUid);
+    return docNumMatch && addressMatch && addressSelected;
   });
 
   // Функция сравнения для сортировки
@@ -91,19 +99,35 @@ const Invoices: React.FC = () => {
     <Box p={2}>
       <Typography variant="h5" mb={1.5} sx={{ fontSize: { xs: '20px', sm: '22px' } }}>Накладные</Typography>
       <Paper sx={{ mb: 2, p: 2 }}>
-        <Box display={{ xs: 'block', sm: 'flex' }} gap={0.5} alignItems="center" mb={1} sx={{ '& .MuiTextField-root, & .MuiSelect-root': { fontSize: { xs: '13px', sm: '19px' }, minHeight: '28px', '& .MuiInputBase-input': { fontSize: { xs: '13px', sm: '19px' }, py: 0.5 } }, '& .MuiInputLabel-root': { fontSize: { xs: '14px', sm: '20px' }, top: '-4px' }, '& .MuiMenuItem-root': { fontSize: { xs: '13px', sm: '19px' }, minHeight: '28px' }, '& .MuiButton-root': { fontSize: { xs: '10px', sm: '13px' }, minHeight: { xs: '24px', sm: '32px' }, px: { xs: 0.6, sm: 1.4 }, py: { xs: 0.2, sm: 0.6 }, '& .MuiButton-startIcon, & .MuiButton-endIcon': { mr: 0.3, '& svg': { fontSize: 18 } } } }}>
-          <TextField label="Номер накладной" value={docNumFilter} onChange={e => setDocNumFilter(e.target.value)} size="small" />
-          <TextField label="Часть адреса/филиала" value={addressFilter} onChange={e => setAddressFilter(e.target.value)} size="small" />
+        <Box display="flex" alignItems="center" flexWrap="wrap" gap={1} mb={2} sx={{ '& .MuiTextField-root, & .MuiSelect-root': { fontSize: { xs: '13px', sm: '19px' }, minHeight: '28px', '& .MuiInputBase-input': { fontSize: { xs: '13px', sm: '19px' }, py: 0.5 } }, '& .MuiInputLabel-root': { fontSize: { xs: '14px', sm: '20px' }, top: '-4px' }, '& .MuiMenuItem-root': { fontSize: { xs: '13px', sm: '19px' }, minHeight: '28px' }, '& .MuiButton-root': { fontSize: { xs: '10px', sm: '13px' }, minHeight: { xs: '24px', sm: '32px' }, px: { xs: 0.6, sm: 1.4 }, py: { xs: 0.2, sm: 0.6 }, '& .MuiButton-startIcon, & .MuiButton-endIcon': { mr: 0.3, '& svg': { fontSize: 18 } } } }}>
+          <AddressFilter addresses={clients.map(c => ({ id: c.id, name: c.name }))} />
+          <TextField
+            label="Поиск по номеру накладной"
+            size="small"
+            value={docNumFilter}
+            onChange={e => setDocNumFilter(e.target.value)}
+            sx={{ minWidth: 200, ml: 0 }}
+          />
+          <TextField
+            label="Поиск по клиенту/адресу"
+            size="small"
+            value={addressFilter}
+            onChange={e => setAddressFilter(e.target.value)}
+            sx={{ minWidth: 200 }}
+          />
           <TextField type="date" label="С" value={dateFrom} onChange={e => setDateFrom(e.target.value)} size="small" InputLabelProps={{ shrink: true }} />
           <TextField type="date" label="По" value={dateTo} onChange={e => setDateTo(e.target.value)} size="small" InputLabelProps={{ shrink: true }} />
           <Select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} displayEmpty size="small" sx={{ fontSize: { xs: '13px', sm: '19px' } }}>
-            <MenuItem value="" sx={{ fontSize: { xs: '13px', sm: '19px' } }}>Все статусы</MenuItem>
-            <MenuItem value="Не подтвержден" sx={{ fontSize: { xs: '13px', sm: '19px' } }}>Не подтвержден</MenuItem>
-            <MenuItem value="Подтвержден" sx={{ fontSize: { xs: '13px', sm: '19px' } }}>Подтвержден</MenuItem>
+            <MenuItem value="">Все статусы</MenuItem>
+            <MenuItem value="Не подтвержден">Не подтвержден</MenuItem>
+            <MenuItem value="Подтвержден">Подтвержден</MenuItem>
+            <MenuItem value="Проведен">Проведен</MenuItem>
+            <MenuItem value="Отменен">Отменен</MenuItem>
           </Select>
           <Button variant="outlined" startIcon={<GetAppIcon />}>Скачать документы</Button>
           <Button variant="outlined">Выгрузить в Excel</Button>
         </Box>
+
         <TableContainer sx={{ overflowX: 'auto' }}>
           <Table size="small">
             <TableHead>

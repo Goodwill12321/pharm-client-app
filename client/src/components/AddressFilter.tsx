@@ -19,90 +19,18 @@ export const AddressFilter: React.FC<AddressFilterProps> = ({ addresses }) => {
   const selectedObjs = addresses.filter(a => selectedAddresses.includes(a.id));
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'nowrap', flexDirection: { xs: 'column', sm: 'row' }, mb: 1, width: 'auto' }}>
-
-
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'nowrap', flexDirection: { xs: 'column', sm: 'row' }, m: 0, mb: 0, mr: 0, ml: 0, px: 0, py: 0, width: 'auto' }}>
       <Autocomplete
         multiple
         size="small"
         options={addresses}
         getOptionLabel={option => option.name}
+        sx={{ p: 0, m: 0, minWidth: 150, width: 'auto', maxWidth: 'none' }}
         value={selectedObjs}
         onChange={(_, value) => setSelectedAddresses(value.map(a => a.id))}
-        renderInput={params => (
-          <TextField
-            {...params}
-            label="Отбор по адресам"
-            variant="outlined"
-            sx={{
-              minWidth: 150,
-              width: '50%',
-              maxWidth: 'none',
-              m: 0,
-              my: 0,
-              p: 0,
-              '.MuiInputBase-root': {
-                minHeight: 36,
-                fontSize: '0.95em',
-                py: 0,
-              },
-              '.MuiInputLabel-root': {
-                fontSize: '0.82em',
-                top: '-2px',
-              },
-              '.MuiOutlinedInput-input': {
-                py: '7px',
-                fontSize: '0.95em',
-              },
-            }}
-            InputProps={{ ...params.InputProps, style: { minHeight: 36, fontSize: '0.95em', padding: 0 } }}
-          />
+        renderInput={(params) => (
+          <TextField {...params} label="Отбор по адресам" placeholder="Адрес" size="small" sx={{ p: 0, m: 0, minWidth: 150, width: 'auto', maxWidth: 'none' }} />
         )}
-        disableCloseOnSelect
-        sx={{
-          minWidth: 480,
-          width: '50%',
-          maxWidth: 'none',
-          bgcolor: 'background.paper',
-          borderRadius: 1,
-          m: 0,
-          my: 0,
-          fontSize: '1.08em',
-          '.MuiChip-root': {
-            height: 28,
-            fontSize: '0.82em',
-            m: '1px',
-            px: 1,
-            py: 0,
-            borderRadius: '8px',
-            maxWidth: 180,
-            whiteSpace: 'nowrap',
-          },
-          '.MuiAutocomplete-tag': {
-            display: 'inline-flex',
-            flexWrap: 'nowrap',
-            maxWidth: '100%',
-            overflowX: 'auto',
-            alignItems: 'center',
-            m: '2px',
-          },
-          '.MuiAutocomplete-inputRoot': {
-            display: 'flex',
-            flexWrap: 'nowrap',
-            overflowX: 'auto',
-            alignItems: 'center',
-          },
-
-          '.MuiAutocomplete-listbox': {
-            fontSize: '0.85em',
-          },
-        }}
-        ListboxProps={{
-          style: {
-            maxHeight: 220,
-            fontSize: '0.85em',
-          },
-        }}
       />
     </Box>
   );
