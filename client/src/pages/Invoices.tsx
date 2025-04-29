@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, IconButton, TextField, Select, MenuItem, Button, Tooltip, Chip } from '@mui/material';
+import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, IconButton, TextField, Select, MenuItem, Button, Tooltip, Chip, TableSortLabel } from '@mui/material';
 import GetAppIcon from '@mui/icons-material/GetApp';
 import PrintIcon from '@mui/icons-material/Print';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -38,6 +38,12 @@ const Invoices: React.FC = () => {
     // clientUids: ... // если потребуется
   });
 
+  // Сортировка
+  type Order = 'asc' | 'desc';
+  type SortField = 'docNum' | 'clientName' | 'docDate' | 'sumSNds' | 'status';
+  const [order, setOrder] = useState<Order>('desc');
+  const [orderBy, setOrderBy] = useState<SortField>('docDate');
+
   // Фильтрация по номеру и части адреса (филиал или клиент)
   const filteredInvoices = invoices.filter(inv => {
     const docNumMatch = docNumFilter === '' || inv.docNum?.toLowerCase().includes(docNumFilter.toLowerCase());
@@ -45,6 +51,41 @@ const Invoices: React.FC = () => {
       inv.clientName?.toLowerCase().includes(addressFilter.toLowerCase());
     return docNumMatch && addressMatch;
   });
+
+  // Функция сравнения для сортировки
+  function getComparator<Key extends keyof any>(order: Order, orderBy: Key) {
+    return (a: { [key in Key]: any }, b: { [key in Key]: any }) => {
+      let aValue = a[orderBy];
+      let bValue = b[orderBy];
+      if (orderBy === 'docDate') {
+        aValue = aValue ? new Date(aValue).getTime() : 0;
+        bValue = bValue ? new Date(bValue).getTime() : 0;
+      }
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        const cmp = aValue.localeCompare(bValue, 'ru', { numeric: true });
+        return order === 'asc' ? cmp : -cmp;
+      }
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return order === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      // Безопасное сравнение по строковому представлению для остальных случаев
+      const aStr = String(aValue);
+      const bStr = String(bValue);
+      const cmp = aStr.localeCompare(bStr, 'ru', { numeric: true });
+      return order === 'asc' ? cmp : -cmp;
+    };
+  }
+
+  const sortedInvoices = [...filteredInvoices].sort(getComparator(order, orderBy));
+
+  const handleSort = (field: SortField) => {
+    if (orderBy === field) {
+      setOrder(order === 'asc' ? 'desc' : 'asc');
+    } else {
+      setOrderBy(field);
+      setOrder(field === 'docDate' ? 'desc' : 'asc'); // По дате по умолчанию по убыванию
+    }
+  };
 
   return (
     <Box p={2}>
@@ -67,13 +108,43 @@ const Invoices: React.FC = () => {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }} padding="checkbox"><Checkbox /></TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>НОМЕР</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>КЛИЕНТ</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>ДАТА</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>СУММА С НДС</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>СТАТУС</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>ДЕЙСТВИЯ</TableCell>
+                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }} padding="checkbox"><Checkbox disabled /></TableCell>
+                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+                  <TableSortLabel
+                    active={orderBy === 'docNum'}
+                    direction={orderBy === 'docNum' ? order : 'asc'}
+                    onClick={() => handleSort('docNum')}
+                  >Номер</TableSortLabel>
+                </TableCell>
+                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>
+                  <TableSortLabel
+                    active={orderBy === 'clientName'}
+                    direction={orderBy === 'clientName' ? order : 'asc'}
+                    onClick={() => handleSort('clientName')}
+                  >Клиент</TableSortLabel>
+                </TableCell>
+                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+                  <TableSortLabel
+                    active={orderBy === 'docDate'}
+                    direction={orderBy === 'docDate' ? order : 'desc'}
+                    onClick={() => handleSort('docDate')}
+                  >Дата</TableSortLabel>
+                </TableCell>
+                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+                  <TableSortLabel
+                    active={orderBy === 'sumSNds'}
+                    direction={orderBy === 'sumSNds' ? order : 'asc'}
+                    onClick={() => handleSort('sumSNds')}
+                  >Сумма с НДС</TableSortLabel>
+                </TableCell>
+                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+                  <TableSortLabel
+                    active={orderBy === 'status'}
+                    direction={orderBy === 'status' ? order : 'asc'}
+                    onClick={() => handleSort('status')}
+                  >Статус</TableSortLabel>
+                </TableCell>
+                 <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>Действия</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -82,7 +153,7 @@ const Invoices: React.FC = () => {
                   <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }} colSpan={6} align="center">Нет данных</TableCell>
                 </TableRow>
               ) : (
-                filteredInvoices.map(inv => (
+                sortedInvoices.map(inv => (
                   <TableRow key={inv?.uid || Math.random()} hover selected={selectedInvoice?.uid === inv?.uid} onClick={() => inv && setSelectedInvoice(inv)} style={{ cursor: 'pointer' }}>
                     <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }} padding="checkbox"><Checkbox disabled={!inv} /></TableCell>
                     <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{inv?.docNum ?? ''}</TableCell>
