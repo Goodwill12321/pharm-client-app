@@ -52,8 +52,6 @@ public class InvoiceH {
     @Column(name = "update_time")
     private LocalDateTime updateTime;
 
-    @Column(name = "delivery_address")
-    private String deliveryAddress;
 
     @Column(name = "is_del")
     private Boolean isDel;
