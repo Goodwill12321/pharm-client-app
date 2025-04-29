@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS clame_t (
 
 -- Таблица client_contact
 CREATE TABLE IF NOT EXISTS client_contact (
-    uid varchar(36) PRIMARY KEY,
+    uid varchar(36) PRIMARY KEY DEFAULT (gen_random_uuid()::text),
     client_uid varchar(36),
     contact_uid varchar(36)
 );

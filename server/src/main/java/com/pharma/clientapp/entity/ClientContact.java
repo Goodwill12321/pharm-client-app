@@ -9,9 +9,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Table(name = "client_contact")
 public class ClientContact {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Schema(hidden = true)
-    private Long id;
+    @Column(name = "uid", length = 36, updatable = false, nullable = false)
+    @GeneratedValue(generator = "uuid2")
+    @org.hibernate.annotations.GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
+    private String uid;
 
     @Column(name = "client_uid", length = 36)
     private String clientUid;
