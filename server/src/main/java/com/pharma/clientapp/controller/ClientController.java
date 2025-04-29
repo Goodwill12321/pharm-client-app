@@ -29,7 +29,11 @@ public class ClientController {
     }
 
     @PostMapping
-    public Client createClient(@RequestBody Client client) {
+    /**
+ * Добавляет нового клиента или обновляет существующего по uid (upsert).
+ * Если uid уже есть в базе — запись обновляется, иначе создается новая.
+ */
+public Client upsertClient(@RequestBody Client client) {
         return clientService.save(client);
     }
 

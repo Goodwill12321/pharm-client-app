@@ -11,10 +11,9 @@ import java.time.LocalDateTime;
 public class InvoiceT {
     @Id
     @Column(name = "uid_line", length = 36)
-    @Schema(hidden = true)
     private String uidLine;
 
-    @Column(name = "uid", length = 36)
+    @Column(length = 36)
     private String uid;
 
     @Column(name = "good_uid", length = 36)

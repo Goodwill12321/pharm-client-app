@@ -29,7 +29,11 @@ public class SeriesController {
     }
 
     @PostMapping
-    public Series createSeries(@RequestBody Series series) {
+    /**
+ * Добавляет новую серию или обновляет существующую по uid (upsert).
+ * Если uid уже есть в базе — запись обновляется, иначе создается новая.
+ */
+public Series upsertSeries(@RequestBody Series series) {
         return seriesService.save(series);
     }
 

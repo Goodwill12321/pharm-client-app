@@ -45,7 +45,11 @@ public class InvoiceHController {
     }
 
     @PostMapping
-    public InvoiceH createInvoiceH(@RequestBody InvoiceH invoiceH) {
+    /**
+ * Добавляет новый InvoiceH или обновляет существующий по uid (upsert).
+ * Если uid уже есть в базе — запись обновляется, иначе создается новая.
+ */
+public InvoiceH upsertInvoiceH(@RequestBody InvoiceH invoiceH) {
         return invoiceHService.save(invoiceH);
     }
 

@@ -29,7 +29,11 @@ public class UlController {
     }
 
     @PostMapping
-    public Ul createUl(@RequestBody Ul ul) {
+    /**
+ * Добавляет новую организацию (Ul) или обновляет существующую по uid (upsert).
+ * Если uid уже есть в базе — запись обновляется, иначе создается новая.
+ */
+public Ul upsertUl(@RequestBody Ul ul) {
         return ulService.save(ul);
     }
 

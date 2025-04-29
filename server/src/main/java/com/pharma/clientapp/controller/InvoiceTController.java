@@ -35,7 +35,11 @@ public class InvoiceTController {
     }
 
     @PostMapping
-    public InvoiceT createInvoiceT(@RequestBody InvoiceT invoiceT) {
+    /**
+ * Добавляет новую строку InvoiceT или обновляет существующую по uidLine (upsert).
+ * Если uidLine уже есть в базе — запись обновляется, иначе создается новая.
+ */
+public InvoiceT upsertInvoiceT(@RequestBody InvoiceT invoiceT) {
         return invoiceTService.save(invoiceT);
     }
 

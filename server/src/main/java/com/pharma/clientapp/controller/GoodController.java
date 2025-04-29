@@ -26,8 +26,12 @@ public class GoodController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Добавляет новый товар или обновляет существующий по uid (upsert).
+     * Если uid уже есть в базе — запись обновляется, иначе создается новая.
+     */
     @PostMapping
-    public Good createGoods(@RequestBody Good good) {
+    public Good upsertGood(@RequestBody Good good) {
         return goodService.save(good);
     }
 

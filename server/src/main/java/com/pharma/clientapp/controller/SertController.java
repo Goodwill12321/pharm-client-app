@@ -29,7 +29,11 @@ public class SertController {
     }
 
     @PostMapping
-    public Sert createSert(@RequestBody Sert sert) {
+    /**
+ * Добавляет новый сертификат (Sert) или обновляет существующий по uid (upsert).
+ * Если uid уже есть в базе — запись обновляется, иначе создается новая.
+ */
+public Sert upsertSert(@RequestBody Sert sert) {
         return sertService.save(sert);
     }
 

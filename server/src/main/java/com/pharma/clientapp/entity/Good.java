@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 public class Good {
     @Id
     @Column(length = 36)
-    @Schema(hidden = true)
     private String uid;
 
     @Column(length = 500)

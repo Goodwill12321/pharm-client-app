@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class Client {
     @Id
     @Column(length = 36)
-    @Schema(hidden = true)
     private String uid;
 
     @Column(length = 20)

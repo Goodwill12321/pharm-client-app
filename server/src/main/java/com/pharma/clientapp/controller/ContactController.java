@@ -29,7 +29,11 @@ public class ContactController {
     }
 
     @PostMapping
-    public Contact createContact(@RequestBody Contact contact) {
+    /**
+ * Добавляет новый контакт или обновляет существующий по uid (upsert).
+ * Если uid уже есть в базе — запись обновляется, иначе создается новая.
+ */
+public Contact upsertContact(@RequestBody Contact contact) {
         return contactService.save(contact);
     }
 

@@ -29,7 +29,11 @@ public class StaffController {
     }
 
     @PostMapping
-    public Staff createStaff(@RequestBody Staff staff) {
+    /**
+ * Добавляет нового сотрудника или обновляет существующего по uid (upsert).
+ * Если uid уже есть в базе — запись обновляется, иначе создается новая.
+ */
+public Staff upsertStaff(@RequestBody Staff staff) {
         return staffService.save(staff);
     }
 

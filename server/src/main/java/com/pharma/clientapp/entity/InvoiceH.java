@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 public class InvoiceH {
     @Id
     @Column(length = 36)
-    @Schema(hidden = true)
     private String uid;
 
     @Column(name = "type_uid", length = 36)
