@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.time.LocalDate;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DebitorkaService {
@@ -18,6 +19,7 @@ public class DebitorkaService {
      * @param items новый список
      * @return сохранённые записи
      */
+    @Transactional
     public List<Debitorka> replaceAllByUlUid(String ulUid, List<Debitorka> items) {
         debitorkaRepository.deleteAllByUlUid(ulUid);
         for (Debitorka item : items) {

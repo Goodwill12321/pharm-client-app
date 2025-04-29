@@ -3,6 +3,8 @@ package com.pharma.clientapp.service;
 import com.pharma.clientapp.entity.InvoiceT;
 import com.pharma.clientapp.repository.InvoiceTRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +15,7 @@ public class InvoiceTService {
      * Полная замена всех строк накладной по uid (шапки).
      * Старые строки удаляются, новые сохраняются.
      */
+    @Transactional
     public List<InvoiceT> replaceInvoiceLines(String uid, List<InvoiceT> lines) {
         invoiceTRepository.deleteAllByUid(uid);
         for (InvoiceT line : lines) {

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ClientManagerService {
@@ -16,6 +17,7 @@ public class ClientManagerService {
      * @param managers новый список
      * @return сохранённые записи
      */
+    @Transactional
     public List<ClientManager> replaceAllByClientUid(String clientUid, List<ClientManager> managers) {
         clientManagerRepository.deleteAllByClientUid(clientUid);
         for (ClientManager manager : managers) {

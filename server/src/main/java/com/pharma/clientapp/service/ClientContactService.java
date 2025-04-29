@@ -7,6 +7,7 @@ import com.pharma.clientapp.dto.ClientAddressDto;
 import com.pharma.clientapp.repository.ClientRepository;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ClientContactService {
@@ -17,6 +18,7 @@ public class ClientContactService {
      * @param contacts новый список
      * @return сохранённые записи
      */
+    @Transactional
     public List<ClientContact> replaceAllByContactUid(String contactUid, List<ClientContact> contacts) {
         clientContactRepository.deleteAllByContactUid(contactUid);
         for (ClientContact contact : contacts) {
