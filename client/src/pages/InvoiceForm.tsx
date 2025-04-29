@@ -77,10 +77,8 @@ const InvoiceForm: React.FC<Props> = ({ invoice }) => {
           <TableBody>
             {filteredLines.map(line => (
               <TableRow key={line.uidLine}>
-                <TableCell sx={{ fontSize: { xs: '1сделай 4px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.goodUid}</TableCell>
                 <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.goodName}</TableCell>
                 <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}><Checkbox checked={!!line.isMarked} disabled /></TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.seriesUid}</TableCell>
                 <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.seriesName}</TableCell>
                 <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{formatDate(line.dateExpBefore)}</TableCell>
                 <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{formatDate(line.dateProduction)}</TableCell>
