@@ -10,6 +10,24 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/invoicet")
 public class InvoiceTController {
+
+    /**
+     * Полная замена всех строк накладной (InvoiceT) по uid (шапки).
+     * <p>
+     * Если строки ранее отсутствовали, происходит первая загрузка. Если были — все старые строки удаляются,
+     * и uid будет содержать только переданный набор.
+     * <p>
+     * Используйте этот метод для синхронизации или массовой загрузки строк накладной.
+     *
+     * @param uid UID шапки накладной
+     * @param lines Новый набор строк
+     * @return Список сохранённых строк
+     */
+    @PostMapping("/replace-lines/{uid}")
+    public List<InvoiceT> replaceInvoiceLines(@PathVariable String uid, @RequestBody List<InvoiceT> lines) {
+        return invoiceTService.replaceInvoiceLines(uid, lines);
+    }
+
     private final InvoiceTService invoiceTService;
 
     public InvoiceTController(InvoiceTService invoiceTService) {

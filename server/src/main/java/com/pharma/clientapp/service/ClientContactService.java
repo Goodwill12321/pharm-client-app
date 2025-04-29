@@ -10,6 +10,21 @@ import java.util.Optional;
 
 @Service
 public class ClientContactService {
+    /**
+     * Полная замена всех записей ClientContact по contactUid.
+     * Старые записи удаляются, новые полностью сохраняются.
+     * @param contactUid contactUid для замещения
+     * @param contacts новый список
+     * @return сохранённые записи
+     */
+    public List<ClientContact> replaceAllByContactUid(String contactUid, List<ClientContact> contacts) {
+        clientContactRepository.deleteAllByContactUid(contactUid);
+        for (ClientContact contact : contacts) {
+            contact.setContactUid(contactUid);
+        }
+        return clientContactRepository.saveAll(contacts);
+    }
+
     private final ClientContactRepository clientContactRepository;
     private final ClientRepository clientRepository;
 

@@ -9,6 +9,21 @@ import java.util.Optional;
 
 @Service
 public class ClientManagerService {
+    /**
+     * Полная замена всех записей ClientManager по clientUid.
+     * Старые записи удаляются, новые полностью сохраняются.
+     * @param clientUid clientUid для замещения
+     * @param managers новый список
+     * @return сохранённые записи
+     */
+    public List<ClientManager> replaceAllByClientUid(String clientUid, List<ClientManager> managers) {
+        clientManagerRepository.deleteAllByClientUid(clientUid);
+        for (ClientManager manager : managers) {
+            manager.setClientUid(clientUid);
+        }
+        return clientManagerRepository.saveAll(managers);
+    }
+
     private final ClientManagerRepository clientManagerRepository;
 
     public ClientManagerService(ClientManagerRepository clientManagerRepository) {

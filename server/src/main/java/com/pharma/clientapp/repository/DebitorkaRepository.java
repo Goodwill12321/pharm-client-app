@@ -11,6 +11,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface DebitorkaRepository extends JpaRepository<Debitorka, Long> {
+    void deleteAllByUlUid(String ulUid);
+
     List<Debitorka> findByPayDateBefore(LocalDate date);
 
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(*) FROM Debitorka d WHERE d.payDate < :today")

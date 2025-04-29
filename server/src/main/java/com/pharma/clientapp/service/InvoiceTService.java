@@ -9,6 +9,18 @@ import java.util.Optional;
 
 @Service
 public class InvoiceTService {
+    /**
+     * Полная замена всех строк накладной по uid (шапки).
+     * Старые строки удаляются, новые сохраняются.
+     */
+    public List<InvoiceT> replaceInvoiceLines(String uid, List<InvoiceT> lines) {
+        invoiceTRepository.deleteAllByUid(uid);
+        for (InvoiceT line : lines) {
+            line.setUid(uid);
+        }
+        return invoiceTRepository.saveAll(lines);
+    }
+
     private final InvoiceTRepository invoiceTRepository;
 
     public InvoiceTService(InvoiceTRepository invoiceTRepository) {

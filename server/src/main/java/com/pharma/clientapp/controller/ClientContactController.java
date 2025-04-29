@@ -48,4 +48,17 @@ public class ClientContactController {
         String contactUid = contact != null ? contact.getUid() : null;
         return clientContactService.getAvailableAddresses(contactUid);
     }
+
+    /**
+     * Полная замена всех записей ClientContact по contactUid.
+     * @param contactUid UID контакта
+     * @param contacts Новый список ClientContact
+     * @return сохранённые записи
+     */
+    @PutMapping("/replace/{contactUid}")
+    public List<ClientContact> replaceAllByContactUid(
+            @PathVariable String contactUid,
+            @RequestBody List<ClientContact> contacts) {
+        return clientContactService.replaceAllByContactUid(contactUid, contacts);
+    }
 }

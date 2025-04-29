@@ -38,4 +38,17 @@ public class ClientManagerController {
         clientManagerService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Полная замена всех записей ClientManager по clientUid.
+     * @param clientUid UID клиента
+     * @param managers Новый список ClientManager
+     * @return сохранённые записи
+     */
+    @PutMapping("/replace/{clientUid}")
+    public List<ClientManager> replaceAllByClientUid(
+            @PathVariable String clientUid,
+            @RequestBody List<ClientManager> managers) {
+        return clientManagerService.replaceAllByClientUid(clientUid, managers);
+    }
 }

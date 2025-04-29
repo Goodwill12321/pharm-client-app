@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface InvoiceTRepository extends JpaRepository<InvoiceT, String> {
+    void deleteAllByUid(String uid);
     @Query("""
     SELECT new com.pharma.clientapp.dto.InvoiceTWithNamesDto(
         t.uidLine, t.uid, g.uid, g.name, g.mark, s.uid, s.name, s.dateExpBefore, s.dateProduction,

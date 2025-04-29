@@ -70,4 +70,17 @@ public class DebitorkaController {
         debitorkaService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Полная замена всех записей Debitorka по ulUid.
+     * @param ulUid UID организации
+     * @param items Новый список Debitorka
+     * @return сохранённые записи
+     */
+    @PutMapping("/replace/{ulUid}")
+    public List<Debitorka> replaceAllByUlUid(
+            @PathVariable String ulUid,
+            @RequestBody List<Debitorka> items) {
+        return debitorkaService.replaceAllByUlUid(ulUid, items);
+    }
 }

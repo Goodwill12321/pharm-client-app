@@ -11,6 +11,21 @@ import java.time.LocalDate;
 
 @Service
 public class DebitorkaService {
+    /**
+     * Полная замена всех записей Debitorka по ulUid.
+     * Старые записи удаляются, новые полностью сохраняются.
+     * @param ulUid ulUid для замещения
+     * @param items новый список
+     * @return сохранённые записи
+     */
+    public List<Debitorka> replaceAllByUlUid(String ulUid, List<Debitorka> items) {
+        debitorkaRepository.deleteAllByUlUid(ulUid);
+        for (Debitorka item : items) {
+            item.setUlUid(ulUid);
+        }
+        return debitorkaRepository.saveAll(items);
+    }
+
     private final DebitorkaRepository debitorkaRepository;
 
     public DebitorkaService(DebitorkaRepository debitorkaRepository) {
