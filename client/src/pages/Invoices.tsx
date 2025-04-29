@@ -40,7 +40,7 @@ const Invoices: React.FC = () => {
 
   // Сортировка
   type Order = 'asc' | 'desc';
-  type SortField = 'docNum' | 'clientName' | 'docDate' | 'sumSNds' | 'status';
+  type SortField = 'docNum' | 'clientName' | 'deliveryAddress' | 'docDate' | 'sumSNds' | 'status';
   const [order, setOrder] = useState<Order>('desc');
   const [orderBy, setOrderBy] = useState<SortField>('docDate');
 

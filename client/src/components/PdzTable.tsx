@@ -56,7 +56,7 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
 
   const filtered = useMemo(() => {
     return data.filter(row => {
-      const address = row.deliveryAddress || row.clientName || '';
+      const address = row.address || row.clientName || '';
       return (
         String(row.docUid ?? '').toLowerCase().includes(docFilter.toLowerCase()) &&
         address.toLowerCase().includes(ulFilter.toLowerCase())
