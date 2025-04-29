@@ -30,6 +30,29 @@ public class DebitorkaService {
 
     private final DebitorkaRepository debitorkaRepository;
 
+    /**
+     * Полная замена всех записей Debitorka по docUid.
+     * Старые записи удаляются, новые полностью сохраняются.
+     * @param docUid docUid для замещения
+     * @param items новый список
+     * @return сохранённые записи
+     */
+    @Transactional
+    public List<Debitorka> replaceAllByDocUid(String docUid, List<Debitorka> items) {
+        debitorkaRepository.deleteAllByDocUid(docUid);
+        for (Debitorka item : items) {
+            item.setDocUid(docUid);
+        }
+        return debitorkaRepository.saveAll(items);
+    }
+
+    /**
+     * Получить все задолженности по docUid
+     */
+    public List<Debitorka> findByDocUid(String docUid) {
+        return debitorkaRepository.findByDocUid(docUid);
+    }
+
     public DebitorkaService(DebitorkaRepository debitorkaRepository) {
         this.debitorkaRepository = debitorkaRepository;
 }

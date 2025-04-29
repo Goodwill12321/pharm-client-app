@@ -19,6 +19,24 @@ public class DebitorkaController {
     private final DebitorkaService debitorkaService;
     private static final Logger logger = LoggerFactory.getLogger(DebitorkaController.class);
 
+    /**
+     * Получить все задолженности по docUid
+     */
+    @GetMapping("/by-doc/{docUid}")
+    public List<Debitorka> getDebitorkaByDocUid(@PathVariable String docUid) {
+        return debitorkaService.findByDocUid(docUid);
+    }
+
+    /**
+     * Полная замена всех записей Debitorka по docUid
+     */
+    @PutMapping("/replace-by-doc/{docUid}")
+    public List<Debitorka> replaceAllByDocUid(
+            @PathVariable String docUid,
+            @RequestBody List<Debitorka> items) {
+        return debitorkaService.replaceAllByDocUid(docUid, items);
+    }
+
     public DebitorkaController(DebitorkaService debitorkaService) {
         this.debitorkaService = debitorkaService;
     }

@@ -11,6 +11,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface DebitorkaRepository extends JpaRepository<Debitorka, Long> {
+    // Новый метод для поиска по docUid
+    List<Debitorka> findByDocUid(String docUid);
+
+    // Новый метод для удаления по docUid
+    void deleteAllByDocUid(String docUid);
+
     void deleteAllByUlUid(String ulUid);
 
     List<Debitorka> findByPayDateBefore(LocalDate date);
