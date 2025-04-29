@@ -123,6 +123,13 @@ const Invoices: React.FC = () => {
                     onClick={() => handleSort('clientName')}
                   >Клиент</TableSortLabel>
                 </TableCell>
+                <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>
+                  <TableSortLabel
+                    active={orderBy === 'deliveryAddress'}
+                    direction={orderBy === 'deliveryAddress' ? order : 'asc'}
+                    onClick={() => handleSort('deliveryAddress')}
+                  >Адрес доставки</TableSortLabel>
+                </TableCell>
                 <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
                   <TableSortLabel
                     active={orderBy === 'docDate'}
@@ -157,7 +164,8 @@ const Invoices: React.FC = () => {
                   <TableRow key={inv?.uid || Math.random()} hover selected={selectedInvoice?.uid === inv?.uid} onClick={() => inv && setSelectedInvoice(inv)} style={{ cursor: 'pointer' }}>
                     <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }} padding="checkbox"><Checkbox disabled={!inv} /></TableCell>
                     <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{inv?.docNum ?? ''}</TableCell>
-                    <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>{inv?.clientName ?? ''}</TableCell>
+                    <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>{inv?.clientName}</TableCell>
+                    <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>{inv?.deliveryAddress ?? ''}</TableCell>
                     <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{inv?.docDate ? new Date(inv.docDate).toLocaleDateString('ru-RU') : ''}</TableCell>
                     <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{typeof inv?.sumSNds === 'number' ? inv.sumSNds.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' }) : ''}</TableCell>
                     <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>

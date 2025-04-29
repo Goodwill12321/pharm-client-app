@@ -14,7 +14,7 @@ export type Debitorka = {
   sumPaid: number;
   sumDolg: number;
   docNum?: string; // номер документа
-  deliveryAddress?: string; // адрес доставки
+  address?: string; // адрес доставки
   clientName?: string; // название клиента
 };
 
@@ -24,7 +24,7 @@ interface PdzTableProps {
 
 type Order = 'asc' | 'desc';
 
-type SortField = 'docUid' | 'otsrochkaDay' | 'payDate' | 'ostatokDay' | 'prosrochkaDay' | 'sumDoc' | 'sumPaid' | 'ulUid' | 'docNum' | 'deliveryAddress';
+type SortField = 'docUid' | 'otsrochkaDay' | 'payDate' | 'ostatokDay' | 'prosrochkaDay' | 'sumDoc' | 'sumPaid' | 'ulUid' | 'docNum' | 'address' | 'clientName';
 
 const columns: { key: SortField; label: string }[] = [
   { key: 'docNum', label: 'Документ (номер + дата)' },
@@ -34,7 +34,8 @@ const columns: { key: SortField; label: string }[] = [
   { key: 'prosrochkaDay', label: 'Дней просрочки' },
   { key: 'sumDoc', label: 'Сумма' },
   { key: 'sumPaid', label: 'Оплачено' },
-  { key: 'deliveryAddress', label: 'Адрес доставки' },
+  { key: 'clientName', label: 'Клиент' },
+  { key: 'address', label: 'Адрес доставки' },
 ];
 
 export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
@@ -157,7 +158,10 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
 >{row.sumPaid.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}</TableCell>
                 <TableCell
   sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}
->{row.deliveryAddress || row.clientName || row.ulUid}</TableCell>
+>{row.clientName ?? ''}</TableCell>
+                <TableCell
+  sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}
+>{row.address ?? ''}</TableCell>
               </TableRow>
             ))}
           </TableBody>

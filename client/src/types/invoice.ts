@@ -9,6 +9,7 @@ export interface InvoiceHeader {
   sumSNds: number;
   clientUid: string;
   clientName: string;
+  deliveryAddress: string;
   status: string;
   comment: string;
   statusBuh: string;

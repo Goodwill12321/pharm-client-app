@@ -17,7 +17,7 @@ public class Debitorka {
     @Column(name = "doc_uid", length = 36)
     private String docUid;
 
-    @Column(name = "ul_uid", length = 36)
+    @Column(name = "", length = 36)
     private String ulUid;
 
     @Column(name = "Otsrochka_Day")

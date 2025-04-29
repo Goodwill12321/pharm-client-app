@@ -12,7 +12,7 @@ public interface InvoiceHRepository extends JpaRepository<InvoiceH, String> {
     @Query("""
     SELECT new com.pharma.clientapp.dto.InvoiceHFilteredDto(
         h.uid, h.typeUid, h.docNum, h.docDate, h.ndsSum, h.sumNoNds, h.sumSNds,
-        h.clientUid, c.name, h.status, h.comment, h.statusBuh, h.filial, h.createTime, h.updateTime, h.isDel
+        h.clientUid, c.name, h.status, h.comment, h.statusBuh, h.filial, h.createTime, h.updateTime, h.isDel, c.deliveryAddress
     )
     FROM InvoiceH h
     LEFT JOIN Client c ON h.clientUid = c.uid
