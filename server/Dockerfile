@@ -4,9 +4,9 @@ FROM openjdk:17-jdk-slim
 ENV APP_HOME=/app
 WORKDIR $APP_HOME
 
-# Install Maven
+# Install Maven and curl for healthcheck
 RUN apt-get update \
-    && apt-get install -y maven \
+    && apt-get install -y maven curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Create directories for logs, certificates, and chat images
