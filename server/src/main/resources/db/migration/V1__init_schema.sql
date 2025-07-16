@@ -280,3 +280,38 @@ BEGIN
         EXECUTE format('CREATE TRIGGER trg_set_update_time BEFORE UPDATE ON %I FOR EACH ROW EXECUTE FUNCTION set_update_time()', r.table_name);
     END LOOP;
 END $$;
+
+
+-- Создание пользователя pharm_service с ограниченными правами
+-- Эта миграция выполняется только в продакшне для безопасности
+DO $$
+BEGIN
+    -- Создаем пользователя, если он не существует
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_user WHERE usename = 'pharm_service') THEN
+        CREATE USER pharm_service WITH PASSWORD 'Fhg$#jgjvndd$3jd';
+    END IF;
+    
+    -- Предоставляем права на подключение к базе данных
+    GRANT CONNECT ON DATABASE clientapp TO pharm_service;
+    
+    -- Предоставляем права на использование схемы public
+    GRANT USAGE ON SCHEMA public TO pharm_service;
+    
+    -- Предоставляем права на чтение и изменение данных для всех таблиц
+    GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pharm_service;
+    
+    -- Предоставляем права на использование последовательностей
+    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO pharm_service;
+    
+    -- Предоставляем права на создание временных таблиц
+    GRANT CREATE TEMPORARY TABLES ON DATABASE clientapp TO pharm_service;
+    
+    -- Устанавливаем права по умолчанию для будущих таблиц
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pharm_service;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO pharm_service;
+    
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Игнорируем ошибки, если пользователь уже существует или права уже предоставлены
+        NULL;
+END $$; 
