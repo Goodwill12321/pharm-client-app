@@ -1,0 +1,1 @@
+ssh root@51.89.157.175 "cd /home/projects/pharm-app/pharm-client-app;  docker compose restart backend" 
