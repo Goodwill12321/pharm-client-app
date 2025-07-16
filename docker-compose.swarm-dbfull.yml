@@ -1,0 +1,93 @@
+version: '3.8'
+
+# Swarm окружение с полным доступом к БД
+# ВНИМАНИЕ: Использует пользователя postgres с полными правами на изменение структуры БД
+services:
+  frontend:
+    extends:
+      file: docker-compose.base.yml
+      service: frontend
+    image: pharmopt-frontend:latest
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - FRONT_MODE=prod
+    volumes: []  # Убираем локальные volumes для swarm
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      placement:
+        constraints:
+          - node.role == worker
+
+  backend:
+    extends:
+      file: docker-compose.base.yml
+      service: backend
+    image: pharmopt-backend:latest
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod-dbfull
+    volumes:
+      - pharmopt_logs:/data/logs
+      - pharmopt_certs:/data/certs
+      - pharmopt_chat_images:/data/chat_images
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      placement:
+        constraints:
+          - node.role == worker
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  db:
+    extends:
+      file: docker-compose.base.yml
+      service: db
+    volumes:
+      - pharmopt_postgres:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+volumes:
+  pharmopt_postgres:
+    driver: local
+  pharmopt_logs:
+    driver: local
+  pharmopt_certs:
+    driver: local
+  pharmopt_chat_images:
+    driver: local
+
+networks:
+  default:
+    driver: overlay
+    attachable: true 

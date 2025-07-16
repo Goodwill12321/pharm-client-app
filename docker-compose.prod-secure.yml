@@ -1,0 +1,20 @@
+version: '3.8'
+
+# Secure версия prod - наследуем от prod-dbfull и переопределяем только профиль
+services:
+  frontend:
+    extends:
+      file: docker-compose.prod-dbfull.yml
+      service: frontend
+
+  backend:
+    extends:
+      file: docker-compose.prod-dbfull.yml
+      service: backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod-secure
+
+  db:
+    extends:
+      file: docker-compose.prod-dbfull.yml
+      service: db 
