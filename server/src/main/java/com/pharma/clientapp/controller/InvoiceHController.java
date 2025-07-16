@@ -11,11 +11,11 @@ import java.util.List;
 @RequestMapping("/api/invoiceh")
 public class InvoiceHController {
     private final InvoiceHService invoiceHService;
-    private final com.pharma.clientapp.service.ClientContactService clientContactService;
+    //private final com.pharma.clientapp.service.ClientContactService clientContactService;
 
     public InvoiceHController(InvoiceHService invoiceHService, com.pharma.clientapp.service.ClientContactService clientContactService) {
         this.invoiceHService = invoiceHService;
-        this.clientContactService = clientContactService;
+        //this.clientContactService = clientContactService;
     }
 
 

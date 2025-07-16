@@ -1,7 +1,9 @@
-package com.pharma.clientapp.spy;
+package com.pharma.clientapp.logging;
 
-import com.p6spy.engine.spy.appender.StdoutLogger;
+//import com.p6spy.engine.spy.appender.StdoutLogger;
+import com.p6spy.engine.spy.appender.Slf4JLogger;
 
+/*
 public class CustomFilterLogger extends StdoutLogger {
     // Добавьте сюда любые ключевые слова для фильтрации
     private static final String[] KEYWORDS = {"debitorka"}; // Можно расширить список
@@ -36,4 +38,9 @@ public class CustomFilterLogger extends StdoutLogger {
             super.logText(text);
         }
     }
+}
+*/
+
+public class CustomFilterLogger extends Slf4JLogger {
+    // Можно добавить фильтрацию, если нужно, но теперь всё идёт в логгер p6spy
 }
