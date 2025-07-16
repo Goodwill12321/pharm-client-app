@@ -19,7 +19,7 @@ services:
       file: docker-compose.base.yml
       service: backend
     environment:
-      - SPRING_PROFILES_ACTIVE=dev-dbfull
+      - SPRING_PROFILES_ACTIVE=dev,dbfull
       - DEV=true
       - JWT_SECRET=Qv6rT8zj3Lw2Yx1B9dK4nV7eP5aS0fG6
 

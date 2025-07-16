@@ -12,7 +12,7 @@ services:
       file: docker-compose.prod-dbfull.yml
       service: backend
     environment:
-      - SPRING_PROFILES_ACTIVE=prod-secure
+      - SPRING_PROFILES_ACTIVE=prod,secure
 
   db:
     extends:
