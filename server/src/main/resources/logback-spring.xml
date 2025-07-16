@@ -1,44 +1,104 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-    <springProfile name="prod">
-        <property name="LOG_DIR" value="${LOG_DIR:-./logs}"/>
-        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder>
-                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-            </encoder>
-        </appender>
-        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>${LOG_DIR}/app-prod.log</file>
-            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                <fileNamePattern>${LOG_DIR}/app-prod.%d{EEE}.log</fileNamePattern>
-                <maxHistory>7</maxHistory>
-            </rollingPolicy>
-            <encoder>
-                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-            </encoder>
-        </appender>
-        <root level="INFO">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="FILE"/>
-        </root>
-        <logger name="org.springframework" level="INFO"/>
-        <logger name="org.hibernate.SQL" level="OFF"/>
-        <logger name="org.hibernate.type.descriptor.sql" level="OFF"/>
-        <logger name="org.hibernate.engine.internal.StatisticalLoggingSessionEventListener" level="WARN"/>
-    </springProfile>
+<configuration scan="true" scanPeriod="30 seconds">
+    <property name="LOG_DIR" value="${LOG_DIR:-./logs}"/>
+    
+    <!-- Кастомный конвертер для цветов -->
+    <conversionRule conversionWord="levelColor" 
+                    converterClass="com.pharma.clientapp.logging.LevelColorConverter"/>
 
-    <springProfile name="dev,default">
-        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder>
-                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-            </encoder>
-        </appender>
-        <root level="INFO">
-            <appender-ref ref="CONSOLE"/>
-        </root>
-        <logger name="org.springframework" level="INFO"/>
-        <logger name="org.hibernate.SQL" level="OFF"/>
-        <logger name="org.hibernate.type.descriptor.sql" level="OFF"/>
-        <logger name="org.hibernate.engine.internal.StatisticalLoggingSessionEventListener" level="WARN"/>
-    </springProfile>
+    <!-- Консоль только для ошибок -->
+    <!-- Удаляем CONSOLE_ERROR, чтобы не было дублирования -->
+
+    <!-- Обычный консольный appender для всех сообщений (stdout) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %levelColor %logger{36} - %msg%n%ex</pattern>
+        </encoder>
+        <target>System.out</target>
+    </appender>
+
+    <!-- Короткий консольный appender только для ошибок (без stacktrace) -->
+    <appender name="CONSOLE_ERROR_SHORT" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%red(%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n)</pattern>
+        </encoder>
+        <target>System.err</target>
+    </appender>
+
+    <!-- Appender для HTTP ошибок и исключений -->
+    <appender name="CONSOLE_EXCEPTIONS" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%red(%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n%ex)</pattern>
+        </encoder>
+        <target>System.err</target>
+    </appender>
+
+    <!-- Файл для HTTP-запросов -->
+    <appender name="HTTP_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/http.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/http.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Файл для SQL/Postgres -->
+    <appender name="SQL_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/sql.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/sql.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Файл для общих ошибок -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/error.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n%ex</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Логгер для HTTP (использовать в фильтре RequestLoggingFilter) -->
+    <logger name="com.pharma.clientapp.http" level="INFO" additivity="false">
+        <appender-ref ref="HTTP_FILE"/>
+    </logger>
+
+    <!-- Логгер для SQL (p6spy) -->
+    <logger name="p6spy" level="INFO" additivity="false">
+        <appender-ref ref="SQL_FILE"/>
+    </logger>
+
+    <!-- Логгер для всех ошибок приложения -->
+    <logger name="com.pharma.clientapp.errors" level="ERROR" additivity="false">
+        <appender-ref ref="ERROR_FILE"/>
+        <appender-ref ref="CONSOLE_EXCEPTIONS"/>
+    </logger>
+
+    <!-- Логгер для системных ошибок (до контроллеров) -->
+    <logger name="org.apache.coyote" level="WARN" additivity="false">
+        <appender-ref ref="CONSOLE_EXCEPTIONS"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </logger>
+
+    <!-- Уровень логгера для Spring -->
+    <logger name="org.springframework" level="INFO"/>
+
+    <!-- Корневой логгер -->
+    <root>
+        <appender-ref ref="CONSOLE"/>
+    </root>
 </configuration>
