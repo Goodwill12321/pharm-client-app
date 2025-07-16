@@ -1,0 +1,22 @@
+version: '3.8'
+
+# Prod окружение с полным доступом к БД
+# ВНИМАНИЕ: Использует пользователя postgres с полными правами на изменение структуры БД
+services:
+  frontend:
+    extends:
+      file: docker-compose.base.yml
+      service: frontend
+
+  backend:
+    extends:
+      file: docker-compose.base.yml
+      service: backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod-dbfull
+      - DEV=false
+
+  db:
+    extends:
+      file: docker-compose.base.yml
+      service: db 

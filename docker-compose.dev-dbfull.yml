@@ -1,0 +1,29 @@
+version: '3.8'
+
+# Dev окружение с полным доступом к БД - включает hot reload и отладку
+# ВНИМАНИЕ: Использует пользователя postgres с полными правами на изменение структуры БД
+services:
+  frontend:
+    extends:
+      file: docker-compose.base.yml
+      service: frontend
+    environment:
+      - FRONT_MODE=dev
+    # For development with hot reload (vite dev)
+    volumes:
+      - ./client/src:/app/src
+      - ./client/public:/app/public
+
+  backend:
+    extends:
+      file: docker-compose.base.yml
+      service: backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev-dbfull
+      - DEV=true
+      - JWT_SECRET=Qv6rT8zj3Lw2Yx1B9dK4nV7eP5aS0fG6
+
+  db:
+    extends:
+      file: docker-compose.base.yml
+      service: db   

@@ -1,0 +1,20 @@
+version: '3.8'
+
+# Secure версия dev - наследуем от dev-dbfull и переопределяем только профиль
+services:
+  frontend:
+    extends:
+      file: docker-compose.dev-dbfull.yml
+      service: frontend
+
+  backend:
+    extends:
+      file: docker-compose.dev-dbfull.yml
+      service: backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev,secure
+
+  db:
+    extends:
+      file: docker-compose.dev-dbfull.yml
+      service: db 

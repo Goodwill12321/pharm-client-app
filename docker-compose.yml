@@ -1,73 +1,35 @@
 version: '3.8'
+
+# Основной файл с переключением окружений через переменную ENV
+# 
+# БЕЗОПАСНЫЕ ОКРУЖЕНИЯ (рекомендуемые для обычной работы):
+# - ENV=dev-secure (по умолчанию) - разработка с ограниченными правами
+# - ENV=prod-secure - продакшн с ограниченными правами
+# - ENV=swarm-secure - продакшн в swarm режиме с ограниченными правами
+#
+# ОКРУЖЕНИЯ С ПОЛНЫМ ДОСТУПОМ К БД (только для миграций):
+# - ENV=dev-dbfull - разработка с полными правами (только для миграций!)
+# - ENV=prod-dbfull - продакшн с полными правами (только для миграций!)
+# - ENV=swarm-dbfull - продакшн в swarm режиме с полными правами (только для миграций!)
+
+# Примеры использования:
+# docker-compose up -d                    # dev-secure (по умолчанию)
+# ENV=prod-secure docker-compose up -d   # prod-secure
+# ENV=dev-dbfull docker-compose up -d    # dev-dbfull (только для миграций!)
+# ENV=prod-dbfull docker-compose up -d   # prod-dbfull (только для миграций!)
+
 services:
   frontend:
-    container_name: clientapp-frontend
-    build:
-      context: ./client
-      dockerfile: client.Dockerfile
-    
-
-      #- /c/work/projects/Java/Work/Pharm-App/pharm-client-app/client/wait-for-it.sh:/wait-for-it.sh:ro
-    ports:
-      - "5173:5173"
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-    depends_on:
-      backend:
-        condition: service_healthy
-    
+    extends:
+      file: docker-compose.${ENV:-dev-secure}.yml
+      service: frontend
 
   backend:
-    container_name: clientapp-backend
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-      - "5005:5005"
-    environment:
-      - LOG_DIR=/data/logs
-      - CERTS_DIR=/data/certs
-      - SPRING_PROFILES_ACTIVE=prod
-      - CHAT_IMAGES_DIR=/data/chat_images
-      - DEV=false
-      - JWT_SECRET=Qv6rT8zj3Lw2Yx1B9dK4nV7eP5aS0fG6
-    volumes:
-      - ./server:/app:cached
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ~/.m2:/root/.m2
-      - ./server/data/logs:/data/logs
-      - ./server/data/certs:/data/certs
-      - ./server/data/chat_images:/data/chat_images
-      - ./server/src/main/resources/application.properties:/app/src/main/resources/application.properties:ro
-    depends_on:
-      - db
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-    restart: unless-stopped
-   
+    extends:
+      file: docker-compose.${ENV:-dev-secure}.yml
+      service: backend
 
   db:
-    image: postgres:15
-    container_name: clientapp-db
-    environment:
-      POSTGRES_DB: clientapp
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./server/data/postgres:/var/lib/postgresql/data
-    restart: unless-stopped
-    
-
-
-# docker-compose up frontend
-# docker-compose up backend
-# docker-compose up db
-# docker-compose restart frontend
-# docker-compose stop backend
+    extends:
+      file: docker-compose.${ENV:-dev-secure}.yml
+      service: db 

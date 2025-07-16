@@ -1,0 +1,62 @@
+version: '3.8'
+services:
+  frontend:
+    container_name: pharmopt-pa-frontend
+    build:
+      context: ./client
+      dockerfile: client.Dockerfile
+    ports:
+      - "80:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+      #backend:
+      #  condition: service_healthy
+
+  backend:
+    container_name: pharmopt-pa-backend
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+      - "5005:5005"
+    environment:
+      - LOG_DIR=./logs
+      - CERTS_DIR=/data/certs
+      - CHAT_IMAGES_DIR=/data/chat_images
+      - DEV=false
+      - JWT_SECRET=Qv6rT8zj3Lw2Yx1B9dK4nV7eP5aS0fG6
+    volumes:
+      - ./server:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.m2:/root/.m2
+      - ./server/logs:/app/logs
+      - ./server/data/certs:/data/certs
+      - ./server/data/chat_images:/data/chat_images
+      #- ./server/src/main/resources/application.properties:/app/src/main/resources/application.properties:ro
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 900s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    container_name: pharmopt-pa-db
+    environment:
+      POSTGRES_DB: clientapp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: QuA5DKd48LUf
+    ports:
+      - "5333:5432"
+    volumes:
+      - ./server/data/postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+    deploy:
+      replicas: 1 
