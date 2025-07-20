@@ -1,12 +1,10 @@
 package com.pharma.clientapp.logging;
 
-//import com.p6spy.engine.spy.appender.StdoutLogger;
 import com.p6spy.engine.spy.appender.Slf4JLogger;
 
-/*
-public class CustomFilterLogger extends StdoutLogger {
+public class CustomFilterLogger extends Slf4JLogger {
     // Добавьте сюда любые ключевые слова для фильтрации
-    private static final String[] KEYWORDS = {"debitorka"}; // Можно расширить список
+    private static final String[] KEYWORDS = {"debitorka", "insert", "update", "delete"}; // Можно расширить список
 
     @Override
     public void logText(String text) {
@@ -33,14 +31,9 @@ public class CustomFilterLogger extends StdoutLogger {
             }
         }
 
-        // Логировать если (долгий пользовательский) или (совпадает по ключу)
+        // Логировать если (долгий запрос >= 500ms) или (совпадает по ключу)
         if ((execTime >= 500) || matchesKeyword) {
             super.logText(text);
         }
     }
-}
-*/
-
-public class CustomFilterLogger extends Slf4JLogger {
-    // Можно добавить фильтрацию, если нужно, но теперь всё идёт в логгер p6spy
 }
