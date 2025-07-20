@@ -43,6 +43,10 @@ public class ClientContactService {
         return clientContactRepository.findById(id);
     }
 
+    public Optional<ClientContact> findByClientUidAndContactUid(String clientUid, String contactUid) {
+        return clientContactRepository.findByClientUidAndContactUid(clientUid, contactUid);
+    }
+
     public ClientContact save(ClientContact clientContact) {
         return clientContactRepository.save(clientContact);
     }
