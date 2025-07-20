@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.pharma.clientapp.entity.Contact;
+import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/client-contacts")
@@ -32,8 +34,25 @@ public class ClientContactController {
     }
 
     @PostMapping
-    public ClientContact createClientContact(@RequestBody ClientContact clientContact) {
-        return clientContactService.save(clientContact);
+    public ResponseEntity<?> create(@RequestBody ClientContact dto) {
+        Optional<ClientContact> existing = clientContactService.findByClientUidAndContactUid(dto.getClientUid(), dto.getContactUid());
+        if (existing.isPresent()) {
+            // Возвращаем OK и id существующей записи в JSON формате
+            return ResponseEntity.ok(Map.of("uid", existing.get().getUid()));
+        }
+        ClientContact saved = clientContactService.save(dto);
+        return ResponseEntity.status(201).body(Map.of("uid", saved.getUid()));
+    }
+
+    // Новый эндпойнт для поиска id по паре clientUid и contactUid
+    @GetMapping("/find")
+    public ResponseEntity<?> findId(@RequestParam String clientUid, @RequestParam String contactUid) {
+        Optional<ClientContact> existing = clientContactService.findByClientUidAndContactUid(clientUid, contactUid);
+        if (existing.isPresent()) {
+            return ResponseEntity.ok(Map.of("uid", existing.get().getUid()));
+        } else {
+            return ResponseEntity.noContent().build();
+        }
     }
 
     @DeleteMapping("/{id}")
