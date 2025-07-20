@@ -22,10 +22,10 @@ public class Contact {
     @Column(length = 30)
     private String password;
 
-    @Column(name = "debitorka")
+    @Column(name = "debitorka", insertable = false, updatable = true)
     private Boolean debitorka;
 
-    @Column(name = "claims")
+    @Column(name = "claims", insertable = false, updatable = true)
     private Boolean claims;
 
     @Column(length = 200)
@@ -43,11 +43,11 @@ public class Contact {
     @Column(length = 20)
     private String salt;
 
-    @Column(name = "create_time")
+    @Column(name = "create_time", insertable = false, updatable = false)
     @Schema(hidden = true)
     private LocalDateTime createTime;
 
-    @Column(name = "update_time")
+    @Column(name = "update_time", insertable = false, updatable = false)
     @Schema(hidden = true)
     private LocalDateTime updateTime;
 

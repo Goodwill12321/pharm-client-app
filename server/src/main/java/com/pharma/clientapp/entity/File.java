@@ -8,7 +8,9 @@ import lombok.Data;
 @Table(name = "files")
 public class File {
     @Id
-    @Column(length = 36, insertable = false, updatable = false)
+    @GeneratedValue(generator = "uuid2")
+    @org.hibernate.annotations.GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
+    @Column(length = 36, updatable = false, nullable = false)
     private String uid;
 
     @Column(length = 200)

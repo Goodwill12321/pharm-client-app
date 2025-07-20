@@ -46,10 +46,10 @@ public class InvoiceH {
     @Column(name = "filial", length = 36)
     private String filial;
 
-    @Column(name = "create_time")
+    @Column(name = "create_time", insertable = false, updatable = false)
     private LocalDateTime createTime;
 
-    @Column(name = "update_time")
+    @Column(name = "update_time", insertable = false, updatable = false)
     private LocalDateTime updateTime;
 
 

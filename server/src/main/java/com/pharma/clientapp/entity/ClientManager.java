@@ -22,6 +22,6 @@ public class ClientManager {
     @Column(name = "goods_type_uid", length = 36)
     private String goodsTypeUid;
 
-    @Column(name = "is_main")
+    @Column(name = "is_main", insertable = false, updatable = true)
     private Boolean isMain;
 }

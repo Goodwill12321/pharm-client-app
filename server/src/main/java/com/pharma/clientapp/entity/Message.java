@@ -10,7 +10,9 @@ import java.time.LocalDateTime;
 @Table(name = "messages")
 public class Message {
     @Id
-    @Column(length = 36, insertable = false, updatable = false)
+    @GeneratedValue(generator = "uuid2")
+    @org.hibernate.annotations.GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
+    @Column(length = 36, updatable = false, nullable = false)
     private String uid;
 
     @Column(name = "object_uid", length = 36)

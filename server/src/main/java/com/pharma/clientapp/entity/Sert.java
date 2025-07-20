@@ -19,14 +19,14 @@ public class Sert {
     @Column(name = "sertno", length = 50)
     private String sertNo;
 
-    @Column(name = "image_loaded")
+    @Column(name = "image_loaded", insertable = false, updatable = true)
     private Boolean imageLoaded;
 
-    @Column(name = "create_time")
+    @Column(name = "create_time", insertable = false, updatable = false)
     @Schema(hidden = true)
     private LocalDateTime createTime;
 
-    @Column(name = "update_time")
+    @Column(name = "update_time", insertable = false, updatable = false)
     @Schema(hidden = true)
     private LocalDateTime updateTime;
 

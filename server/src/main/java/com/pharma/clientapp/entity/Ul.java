@@ -31,14 +31,14 @@ public class Ul {
     @Column(length = 1000)
     private String status;
 
-    @Column(name = "constraint_flag")
+    @Column(name = "constraint_flag", insertable = false, updatable = true)
     private Boolean constraintFlag;
 
-    @Column(name = "create_time")
+    @Column(name = "create_time", insertable = false, updatable = false)
     @Schema(hidden = true)
     private LocalDateTime createTime;
 
-    @Column(name = "update_time")
+    @Column(name = "update_time", insertable = false, updatable = false)
     @Schema(hidden = true)
     private LocalDateTime updateTime;
 

@@ -26,10 +26,10 @@ public class Good {
     @Column(length = 150)
     private String country;
 
-    @Column(name = "gv")
+    @Column(name = "gv", insertable = false, updatable = true)
     private Boolean gv;
 
-    @Column(name = "mark")
+    @Column(name = "mark", insertable = false, updatable = true)
     private Boolean mark;
 
     @Column(name = "mark_type", length = 50)
@@ -41,11 +41,11 @@ public class Good {
     @Column(name = "temperature_mode", length = 30)
     private String temperatureMode;
 
-    @Column(name = "create_time")
+    @Column(name = "create_time", insertable = false, updatable = false)
     @Schema(hidden = true)
     private LocalDateTime createTime;
 
-    @Column(name = "update_time")
+    @Column(name = "update_time", insertable = false, updatable = false)
     @Schema(hidden = true)
     private LocalDateTime updateTime;
 
