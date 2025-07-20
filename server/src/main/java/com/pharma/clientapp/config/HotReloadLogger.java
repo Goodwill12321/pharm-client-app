@@ -1,6 +1,9 @@
 package com.pharma.clientapp.config;
 
 import com.pharma.clientapp.logging.HotReloadEventLog;
+
+//import io.micrometer.common.lang.NonNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -8,6 +11,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.lang.NonNull;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,7 +29,7 @@ public class HotReloadLogger implements ApplicationListener<ApplicationReadyEven
     private Environment env;
     
     @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
+    public void onApplicationEvent(@NonNull ApplicationReadyEvent event) {
         // Проверяем, активен ли dev-профиль (любой dev*)
         boolean isDev = Arrays.stream(env.getActiveProfiles()).anyMatch(p -> p.startsWith("dev"));
         if (!isDev) {
