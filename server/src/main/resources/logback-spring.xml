@@ -12,7 +12,7 @@
     <!-- Обычный консольный appender для всех сообщений (stdout) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %levelColor %logger{36} - %msg%n%ex</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %levelColor %logger{36} - %msg%n</pattern>
         </encoder>
         <target>System.out</target>
     </appender>
@@ -31,7 +31,7 @@
     <!-- Appender для HTTP ошибок и исключений -->
     <appender name="CONSOLE_EXCEPTIONS" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%red(%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n%ex)</pattern>
+            <pattern>%red(%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n)</pattern>
         </encoder>
         <target>System.err</target>
     </appender>
@@ -48,11 +48,23 @@
         </encoder>
     </appender>
 
-    <!-- Файл для SQL/Postgres -->
+    <!-- Файл для SQL/Postgres (p6spy) -->
     <appender name="SQL_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_DIR}/sql.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_DIR}/sql.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Файл для Hibernate SQL -->
+    <appender name="HIBERNATE_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/hibernate.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/hibernate.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>7</maxHistory>
         </rollingPolicy>
         <encoder>
@@ -82,10 +94,20 @@
         <appender-ref ref="SQL_FILE"/>
     </logger>
 
+    <!-- Логгер для Hibernate SQL -->
+    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+        <appender-ref ref="HIBERNATE_FILE"/>
+    </logger>
+
+    <!-- Логгер для Hibernate параметров -->
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" additivity="false">
+        <appender-ref ref="HIBERNATE_FILE"/>
+    </logger>
+
     <!-- Логгер для всех ошибок приложения -->
     <logger name="com.pharma.clientapp.errors" level="ERROR" additivity="false">
         <appender-ref ref="ERROR_FILE"/>
-        <appender-ref ref="CONSOLE_EXCEPTIONS"/>
+        <appender-ref ref="CONSOLE_ERROR_SHORT"/>
     </logger>
 
     <!-- Логгер для системных ошибок (до контроллеров) -->

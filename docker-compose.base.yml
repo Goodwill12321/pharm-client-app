@@ -28,6 +28,7 @@ services:
       - CHAT_IMAGES_DIR=/data/chat_images
       - DEV=false
       - JWT_SECRET=Qv6rT8zj3Lw2Yx1B9dK4nV7eP5aS0fG6
+      - TZ=Europe/Moscow
     volumes:
       - ./server:/app
       - /var/run/docker.sock:/var/run/docker.sock
@@ -45,6 +46,7 @@ services:
       retries: 10
       start_period: 120s
     restart: unless-stopped
+    #restart: no
 
   db:
     image: postgres:15
@@ -53,6 +55,7 @@ services:
       POSTGRES_DB: clientapp
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: QuA5DKd48LUf
+      TZ: Europe/Moscow
     ports:
       - "5333:5432"
     volumes:
