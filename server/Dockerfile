@@ -13,7 +13,7 @@ RUN apt-get update \
 RUN mkdir -p /data/logs /data/certs /data/chat_images
 
 # Expose port
-EXPOSE 8383
+EXPOSE 8080
 
 # Default log, certs, and chat images location as environment variables
 ENV LOG_DIR=/data/logs
