@@ -28,4 +28,12 @@ public class GoodService {
     public void deleteById(String uid) {
         goodRepository.deleteById(uid);
     }
+
+    /**
+     * Сохраняет список товаров (batch insert/update).
+     * Если uid уже есть в базе — запись обновляется, иначе создается новая.
+     */
+    public List<Good> saveAll(List<Good> goods) {
+        return goodRepository.saveAll(goods);
+    }
 }

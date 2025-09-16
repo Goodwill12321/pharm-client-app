@@ -35,6 +35,15 @@ public class GoodController {
         return goodService.save(good);
     }
 
+    /**
+     * Добавляет несколько товаров или обновляет существующие по uid (batch upsert).
+     * Если uid уже есть в базе — запись обновляется, иначе создается новая.
+     */
+    @PostMapping("/add_batch")
+    public List<Good> upsertGoodsBatch(@RequestBody List<Good> goods) {
+        return goodService.saveAll(goods);
+    }
+
     @DeleteMapping("/{uid}")
     public ResponseEntity<Void> deleteGoods(@PathVariable String uid) {
         goodService.deleteById(uid);

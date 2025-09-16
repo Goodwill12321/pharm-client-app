@@ -27,6 +27,10 @@ public class SeriesService {
         return seriesRepository.save(series);
     }
 
+    public List<Series> saveAll(List<Series> series) {
+        return seriesRepository.saveAll(series);
+    }
+
     public void deleteById(String uid) {
         seriesRepository.deleteById(uid);
     }

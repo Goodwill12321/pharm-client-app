@@ -28,6 +28,11 @@ public class SeriesController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PostMapping("/add_batch")
+    public List<Series> upsertSeriesBatch(@RequestBody List<Series> series) {
+        return seriesService.saveAll(series);
+    }
+
     @PostMapping
     /**
  * Добавляет новую серию или обновляет существующую по uid (upsert).
