@@ -304,7 +304,7 @@ BEGIN
     GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO pharm_service;
     
     -- Предоставляем права на создание временных таблиц
-    GRANT CREATE TEMPORARY TABLES ON DATABASE clientapp TO pharm_service;
+    GRANT TEMPORARY ON DATABASE clientapp TO pharm_service;
     
     -- Устанавливаем права по умолчанию для будущих таблиц
     ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pharm_service;
