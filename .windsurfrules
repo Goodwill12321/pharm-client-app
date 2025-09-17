@@ -11,5 +11,5 @@
 Мой проект запускается в Docker либо на удаленном сервере (remote debug attach)
 Там 3 контейнера: backend (называется pharmopt-pa-backend), frontend (называется pharmopt-pa-frontend) и db (называется pharmopt-pa-db)
 У них настроены volume для проброса исходного кода, логов и др. файлов. В режиме DEV настроен hot-reload в Spring и в Vite.
-
+Для сборки используется maven
 
