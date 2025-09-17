@@ -37,6 +37,8 @@ services:
       - ./server/data/certs:/data/certs
       - ./server/data/chat_images:/data/chat_images
       #- ./server/src/main/resources/application.properties:/app/src/main/resources/application.properties:ro
+    mem_limit: 1200m
+    
     depends_on:
       - db
     healthcheck:
