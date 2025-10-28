@@ -59,7 +59,7 @@ services:
       POSTGRES_PASSWORD: QuA5DKd48LUf
       TZ: Europe/Moscow
     ports:
-      - "5333:5432"
+      - "127.0.0.1:5333:5432"
     volumes:
       - ./server/data/postgres:/var/lib/postgresql/data
     restart: unless-stopped
