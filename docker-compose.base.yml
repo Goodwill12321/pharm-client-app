@@ -42,7 +42,7 @@ services:
     depends_on:
       - db
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:9080/actuator/health"]
       interval: 900s
       timeout: 10s
       retries: 10
