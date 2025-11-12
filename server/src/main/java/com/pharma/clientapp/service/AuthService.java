@@ -1,6 +1,7 @@
 package com.pharma.clientapp.service;
 
 import com.pharma.clientapp.entity.Contact;
+import com.pharma.clientapp.exception.AuthenticationException;
 import com.pharma.clientapp.repository.ContactRepository;
 import com.pharma.clientapp.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,11 +32,13 @@ public class AuthService {
     public AuthTokens authenticateWithRefresh(String login, String password) {
         Contact contact = contactRepository.findAll().stream()
                 .filter(c -> login.equals(c.getLogin()))
-                .findFirst().orElse(null);
-        if (contact == null) throw new RuntimeException("Пользователь не найден");
+                .findFirst()
+                .orElseThrow(() -> new AuthenticationException("Пользователь не найден"));
+                
         if (!BCrypt.checkpw(password, contact.getPassword())) {
-            throw new RuntimeException("Неверный пароль");
+            throw new AuthenticationException("Неверный пароль");
         }
+        
         String accessToken = jwtUtil.generateToken(contact.getUid());
         String refreshToken = jwtUtil.generateRefreshToken(contact.getUid());
         return new AuthTokens(accessToken, refreshToken);

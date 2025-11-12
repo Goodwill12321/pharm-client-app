@@ -4,6 +4,7 @@ import com.pharma.clientapp.dto.LoginRequest;
 import com.pharma.clientapp.dto.JwtResponse;
 import com.pharma.clientapp.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,11 +33,11 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<JwtResponse> refresh(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
         if (refreshToken == null) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         String newAccessToken = authService.refreshAccessToken(refreshToken);
         if (newAccessToken == null) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok(new JwtResponse(newAccessToken));
     }

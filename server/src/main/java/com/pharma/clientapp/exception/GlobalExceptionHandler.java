@@ -1,4 +1,6 @@
-package com.pharma.clientapp.config;
+package com.pharma.clientapp.exception;
+
+//import com.pharma.clientapp.exception.AuthenticationException;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.slf4j.Logger;
@@ -14,6 +16,7 @@ import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Collections;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -56,6 +59,14 @@ public class GlobalExceptionHandler {
         );
         body.put("fieldErrors", fieldErrors);
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
+        log.warn("Ошибка аутентификации: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Collections.singletonMap("error", ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

@@ -12,4 +12,6 @@
 Там 3 контейнера: backend (называется pharmopt-pa-backend), frontend (называется pharmopt-pa-frontend) и db (называется pharmopt-pa-db)
 У них настроены volume для проброса исходного кода, логов и др. файлов. В режиме DEV настроен hot-reload в Spring и в Vite.
 Для сборки используется maven
+Логи хранятся на удаленном сервере в папке /logs, с локальной машины они не доступны, для поиска ошибок нужно использовать 
+mcp debug, читая текущие переменные через watch, stacktrace (call stack)
 
