@@ -1,7 +1,5 @@
 package com.pharma.clientapp.exception;
 
-//import com.pharma.clientapp.exception.AuthenticationException;
-
 import org.springframework.dao.DataIntegrityViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import com.pharma.clientapp.context.RequestContext;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
@@ -22,33 +21,54 @@ import java.util.Collections;
 public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger("com.pharma.clientapp.errors");
     
+    private String getClientIp() {
+        return RequestContext.getCurrentIp();
+    }
+
+    private String getCurrentLogin() {
+        return RequestContext.getCurrentUser() != null ? 
+               RequestContext.getCurrentUser() : "unauthenticated";
+    }
+
     @ExceptionHandler(EntityNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<Object> handleEntityNotFound(EntityNotFoundException ex) {
-        log.error("Сущность не найдена: {} - {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);
+        String ip = getClientIp();
+        String login = getCurrentLogin();
+        log.error("Сущность не найдена: {} - {} | IP: {} | User: {}", 
+            ex.getClass().getSimpleName(), ex.getMessage(), ip, login, ex);
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<Object> handleIllegalArgument(IllegalArgumentException ex) {
-        log.error("Некорректный аргумент: {} - {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);
+        String ip = getClientIp();
+        String login = getCurrentLogin();
+        log.error("Некорректный аргумент: {} - {} | IP: {} | User: {}", 
+            ex.getClass().getSimpleName(), ex.getMessage(), ip, login, ex);
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ResponseEntity<Object> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        String ip = getClientIp();
+        String login = getCurrentLogin();
         Throwable rootCause = ex.getRootCause();
         String message = "Data integrity violation: " + (rootCause != null ? rootCause.getMessage() : ex.getMessage());
-        log.error("Нарушение целостности данных: {} - {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);
+        log.error("Нарушение целостности данных: {} - {} | IP: {} | User: {}", 
+            ex.getClass().getSimpleName(), ex.getMessage(), ip, login, ex);
         return buildResponse(HttpStatus.CONFLICT, message);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<Object> handleValidation(MethodArgumentNotValidException ex) {
-        log.error("Ошибка валидации: {} - {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);
+        String ip = getClientIp();
+        String login = getCurrentLogin();
+        log.error("Ошибка валидации: {} - {} | IP: {} | User: {}", 
+            ex.getClass().getSimpleName(), ex.getMessage(), ip, login, ex);
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.BAD_REQUEST.value());
@@ -64,7 +84,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
-        log.warn("Ошибка аутентификации: {}", ex.getMessage());
+        String ip = getClientIp();
+        String login = getCurrentLogin();
+        log.warn("Ошибка аутентификации: {} | IP: {} | User: {}", 
+            ex.getMessage(), ip, login);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Collections.singletonMap("error", ex.getMessage()));
     }
@@ -72,7 +95,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<Object> handleAllOther(Exception ex) {
-        log.error("Глобальная ошибка: {} - {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);
+        String ip = getClientIp();
+        String login = getCurrentLogin();
+        log.error("Глобальная ошибка: {} - {} | IP: {} | User: {}", 
+            ex.getClass().getSimpleName(), ex.getMessage(), ip, login, ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Cookie;
+import com.pharma.clientapp.context.RequestContext;
 
 
 @RestController
@@ -21,6 +22,9 @@ public class AuthController {
     public ResponseEntity<JwtResponse> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
         // Предполагаем, что authenticate теперь возвращает объект с access и refresh
         var tokens = authService.authenticateWithRefresh(loginRequest.getLogin(), loginRequest.getPassword());
+        // Устанавливаем пользователя в контекст запроса
+        RequestContext.setCurrentUser(loginRequest.getLogin());
+        
         // refresh token кладём в HttpOnly cookie
         Cookie refreshCookie = new Cookie("refreshToken", tokens.getRefreshToken());
         refreshCookie.setHttpOnly(true);
