@@ -20,10 +20,10 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
-        // Предполагаем, что authenticate теперь возвращает объект с access и refresh
-        var tokens = authService.authenticateWithRefresh(loginRequest.getLogin(), loginRequest.getPassword());
         // Устанавливаем пользователя в контекст запроса
         RequestContext.setCurrentUser(loginRequest.getLogin());
+        // Предполагаем, что authenticate теперь возвращает объект с access и refresh
+        var tokens = authService.authenticateWithRefresh(loginRequest.getLogin(), loginRequest.getPassword());
         
         // refresh token кладём в HttpOnly cookie
         Cookie refreshCookie = new Cookie("refreshToken", tokens.getRefreshToken());

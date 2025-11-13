@@ -86,7 +86,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
         String ip = getClientIp();
         String login = getCurrentLogin();
-        log.warn("Ошибка аутентификации: {} | IP: {} | User: {}", 
+        log.error("Ошибка аутентификации: {} | IP: {} | User: {}", 
             ex.getMessage(), ip, login);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Collections.singletonMap("error", ex.getMessage()));
