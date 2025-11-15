@@ -5,7 +5,7 @@ INSERT INTO contact (
     gen_random_uuid()::text,
     '1C Exchange',
     'exchange_1c',
-    '$2a$12$SYYBfYqnaRy9XN9A4.tXmuYsmTxC8J.jXP222XZ7Z03C2tmfHlTJ.',
+    '$2a$12$MuQG70K3jqyFV3vpLUOx2uE0WNMyDvR3ds7ROtLeMInsCTkdAfhym',
     false, false, '1C Exchange', '', '', '', '', NOW(), NOW(), false
 )
 ON CONFLICT (login) DO NOTHING; 

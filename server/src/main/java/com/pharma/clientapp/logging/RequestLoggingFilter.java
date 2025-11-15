@@ -11,6 +11,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
+import com.pharma.clientapp.context.RequestContext;
 
 @Component
 public class RequestLoggingFilter extends OncePerRequestFilter {
@@ -24,12 +26,13 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } finally {
             long duration = System.currentTimeMillis() - start;
-            httpLogger.info("{} {} [{}] from {} ({} ms)",
-                    request.getMethod(),
-                    request.getRequestURI(),
-                    response.getStatus(),
-                    request.getRemoteAddr(),
-                    duration
+            httpLogger.info("{} {} [{}] from {} user={} ({} ms)",
+                request.getMethod(),
+                request.getRequestURI(),
+                response.getStatus(),
+                request.getRemoteAddr(),
+                Optional.ofNullable(RequestContext.getCurrentUser()).orElse("unauthenticated"),
+                duration
             );
         }
     }

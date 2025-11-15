@@ -12,7 +12,7 @@
     <!-- Обычный консольный appender для всех сообщений (stdout) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %levelColor %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %levelColor [user=%X{user:-?} ip=%X{ip:-?}] %logger{36} - %msg%n</pattern>
         </encoder>
         <target>System.out</target>
     </appender>
@@ -23,15 +23,17 @@
             <level>ERROR</level>
         </filter>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%red(%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n)</pattern>
+            <!-- Только краткое сообщение, без stacktrace -->
+            <pattern>%red(%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [user=%X{user:-?} ip=%X{ip:-?}] %logger{36} - %msg%n)</pattern>
         </encoder>
         <target>System.err</target>
     </appender>
 
-    <!-- Appender для HTTP ошибок и исключений -->
+    <!-- Appender для HTTP ошибок и исключений: выводит stacktrace -->
     <appender name="CONSOLE_EXCEPTIONS" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%red(%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n)</pattern>
+            <!-- Заголовок красным, затем полный stacktrace -->
+            <pattern>%red(%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [user=%X{user:-?} ip=%X{ip:-?}] %logger{36} - %msg%n)%ex</pattern>
         </encoder>
         <target>System.err</target>
     </appender>
@@ -44,7 +46,8 @@
             <maxHistory>7</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <!-- user/ip берутся из MDC, дефолт ? если нет -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [user=%X{user:-?} ip=%X{ip:-?}] %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -56,7 +59,7 @@
             <maxHistory>7</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [user=%X{user:-?} ip=%X{ip:-?}] %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -68,7 +71,7 @@
             <maxHistory>7</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [user=%X{user:-?} ip=%X{ip:-?}] %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -79,7 +82,7 @@
             <maxHistory>7</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [user=%X{user:-?} ip=%X{ip:-?}] %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -91,7 +94,7 @@
             <maxHistory>7</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n%ex</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [user=%X{user:-?} ip=%X{ip:-?}] %msg%n%ex</pattern>
         </encoder>
     </appender>
 
@@ -107,6 +110,11 @@
     <!-- Логгер для SQL (p6spy) -->
     <logger name="p6spy" level="INFO" additivity="false">
         <appender-ref ref="SQL_FILE"/>
+    </logger>
+
+    <!-- Общий логгер для Hibernate: только в файл, без консоли -->
+    <logger name="org.hibernate" level="INFO" additivity="false">
+        <appender-ref ref="HIBERNATE_FILE"/>
     </logger>
 
     <!-- Логгер для Hibernate SQL -->
