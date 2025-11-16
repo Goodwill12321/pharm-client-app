@@ -2,8 +2,8 @@
 
 # Настройки
 REMOTE_USER=root
-REMOTE_HOST=51.89.157.175
-REMOTE_PATH=/home/projects/pharm-app/pharm-client-app/
+REMOTE_HOST=alterserv.ru
+REMOTE_PATH=/home/projects/pharm-client-app/
 
 # Синхронизация (исключаем лишнее)
 rsync -avz --delete \
