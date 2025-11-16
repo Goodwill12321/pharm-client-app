@@ -43,7 +43,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         contact, null, Collections.emptyList());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
+                
+                // 🔹 здесь добавляем связывание с RequestContext и MDC
+                String login = contact.getLogin();
+                //String ip = request.getRemoteAddr();
+                String ip = com.pharma.clientapp.util.IpUtils.getClientIp(request);
+                
+                com.pharma.clientapp.context.RequestContext.setCurrentUser(login);
+                com.pharma.clientapp.context.RequestContext.setCurrentIp(ip);
+               
+             }
         }
         filterChain.doFilter(request, response);
     }

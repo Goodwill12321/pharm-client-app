@@ -1,6 +1,8 @@
 package com.pharma.clientapp.filter;
 
 import com.pharma.clientapp.context.RequestContext;
+import com.pharma.clientapp.util.IpUtils;
+
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.annotation.Order;
@@ -17,7 +19,7 @@ public class CustomRequestContextFilter implements Filter {
             throws IOException, ServletException {
         try {
             // Устанавливаем IP-адрес клиента
-            String ip = getClientIp((HttpServletRequest) request);
+            String ip = IpUtils.getClientIp((HttpServletRequest) request);
             RequestContext.setCurrentIp(ip);
             
             // Здесь можно добавить извлечение пользователя из токена, если нужно
@@ -31,17 +33,5 @@ public class CustomRequestContextFilter implements Filter {
         }
     }
 
-    private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        return ip;
-    }
+    
 }

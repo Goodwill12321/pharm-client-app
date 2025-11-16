@@ -5,6 +5,7 @@ public class RequestContext {
     private static final ThreadLocal<String> currentIp = new ThreadLocal<>();
 
     public static void setCurrentUser(String username) {
+        org.slf4j.MDC.put("user", username);
         currentUser.set(username);
     }
 
@@ -13,6 +14,7 @@ public class RequestContext {
     }
 
     public static void setCurrentIp(String ip) {
+        org.slf4j.MDC.put("ip", ip);
         currentIp.set(ip);
     }
 

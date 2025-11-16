@@ -27,7 +27,7 @@ public class MdcRequestContextFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String ip = Optional.ofNullable(RequestContext.getCurrentIp())
-                .orElse(request.getRemoteAddr());
+                .orElse(com.pharma.clientapp.util.IpUtils.getClientIp(request));
 
         String user = Optional.ofNullable(RequestContext.getCurrentUser())
                 .orElse("unauthenticated");
