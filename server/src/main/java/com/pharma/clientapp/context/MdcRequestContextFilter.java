@@ -1,6 +1,5 @@
-package com.pharma.clientapp.logging;
+package com.pharma.clientapp.context;
 
-import com.pharma.clientapp.context.RequestContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

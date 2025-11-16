@@ -1,6 +1,7 @@
 package com.pharma.clientapp.controller;
 
 import com.pharma.clientapp.dto.LoginRequest;
+import com.pharma.clientapp.context.RequestContext;
 import com.pharma.clientapp.dto.JwtResponse;
 import com.pharma.clientapp.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Cookie;
-import com.pharma.clientapp.context.RequestContext;
 
 
 @RestController

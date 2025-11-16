@@ -48,7 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String login = contact.getLogin();
                 //String ip = request.getRemoteAddr();
                 String ip = com.pharma.clientapp.util.IpUtils.getClientIp(request);
-                
+
                 com.pharma.clientapp.context.RequestContext.setCurrentUser(login);
                 com.pharma.clientapp.context.RequestContext.setCurrentIp(ip);
                

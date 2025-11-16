@@ -1,6 +1,5 @@
-package com.pharma.clientapp.filter;
+package com.pharma.clientapp.context;
 
-import com.pharma.clientapp.context.RequestContext;
 import com.pharma.clientapp.util.IpUtils;
 
 import jakarta.servlet.*;
