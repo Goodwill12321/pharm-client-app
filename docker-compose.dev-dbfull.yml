@@ -11,8 +11,10 @@ services:
       - FRONT_MODE=dev
     # For development with hot reload (vite dev)
     volumes:
-      - ./client/src:/app/src
-      - ./client/public:/app/public
+      # Монтируем папку с кодом (client) в рабочую директорию контейнера (/app)
+      - ./client:/app 
+      # Исключаем node_modules, чтобы сохранить установленные контейнером пакеты
+      - /app/node_modules
 
   backend:
     extends:

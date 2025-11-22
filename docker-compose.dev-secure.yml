@@ -6,7 +6,6 @@ services:
     extends:
       file: docker-compose.dev-dbfull.yml
       service: frontend
-
   backend:
     extends:
       file: docker-compose.dev-dbfull.yml
