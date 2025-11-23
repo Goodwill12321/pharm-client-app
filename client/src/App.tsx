@@ -6,7 +6,7 @@ import Invoices from './pages/Invoices';
 import Certificates from './pages/Certificates';
 import Claims from './pages/Claims';
 import ClaimForm from './pages/ClaimForm';
-import InvoiceForm from './pages/InvoiceForm';
+import InvoiceDetailPage from './pages/InvoiceDetailPage';
 import NewsFeed from './pages/NewsFeed';
 import Layout from './components/Layout';
 import InstallPWAButton from './components/InstallPWAButton';
@@ -20,7 +20,7 @@ const App = () => (
           <Route path="/" element={<Dashboard />} />
           <Route path="/debts" element={<Debts />} />
           <Route path="/invoices" element={<Invoices />} />
-          <Route path="/invoices/:id" element={<InvoiceForm />} />
+          <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
           <Route path="/certificates" element={<Certificates />} />
           <Route path="/claims" element={<Claims />} />
           <Route path="/claims/new" element={<ClaimForm />} />

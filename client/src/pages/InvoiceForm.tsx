@@ -6,7 +6,7 @@ import { InvoiceHeader, InvoiceLine } from '../types/invoice';
 import { useInvoiceLinesQuery } from '../hooks/useInvoiceLinesQuery';
 
 interface Props {
-  invoice: InvoiceHeader;
+  invoice?: InvoiceHeader;
 }
 
 // Новый компонент детальной формы накладной (InvoiceForm)
@@ -21,6 +21,14 @@ function formatDate(dateStr?: string) {
 }
 
 const InvoiceForm: React.FC<Props> = ({ invoice }) => {
+  if (!invoice) {
+    return (
+      <Paper sx={{ p: 2, mt: 2 }}>
+        <Typography variant="body1">Накладная не выбрана</Typography>
+      </Paper>
+    );
+  }
+
   // Загружаем строки накладной по UID
   const { data: lines = [], isLoading, isError } = useInvoiceLinesQuery(invoice.uid);
 

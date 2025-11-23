@@ -16,6 +16,12 @@ export async function fetchInvoices(filters: any): Promise<InvoiceHeader[]> {
   return await res.json();
 }
 
+export async function fetchInvoiceHeader(uid: string): Promise<InvoiceHeader> {
+  const res = await apiFetch(`${API_BASE_URL}/invoiceh/${uid}`);
+  if (!res.ok) throw new Error('Failed to fetch invoice header');
+  return await res.json();
+}
+
 export async function fetchInvoiceLines(uid: string): Promise<InvoiceLine[]> {
   const res = await apiFetch(`${API_BASE_URL}/invoicet/by-uid/${uid}`);
   if (!res.ok) throw new Error('Failed to fetch invoice lines');
