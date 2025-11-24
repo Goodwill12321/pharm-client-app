@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, IconButton, TextField, Select, MenuItem, Button, Tooltip, Chip, TableSortLabel } from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, IconButton, TextField, Select, MenuItem, Button, Tooltip, Chip, TableSortLabel, Pagination } from '@mui/material';
 import { AddressFilter } from '../components/AddressFilter';
 import { useClientsQuery } from '../hooks/useClientsQuery';
 import { useAddressFilter } from '../context/AddressFilterContext';
@@ -28,20 +28,31 @@ const Invoices: React.FC = () => {
     const fromStr = `${from.getFullYear()}-${pad(from.getMonth()+1)}-${pad(from.getDate())}`;
     return { from: fromStr, to: toStr };
   };
+
+  
   const defaultDates = getDefaultDates();
 
   const [dateFrom, setDateFrom] = useState(defaultDates.from);
   const [dateTo, setDateTo] = useState(defaultDates.to);
   const [docNumFilter, setDocNumFilter] = useState('');
   const [addressFilter, setAddressFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 5;
 
-  // Загружаем накладные с сервера с фильтрами
+  // Сброс страницы при изменении фильтров/поиска
+  useEffect(() => {
+    setPage(1);
+  }, [docNumFilter, addressFilter, statusFilter, dateFrom, dateTo, selectedAddresses]);
+
+  const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+  };
+
+  // Загружаем накладные с сервера только по статусу и датам (клиентские фильтры применяем локально, чтобы список клиентов был глобальным)
   const { data: invoices = [], isLoading, isError } = useInvoicesQuery({
     status: statusFilter,
     dateFrom,
     dateTo,
-    addresses: selectedAddresses.length > 0 ? selectedAddresses : undefined,
-    // clientUids: ... // если потребуется
   });
 
   // Сортировка
@@ -53,9 +64,9 @@ const Invoices: React.FC = () => {
   // Фильтрация по номеру и части адреса (филиал или клиент)
   const filteredInvoices = invoices.filter(inv => {
     const docNumMatch = docNumFilter === '' || inv.docNum?.toLowerCase().includes(docNumFilter.toLowerCase());
-    const addressMatch = addressFilter === '' || 
-      inv.clientName?.toLowerCase().includes(addressFilter.toLowerCase());
-    // Если выбран фильтр адресов, оставляем только те, чей clientUid входит в выбранные адреса
+    const addressText = `${inv.clientName ?? ''} ${inv.deliveryAddress ?? ''}`.toLowerCase();
+    const addressMatch = addressFilter === '' || addressText.includes(addressFilter.toLowerCase());
+    // Если выбран фильтр адресов (из AddressFilter), оставляем только те, чей clientUid входит в выбранные адреса
     const addressSelected = selectedAddresses.length === 0 || selectedAddresses.includes(inv.clientUid);
     return docNumMatch && addressMatch && addressSelected;
   });
@@ -85,6 +96,8 @@ const Invoices: React.FC = () => {
   }
 
   const sortedInvoices = [...filteredInvoices].sort(getComparator(order, orderBy));
+  const totalPages = Math.max(1, Math.ceil(sortedInvoices.length / rowsPerPage));
+  const pagedInvoices = sortedInvoices.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
   const handleSort = (field: SortField) => {
     if (orderBy === field) {
@@ -95,12 +108,19 @@ const Invoices: React.FC = () => {
     }
   };
 
+  // Опции клиентов для AddressFilter: глобально по загруженным накладным (без локальных фильтров/пагинации)
+  const addressOptions = useMemo(() => {
+    const presentClientUids = new Set(invoices.map(inv => inv.clientUid));
+    const limitedClients = clients.filter(c => presentClientUids.has(c.id));
+    return limitedClients.map(c => ({ id: c.id, name: c.name }));
+  }, [invoices, clients]);
+
   return (
     <Box p={2}>
       <Typography variant="h5" mb={1.5} sx={{ fontSize: { xs: '20px', sm: '22px' } }}>Накладные</Typography>
       <Paper sx={{ mb: 2, p: 2 }}>
         <Box display="flex" alignItems="center" flexWrap="wrap" gap={1} mb={2} sx={{ '& .MuiTextField-root, & .MuiSelect-root': { fontSize: { xs: '13px', sm: '19px' }, minHeight: '28px', '& .MuiInputBase-input': { fontSize: { xs: '13px', sm: '19px' }, py: 0.5 } }, '& .MuiInputLabel-root': { fontSize: { xs: '14px', sm: '20px' }, top: '-4px' }, '& .MuiMenuItem-root': { fontSize: { xs: '13px', sm: '19px' }, minHeight: '28px' }, '& .MuiButton-root': { fontSize: { xs: '10px', sm: '13px' }, minHeight: { xs: '24px', sm: '32px' }, px: { xs: 0.6, sm: 1.4 }, py: { xs: 0.2, sm: 0.6 }, '& .MuiButton-startIcon, & .MuiButton-endIcon': { mr: 0.3, '& svg': { fontSize: 18 } } } }}>
-          <AddressFilter addresses={clients.map(c => ({ id: c.id, name: c.name }))} />
+          <AddressFilter addresses={addressOptions} />
           <TextField
             label="Поиск по номеру накладной"
             size="small"
@@ -126,6 +146,17 @@ const Invoices: React.FC = () => {
           </Select>
           <Button variant="outlined" startIcon={<GetAppIcon />}>Скачать документы</Button>
           <Button variant="outlined">Выгрузить в Excel</Button>
+        </Box>
+
+        <Box mb={1} display="flex" justifyContent="center">
+          <Pagination
+            size="small"
+            count={totalPages}
+            page={page}
+            onChange={handlePageChange}
+            siblingCount={0}
+            boundaryCount={1}
+          />
         </Box>
 
         <TableContainer sx={{ overflowX: 'auto' }}>
@@ -184,7 +215,7 @@ const Invoices: React.FC = () => {
                   <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }} colSpan={6} align="center">Нет данных</TableCell>
                 </TableRow>
               ) : (
-                sortedInvoices.map(inv => (
+                pagedInvoices.map(inv => (
                   <TableRow key={inv?.uid || Math.random()} hover selected={selectedInvoice?.uid === inv?.uid} onClick={() => inv && setSelectedInvoice(inv)} style={{ cursor: 'pointer' }}>
                     <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }} padding="checkbox"><Checkbox disabled={!inv} /></TableCell>
                     <TableCell sx={{ fontSize: { xs: '14px', sm: '18px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{inv?.docNum ?? ''}</TableCell>
