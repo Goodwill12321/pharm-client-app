@@ -1,12 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, TableSortLabel, TextField, Box } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, TableSortLabel, TextField, Box, TablePagination, IconButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import CloseIcon from '@mui/icons-material/Close';
 
 export type Debitorka = {
   id: number;
   docUid: string;
   ulUid: string; // Используем как "адрес" для поиска
   otsrochkaDay: number;
+  docDate?: string;
   payDate: string;
   ostatokDay: number;
   prosrochkaDay: number;
@@ -40,25 +42,31 @@ const columns: { key: SortField; label: string }[] = [
 
 export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
   const navigate = useNavigate();
+  // default: payDate asc
   const [order, setOrder] = useState<Order>('asc');
-  const [orderBy, setOrderBy] = useState<SortField>('docUid');
+  const [orderBy, setOrderBy] = useState<SortField>('payDate');
   const [docFilter, setDocFilter] = useState('');
   const [ulFilter, setUlFilter] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const handleSort = (field: SortField) => {
     if (orderBy === field) {
-      setOrder(order === 'asc' ? 'desc' : 'asc');
+      setOrder(order === 'asc' ? 'asc' : 'desc');
     } else {
       setOrderBy(field);
+      // default ascending when switching column
       setOrder('asc');
     }
+    setPage(0);
   };
 
   const filtered = useMemo(() => {
     return data.filter(row => {
       const address = row.address || row.clientName || '';
+      const docNumber = row.docNum || '';
       return (
-        String(row.docUid ?? '').toLowerCase().includes(docFilter.toLowerCase()) &&
+        docNumber.toLowerCase().includes(docFilter.toLowerCase()) &&
         address.toLowerCase().includes(ulFilter.toLowerCase())
       );
     });
@@ -66,18 +74,19 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
-      let aValue = a[orderBy];
-      let bValue = b[orderBy];
       if (orderBy === 'payDate') {
-        aValue = a.payDate || '';
-        bValue = b.payDate || '';
+        const av = a.payDate ? new Date(a.payDate).getTime() : 0;
+        const bv = b.payDate ? new Date(b.payDate).getTime() : 0;
+        return order === 'asc' ? av - bv : bv - av;
       }
+      const aValue = a[orderBy] as any;
+      const bValue = b[orderBy] as any;
       if (typeof aValue === 'number' && typeof bValue === 'number') {
         return order === 'asc' ? aValue - bValue : bValue - aValue;
       }
       return order === 'asc'
-        ? String(aValue).localeCompare(String(bValue), 'ru')
-        : String(bValue).localeCompare(String(aValue), 'ru');
+        ? String(aValue ?? '').localeCompare(String(bValue ?? ''), 'ru')
+        : String(bValue ?? '').localeCompare(String(aValue ?? ''), 'ru');
     });
   }, [filtered, order, orderBy]);
 
@@ -88,16 +97,42 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
           label="Поиск по номеру документа"
           size="small"
           value={docFilter}
-          onChange={e => setDocFilter(e.target.value)}
+          onChange={e => { setDocFilter(e.target.value); setPage(0); }}
+          InputProps={{
+            endAdornment: docFilter ? (
+              <IconButton size="small" onClick={() => { setDocFilter(''); setPage(0); }} aria-label="Очистить">
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            ) : undefined
+          }}
         />
         <TextField
           label="Поиск по адресу/контрагенту"
           size="small"
           value={ulFilter}
-          onChange={e => setUlFilter(e.target.value)}
+          onChange={e => { setUlFilter(e.target.value); setPage(0); }}
+          InputProps={{
+            endAdornment: ulFilter ? (
+              <IconButton size="small" onClick={() => { setUlFilter(''); setPage(0); }} aria-label="Очистить">
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            ) : undefined
+          }}
         />
       </Box>
       <TableContainer component={Paper} sx={{ mt: 2 }}>
+        <TablePagination
+          component="div"
+          count={sorted.length}
+          page={page}
+          onPageChange={(_e, newPage) => setPage(newPage)}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+          rowsPerPageOptions={[10, 20, 50, 100]}
+          labelRowsPerPage="Накладных на стр."
+          labelDisplayedRows={({ from, to, count }) => `${from}-${to} из ${count}`}
+          sx={{ mb: 1 }}
+        />
         <Table size="small">
           <TableHead>
             <TableRow>
@@ -124,7 +159,7 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {sorted.map((row) => (
+            {sorted.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
               <TableRow key={row.id} hover>
                 <TableCell
   sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}
@@ -136,7 +171,7 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
                   >
                     {row.docNum || row.docUid}
                   </Link>
-                  {row.payDate ? ` от ${new Date(row.payDate).toLocaleDateString('ru-RU')}` : ''}
+                  {row.docDate ? ` от ${new Date(row.docDate).toLocaleDateString('ru-RU')}` : ''}
                 </TableCell>
                 <TableCell
   sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}

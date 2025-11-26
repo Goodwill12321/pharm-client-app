@@ -7,6 +7,7 @@ public class DebtWithAddressDto {
     private String docUid;
     private String ulUid;
     private Integer otsrochkaDay;
+    private LocalDate docDate;
     private LocalDate payDate;
     private Integer ostatokDay;
     private Integer prosrochkaDay;
@@ -17,11 +18,12 @@ public class DebtWithAddressDto {
     private String docNum;
     private String clientName; // название клиента
 
-    public DebtWithAddressDto(Long id, String docUid, String ulUid, Integer otsrochkaDay, LocalDate payDate, Integer ostatokDay, Integer prosrochkaDay, Double sumDoc, Double sumPaid, Double sumDolg, String address, String docNum, String clientName) {
+    public DebtWithAddressDto(Long id, String docUid, String ulUid, Integer otsrochkaDay, LocalDate docDate, LocalDate payDate, Integer ostatokDay, Integer prosrochkaDay, Double sumDoc, Double sumPaid, Double sumDolg, String address, String docNum, String clientName) {
         this.id = id;
         this.docUid = docUid;
         this.ulUid = ulUid;
         this.otsrochkaDay = otsrochkaDay;
+        this.docDate = docDate;
         this.payDate = payDate;
         this.ostatokDay = ostatokDay;
         this.prosrochkaDay = prosrochkaDay;
@@ -42,6 +44,8 @@ public class DebtWithAddressDto {
     public void setUlUid(String ulUid) { this.ulUid = ulUid; }
     public Integer getOtsrochkaDay() { return otsrochkaDay; }
     public void setOtsrochkaDay(Integer otsrochkaDay) { this.otsrochkaDay = otsrochkaDay; }
+    public LocalDate getDocDate() { return docDate; }
+    public void setDocDate(LocalDate docDate) { this.docDate = docDate; }
     public LocalDate getPayDate() { return payDate; }
     public void setPayDate(LocalDate payDate) { this.payDate = payDate; }
     public Integer getOstatokDay() { return ostatokDay; }

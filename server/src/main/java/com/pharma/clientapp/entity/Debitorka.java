@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.hibernate.annotations.Formula;
 
 @Data
 @Entity
@@ -20,16 +21,19 @@ public class Debitorka {
     @Column(name = "", length = 36)
     private String ulUid;
 
+    @Column(name = "doc_date")
+    private LocalDate docDate;
+
     @Column(name = "Otsrochka_Day")
     private Integer otsrochkaDay;
 
-    @Column(name = "Pay_Date")
+    @Column(name = "pay_date", insertable = false, updatable = false)
     private LocalDate payDate;
 
-    @Column(name = "Ostatok_Day")
+    @Formula("CASE WHEN pay_date >= CURRENT_DATE THEN (pay_date - CURRENT_DATE) ELSE 0 END")
     private Integer ostatokDay;
 
-    @Column(name = "Prosrochka_Day")
+    @Formula("CASE WHEN pay_date < CURRENT_DATE THEN (CURRENT_DATE - pay_date) ELSE 0 END")
     private Integer prosrochkaDay;
 
     @Column(name = "Sum_Doc")

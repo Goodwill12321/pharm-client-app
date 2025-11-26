@@ -109,43 +109,43 @@ const InvoiceForm: React.FC<Props> = ({ invoice }) => {
         </Select>
       </Box>
       <TableContainer sx={{ overflowX: 'auto' }}>
-        <Table size="small">
+        <Table size="small" sx={{ tableLayout: 'fixed', minWidth: { xs: 900, sm: 1200 } }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+              <TableCell sx={{ width: { xs: 300, sm: '40%' }, fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
                 <TableSortLabel active={orderBy === 'goodName'} direction={orderBy === 'goodName' ? order : 'asc'} onClick={() => handleSort('goodName')}>Товар</TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+              <TableCell sx={{ width: { xs: 80, sm: 100 }, fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
                 <TableSortLabel active={orderBy === 'isMarked'} direction={orderBy === 'isMarked' ? order : 'asc'} onClick={() => handleSort('isMarked')}>Маркирован</TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+              <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
                 <TableSortLabel active={orderBy === 'seriesName'} direction={orderBy === 'seriesName' ? order : 'asc'} onClick={() => handleSort('seriesName')}>Серия</TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+              <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
                 <TableSortLabel active={orderBy === 'dateExpBefore'} direction={orderBy === 'dateExpBefore' ? order : 'asc'} onClick={() => handleSort('dateExpBefore')}>Срок годн.</TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+              <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
                 <TableSortLabel active={orderBy === 'dateProduction'} direction={orderBy === 'dateProduction' ? order : 'asc'} onClick={() => handleSort('dateProduction')}>Дата произв.</TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+              <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
                 <TableSortLabel active={orderBy === 'price'} direction={orderBy === 'price' ? order : 'asc'} onClick={() => handleSort('price')}>Цена с НДС</TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+              <TableCell sx={{ width: { xs: 80, sm: 100 }, fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
                 <TableSortLabel active={orderBy === 'qnt'} direction={orderBy === 'qnt' ? order : 'asc'} onClick={() => handleSort('qnt')}>Кол-во</TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+              <TableCell sx={{ width: { xs: 80, sm: 100 }, fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
                 <TableSortLabel active={orderBy === 'nds'} direction={orderBy === 'nds' ? order : 'asc'} onClick={() => handleSort('nds')}>Ставка НДС</TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+              <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
                 <TableSortLabel active={orderBy === 'sumSNds'} direction={orderBy === 'sumSNds' ? order : 'asc'} onClick={() => handleSort('sumSNds')}>Сумма с НДС</TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>
+              <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>
                 <TableSortLabel active={orderBy === 'gtin'} direction={orderBy === 'gtin' ? order : 'asc'} onClick={() => handleSort('gtin')}>GTIN</TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>
+              <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>
                 <TableSortLabel active={orderBy === 'ean'} direction={orderBy === 'ean' ? order : 'asc'} onClick={() => handleSort('ean')}>EAN</TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
+              <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, fontWeight: 'bold', py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>
                 <TableSortLabel active={orderBy === 'dateSaleProducer'} direction={orderBy === 'dateSaleProducer' ? order : 'asc'} onClick={() => handleSort('dateSaleProducer')}>Дата реализации</TableSortLabel>
               </TableCell>
             </TableRow>
@@ -153,18 +153,18 @@ const InvoiceForm: React.FC<Props> = ({ invoice }) => {
           <TableBody>
             {sortedLines.map(line => (
               <TableRow key={line.uidLine}>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.goodName}</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}><Checkbox checked={!!line.isMarked} disabled /></TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.seriesName}</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{formatDate(line.dateExpBefore)}</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{formatDate(line.dateProduction)}</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.price}</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.qnt}</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.nds}%</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.sumSNds}</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>{line.gtin}</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>{line.ean}</TableCell>
-                <TableCell sx={{ fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.dateSaleProducer}</TableCell>
+                <TableCell sx={{ width: { xs: 300, sm: '40%' }, fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, whiteSpace: 'normal', wordBreak: 'break-word' }}>{line.goodName}</TableCell>
+                <TableCell sx={{ width: { xs: 80, sm: 100 }, fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}><Checkbox checked={!!line.isMarked} disabled /></TableCell>
+                <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.seriesName}</TableCell>
+                <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{formatDate(line.dateExpBefore)}</TableCell>
+                <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{formatDate(line.dateProduction)}</TableCell>
+                <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.price}</TableCell>
+                <TableCell sx={{ width: { xs: 80, sm: 100 }, fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.qnt}</TableCell>
+                <TableCell sx={{ width: { xs: 80, sm: 100 }, fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.nds}%</TableCell>
+                <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.sumSNds}</TableCell>
+                <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>{line.gtin}</TableCell>
+                <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 }, display: { xs: 'none', sm: 'table-cell' } }}>{line.ean}</TableCell>
+                <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '17px' }, py: { xs: 0.5, sm: 1 }, px: { xs: 0.5, sm: 1.5 } }}>{line.dateSaleProducer}</TableCell>
               </TableRow>
             ))}
           </TableBody>
