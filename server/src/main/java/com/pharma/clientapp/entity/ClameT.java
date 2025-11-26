@@ -9,8 +9,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Table(name = "clame_t")
 public class ClameT {
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @org.hibernate.annotations.GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue
+    @org.hibernate.annotations.UuidGenerator
     @Column(name = "uid_line", length = 36, updatable = false, nullable = false)
     @Schema(hidden = true)
     private String uidLine;

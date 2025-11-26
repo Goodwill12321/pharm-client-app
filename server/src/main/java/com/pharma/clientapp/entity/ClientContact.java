@@ -9,8 +9,8 @@ import lombok.Data;
 @Table(name = "client_contact")
 public class ClientContact {
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @org.hibernate.annotations.GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue
+    @org.hibernate.annotations.UuidGenerator
     @Column(name = "uid", length = 36, updatable = false, nullable = false)
     private String uid;
 
