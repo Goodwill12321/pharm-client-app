@@ -2,7 +2,9 @@ package com.pharma.clientapp.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-//import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -19,4 +21,12 @@ public class ClientContact {
 
     @Column(name = "contact_uid", length = 36)
     private String contactUid;
+
+    @Column(name = "create_time", insertable = false, updatable = false)
+    @Schema(hidden = true)
+    private LocalDateTime createTime;
+
+    @Column(name = "update_time", insertable = false, updatable = false)
+    @Schema(hidden = true)
+    private LocalDateTime updateTime;
 }

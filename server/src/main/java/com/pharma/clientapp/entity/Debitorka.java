@@ -2,6 +2,7 @@ package com.pharma.clientapp.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.time.LocalDateTime;
 import java.time.LocalDate;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.hibernate.annotations.Formula;
@@ -44,4 +45,12 @@ public class Debitorka {
 
     @Column(name = "Sum_Dolg")
     private Double sumDolg;
+
+    @Column(name = "create_time", insertable = false, updatable = false)
+    @Schema(hidden = true)
+    private LocalDateTime createTime;
+
+    @Column(name = "update_time", insertable = false, updatable = false)
+    @Schema(hidden = true)
+    private LocalDateTime updateTime;
 }

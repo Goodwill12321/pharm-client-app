@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.time.LocalDateTime;
+
 @Data
 @Entity
 @Table(name = "filials")
@@ -15,4 +17,12 @@ public class Filial {
 
     @Column(length = 150)
     private String name;
+
+    @Column(name = "create_time", insertable = false, updatable = false)
+    @Schema(hidden = true)
+    private LocalDateTime createTime;
+
+    @Column(name = "update_time", insertable = false, updatable = false)
+    @Schema(hidden = true)
+    private LocalDateTime updateTime;
 }

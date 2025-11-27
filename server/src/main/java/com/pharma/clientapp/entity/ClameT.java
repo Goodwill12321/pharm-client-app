@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.time.LocalDateTime;
+
 @Data
 @Entity
 @Table(name = "clame_t")
@@ -38,4 +40,12 @@ public class ClameT {
 
     @Column(length = 1000)
     private String result;
+
+    @Column(name = "create_time", insertable = false, updatable = false)
+    @Schema(hidden = true)
+    private LocalDateTime createTime;
+
+    @Column(name = "update_time", insertable = false, updatable = false)
+    @Schema(hidden = true)
+    private LocalDateTime updateTime;
 }
