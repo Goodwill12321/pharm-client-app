@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, IconButton, TextField, Select, MenuItem, Button, Tooltip, Chip, TableSortLabel, Pagination, FormControlLabel } from '@mui/material';
+import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, IconButton, TextField, Select, MenuItem, Button, Tooltip, Chip, TableSortLabel, Pagination, FormControlLabel, SelectChangeEvent } from '@mui/material';
 import { AddressFilter } from '../components/AddressFilter';
 import { useClientsQuery } from '../hooks/useClientsQuery';
 import { useAddressFilter } from '../context/AddressFilterContext';
@@ -40,7 +40,7 @@ const Invoices: React.FC = () => {
   const [docNumFilter, setDocNumFilter] = useState('');
   const [addressFilter, setAddressFilter] = useState('');
   const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [showClientColumn, setShowClientColumn] = useState(false);
   const [showAddressColumn, setShowAddressColumn] = useState(false);
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
@@ -54,10 +54,14 @@ const Invoices: React.FC = () => {
   // Сброс страницы при изменении фильтров/поиска
   useEffect(() => {
     setPage(1);
-  }, [docNumFilter, addressFilter, statusFilter, dateFrom, dateTo, selectedAddresses]);
+  }, [docNumFilter, addressFilter, statusFilter, dateFrom, dateTo, selectedAddresses, rowsPerPage]);
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
+  };
+
+  const handleRowsPerPageChange = (event: SelectChangeEvent<number>) => {
+    setRowsPerPage(Number(event.target.value));
   };
 
   // Загружаем накладные с сервера только по статусу и датам (клиентские фильтры применяем локально, чтобы список клиентов был глобальным)
@@ -187,7 +191,7 @@ const Invoices: React.FC = () => {
           />
         </Box>
 
-        <Box mb={1} display="flex" justifyContent="center">
+        <Box mb={1} display="flex" justifyContent="center" alignItems="center" gap={2}>
           <Pagination
             size="small"
             count={totalPages}
@@ -196,6 +200,30 @@ const Invoices: React.FC = () => {
             siblingCount={0}
             boundaryCount={1}
           />
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography variant="body2" sx={{ fontSize: { xs: '12px', sm: '14px' } }}>
+              Накладных на странице:
+            </Typography>
+            <Select
+              value={rowsPerPage}
+              onChange={handleRowsPerPageChange}
+              size="small"
+              sx={{ fontSize: { xs: '12px', sm: '14px' }, minWidth: 60 }}
+            >
+              <MenuItem value={5}>5</MenuItem>
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={20}>20</MenuItem>
+              <MenuItem value={50}>50</MenuItem>
+              <MenuItem value={100}>100</MenuItem>
+              <MenuItem value={500}>500</MenuItem>
+            </Select>
+          </Box>
+          <Typography variant="body2" sx={{ fontSize: { xs: '12px', sm: '14px' } }}>
+            {filteredInvoices.length > 0 
+              ? `${(page - 1) * rowsPerPage + 1}-${Math.min(page * rowsPerPage, filteredInvoices.length)} из ${filteredInvoices.length}`
+              : `0 из 0`
+            }
+          </Typography>
         </Box>
 
         <TableContainer sx={{ overflowX: 'auto' }}>
