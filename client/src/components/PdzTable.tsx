@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, TableSortLabel, TextField, Box, TablePagination, IconButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import CloseIcon from '@mui/icons-material/Close';
@@ -22,6 +22,8 @@ export type Debitorka = {
 
 interface PdzTableProps {
   data: Debitorka[];
+  page?: number;
+  setPage?: (page: number) => void;
 }
 
 type Order = 'asc' | 'desc';
@@ -40,14 +42,19 @@ const columns: { key: SortField; label: string }[] = [
   { key: 'address', label: 'Адрес доставки' },
 ];
 
-export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
+export const PdzTable: React.FC<PdzTableProps> = ({ data, page: externalPage, setPage: externalSetPage }) => {
   const navigate = useNavigate();
   // default: payDate asc
   const [order, setOrder] = useState<Order>('asc');
   const [orderBy, setOrderBy] = useState<SortField>('payDate');
   const [docFilter, setDocFilter] = useState('');
   const [ulFilter, setUlFilter] = useState('');
-  const [page, setPage] = useState(0);
+  
+  // Используем внешнюю страницу если передана, иначе внутреннюю
+  const [internalPage, setInternalPage] = useState(0);
+  const page = externalPage !== undefined ? externalPage : internalPage;
+  const setPage = externalSetPage || setInternalPage;
+  
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const handleSort = (field: SortField) => {
@@ -60,6 +67,10 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data }) => {
     }
     setPage(0);
   };
+
+  useEffect(() => {
+    setPage(0);
+  }, [docFilter, ulFilter]);
 
   const filtered = useMemo(() => {
     return data.filter(row => {

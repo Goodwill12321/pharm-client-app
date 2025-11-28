@@ -12,10 +12,6 @@ export const FILTERS: { key: PdzFilterKey; label: string; color: string }[] = [
   { key: 'gt21days', label: '>21 дня', color: '#424242' },
 ];
 
-interface PdzFilterTilesProps {
-  selected: PdzFilterKey[];
-  onChange: (selected: PdzFilterKey[]) => void;
-}
 
 // Добавим проп hideToday для управления отображением плитки 'Сегодня'
 interface PdzFilterTilesProps {

@@ -14,11 +14,26 @@ const filterByTiles = (data: Debitorka[], tiles: PdzFilterKey[]): Debitorka[] =>
   if (tiles.length === 0) return data;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  
+  // Отладочный лог (раскомментировать для отладки)
+  // console.log('🔍 filterByTiles DEBUG:', {
+  //   tiles,
+  //   today: today.toISOString().split('T')[0],
+  //   dataCount: data.length,
+  //   sampleData: data.slice(0, 3).map(d => ({
+  //     id: d.id,
+  //     payDate: d.payDate,
+  //     payDateObj: new Date(d.payDate),
+  //     diffDays: d.payDate ? Math.floor((today.getTime() - new Date(d.payDate).getTime()) / (1000 * 60 * 60 * 24)) : 'no payDate'
+  //   }))
+  // });
+  
   return data.filter((d: Debitorka) => {
     const payDate = new Date(d.payDate);
     payDate.setHours(0, 0, 0, 0);
     const diffDays = Math.floor((today.getTime() - payDate.getTime()) / (1000 * 60 * 60 * 24));
-    return tiles.some((tile: PdzFilterKey) => {
+    
+    const matches = tiles.some((tile: PdzFilterKey) => {
       switch (tile) {
         case 'today':
           return diffDays === 0;
@@ -36,6 +51,13 @@ const filterByTiles = (data: Debitorka[], tiles: PdzFilterKey[]): Debitorka[] =>
           return false;
       }
     });
+    
+    // Отладочный лог для каждого элемента (раскомментировать для отладки)
+    // if (tiles.includes('today')) {
+    //   console.log(`📍 Item ${d.id}: payDate=${d.payDate}, diffDays=${diffDays}, matches=${matches}`);
+    // }
+    
+    return matches;
   });
 };
 
@@ -53,6 +75,7 @@ const Debts: React.FC = () => {
   const type = query.get('type');
   const [tiles, setTiles] = useState<PdzFilterKey[]>([]);
   const [address, setAddress] = useState<string>('');
+  const [page, setPage] = useState(0);
 
   // tiles сбрасываем при смене адреса
   useEffect(() => {
@@ -61,6 +84,7 @@ const Debts: React.FC = () => {
 
   // tiles выставляем по type при изменении type
   useEffect(() => {
+    // console.log('🔄 useEffect type changed:', { type, currentTiles: tiles });
     if (type === 'today') {
       setTiles(['today']);
     } else if (type === 'overdue') {
@@ -71,6 +95,11 @@ const Debts: React.FC = () => {
       setTiles([]);
     }
   }, [type]);
+
+  // Сбрасываем страницу при смене фильтров
+  useEffect(() => {
+    setPage(0);
+  }, [tiles]);
 
   // Функция для получения строки даты в формате YYYY-MM-DD (локальная зона)
   const pad = (n: number): string => n.toString().padStart(2, '0');
@@ -87,6 +116,14 @@ const Debts: React.FC = () => {
   const filteredData = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
+    // console.log('🎯 filteredData useMemo:', {
+    //   dataCount: data.length,
+    //   tiles,
+    //   type,
+    //   willUseFilterByTiles: tiles.length > 0
+    // });
+    
     if (tiles.length > 0) {
       return filterByTiles(data, tiles);
     }
@@ -99,10 +136,13 @@ const Debts: React.FC = () => {
       });
     }
     if (type === 'today') {
+      // console.log('📅 Using direct type=today filter');
       return data.filter((d: Debitorka) => {
         const payDate = new Date(d.payDate);
         payDate.setHours(0, 0, 0, 0);
-        return payDate.getTime() === today.getTime();
+        const matches = payDate.getTime() === today.getTime();
+        // console.log(`📍 Direct filter: ${d.id}, payDate=${d.payDate}, matches=${matches}`);
+        return matches;
       });
     }
     if (type === 'notdue') {
@@ -251,7 +291,7 @@ const Debts: React.FC = () => {
       {isLoading && <CircularProgress sx={{ my: 4 }} />}
       {error && <Alert severity="error">{typeof error === 'string' ? error : (error instanceof Error ? error.message : String(error))}</Alert>}
       {!isLoading && !error && (
-        <PdzTable data={filteredData} />
+        <PdzTable data={filteredData} page={page} setPage={setPage} />
       )}
       {!isLoading && !error && filteredData.length === 0 && (
         <Typography sx={{ mt: 3 }}>Нет документов по выбранным фильтрам</Typography>
