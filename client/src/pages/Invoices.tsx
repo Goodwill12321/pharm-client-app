@@ -191,24 +191,16 @@ const Invoices: React.FC = () => {
           />
         </Box>
 
-        <Box mb={1} display="flex" justifyContent="center" alignItems="center" gap={2}>
-          <Pagination
-            size="small"
-            count={totalPages}
-            page={page}
-            onChange={handlePageChange}
-            siblingCount={0}
-            boundaryCount={1}
-          />
+        <Box mb={1} display="flex" justifyContent="center" alignItems="center" gap={{ xs: 1, sm: 2 }} flexWrap="wrap">
           <Box display="flex" alignItems="center" gap={1}>
-            <Typography variant="body2" sx={{ fontSize: { xs: '12px', sm: '14px' } }}>
-              Накладных на странице:
+            <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '14px' } }}>
+              Выводить по:
             </Typography>
             <Select
               value={rowsPerPage}
               onChange={handleRowsPerPageChange}
               size="small"
-              sx={{ fontSize: { xs: '12px', sm: '14px' }, minWidth: 60 }}
+              sx={{ fontSize: { xs: '11px', sm: '14px' }, minWidth: { xs: 50, sm: 60 } }}
             >
               <MenuItem value={5}>5</MenuItem>
               <MenuItem value={10}>10</MenuItem>
@@ -218,7 +210,16 @@ const Invoices: React.FC = () => {
               <MenuItem value={500}>500</MenuItem>
             </Select>
           </Box>
-          <Typography variant="body2" sx={{ fontSize: { xs: '12px', sm: '14px' } }}>
+          <Pagination
+            size="small"
+            count={totalPages}
+            page={page}
+            onChange={handlePageChange}
+            siblingCount={0}
+            boundaryCount={1}
+            sx={{ '& .MuiPaginationItem-root': { fontSize: { xs: '11px', sm: '14px' }, minWidth: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 } } }}
+          />
+          <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '14px' } }}>
             {filteredInvoices.length > 0 
               ? `${(page - 1) * rowsPerPage + 1}-${Math.min(page * rowsPerPage, filteredInvoices.length)} из ${filteredInvoices.length}`
               : `0 из 0`

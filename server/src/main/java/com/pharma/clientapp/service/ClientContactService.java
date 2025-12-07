@@ -20,10 +20,14 @@ public class ClientContactService {
      */
     @Transactional
     public List<ClientContact> replaceAllByContactUid(String contactUid, List<ClientContact> contacts) {
-        clientContactRepository.deleteAllByContactUid(contactUid);
+            clientContactRepository.deleteAllByContactUid(contactUid);
+            // Принудительно очищаем контекст персистенции
+            clientContactRepository.flush();
+        // Устанавливаем contactUid для новых записей
         for (ClientContact contact : contacts) {
             contact.setContactUid(contactUid);
         }
+        
         return clientContactRepository.saveAll(contacts);
     }
 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, TableSortLabel, TextField, Box, TablePagination, IconButton } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, TableSortLabel, TextField, Box, IconButton, Typography, Pagination, Select, MenuItem, SelectChangeEvent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -68,9 +68,13 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data, page: externalPage, se
     setPage(0);
   };
 
+  const handleRowsPerPageChange = (event: SelectChangeEvent<number>) => {
+    setRowsPerPage(Number(event.target.value));
+  };
+
   useEffect(() => {
     setPage(0);
-  }, [docFilter, ulFilter]);
+  }, [docFilter, ulFilter, rowsPerPage]);
 
   const filtered = useMemo(() => {
     return data.filter(row => {
@@ -132,32 +136,53 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data, page: externalPage, se
         />
       </Box>
       <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <TablePagination
-          component="div"
-          count={sorted.length}
-          page={page}
-          onPageChange={(_e, newPage) => setPage(newPage)}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
-          rowsPerPageOptions={[10, 20, 50, 100]}
-          labelRowsPerPage="Накладных на стр."
-          labelDisplayedRows={({ from, to, count }) => `${from}-${to} из ${count}`}
-          sx={{ mb: 1 }}
-        />
+        <Box mb={1} display="flex" justifyContent="center" alignItems="center" gap={{ xs: 1, sm: 2 }} flexWrap="wrap">
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '14px' } }}>
+              Выводить по:
+            </Typography>
+            <Select
+              value={rowsPerPage}
+              onChange={handleRowsPerPageChange}
+              size="small"
+              sx={{ fontSize: { xs: '11px', sm: '14px' }, minWidth: { xs: 50, sm: 60 } }}
+            >
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={20}>20</MenuItem>
+              <MenuItem value={50}>50</MenuItem>
+              <MenuItem value={100}>100</MenuItem>
+            </Select>
+          </Box>
+          <Pagination
+            size="small"
+            count={Math.max(1, Math.ceil(sorted.length / rowsPerPage))}
+            page={page + 1}
+            onChange={(_, newPage) => setPage(newPage - 1)}
+            siblingCount={0}
+            boundaryCount={1}
+            sx={{ '& .MuiPaginationItem-root': { fontSize: { xs: '11px', sm: '14px' }, minWidth: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 } } }}
+          />
+          <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '14px' } }}>
+            {sorted.length > 0 
+              ? `${page * rowsPerPage + 1}-${Math.min((page + 1) * rowsPerPage, sorted.length)} из ${sorted.length}`
+              : `0 из 0`
+            }
+          </Typography>
+        </Box>
         <Table size="small">
           <TableHead>
             <TableRow>
               {columns.map(col => (
                 <TableCell
-  key={col.key}
-  sortDirection={orderBy === col.key ? order : false}
-  sx={{
-    fontSize: { xs: '0.75rem', sm: '0.9rem' },
-    px: { xs: 0.5, sm: 1.5 },
-    py: { xs: 0.5, sm: 1 },
-    fontWeight: 600
-  }}
->
+                  key={col.key}
+                  sortDirection={orderBy === col.key ? order : false}
+                  sx={{
+                    fontSize: { xs: '0.75rem', sm: '0.9rem' },
+                    px: { xs: 0.5, sm: 1.5 },
+                    py: { xs: 0.5, sm: 1 },
+                    fontWeight: 600
+                  }}
+                >
                   <TableSortLabel
                     active={orderBy === col.key}
                     direction={orderBy === col.key ? order : 'asc'}
