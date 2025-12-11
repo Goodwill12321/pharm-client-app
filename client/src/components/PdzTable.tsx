@@ -31,7 +31,7 @@ type Order = 'asc' | 'desc';
 type SortField = 'docUid' | 'otsrochkaDay' | 'payDate' | 'ostatokDay' | 'prosrochkaDay' | 'sumDoc' | 'sumPaid' | 'ulUid' | 'docNum' | 'address' | 'clientName';
 
 const columns: { key: SortField; label: string }[] = [
-  { key: 'docNum', label: 'Документ (номер + дата)' },
+  { key: 'docNum', label: 'Документ (№ + дата)' },
   { key: 'otsrochkaDay', label: 'Отсрочка' },
   { key: 'payDate', label: 'Дата оплаты' },
   { key: 'ostatokDay', label: 'Дней осталось' },
@@ -107,9 +107,9 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data, page: externalPage, se
 
   return (
     <>
-      <Box display="flex" gap={2} mb={2}>
+      <Box display="flex" gap={2} mb={2} sx={{ '& .MuiTextField-root': { fontSize: { xs: '14px', sm: '14px' }, '& .MuiInputBase-input': { fontSize: { xs: '14px', sm: '14px' } }, '& .MuiInputLabel-root': { fontSize: { xs: '14px', sm: '14px' } } } }}>
         <TextField
-          label="Поиск по номеру документа"
+          label="По № документа"
           size="small"
           value={docFilter}
           onChange={e => { setDocFilter(e.target.value); setPage(0); }}
@@ -122,7 +122,7 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data, page: externalPage, se
           }}
         />
         <TextField
-          label="Поиск по адресу/контрагенту"
+          label="По адресу/контрагенту"
           size="small"
           value={ulFilter}
           onChange={e => { setUlFilter(e.target.value); setPage(0); }}
@@ -138,14 +138,14 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data, page: externalPage, se
       <TableContainer component={Paper} sx={{ mt: 2 }}>
         <Box mb={1} display="flex" justifyContent="center" alignItems="center" gap={{ xs: 1, sm: 2 }} flexWrap="wrap">
           <Box display="flex" alignItems="center" gap={1}>
-            <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '14px' } }}>
+            <Typography variant="body2" sx={{ fontSize: { xs: '12px', sm: '12px' } }}>
               Выводить по:
             </Typography>
             <Select
               value={rowsPerPage}
               onChange={handleRowsPerPageChange}
               size="small"
-              sx={{ fontSize: { xs: '11px', sm: '14px' }, minWidth: { xs: 50, sm: 60 } }}
+              sx={{ fontSize: { xs: '11px', sm: '11px' }, minWidth: { xs: 50, sm: 60 } }}
             >
               <MenuItem value={10}>10</MenuItem>
               <MenuItem value={20}>20</MenuItem>
@@ -160,9 +160,9 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data, page: externalPage, se
             onChange={(_, newPage) => setPage(newPage - 1)}
             siblingCount={0}
             boundaryCount={1}
-            sx={{ '& .MuiPaginationItem-root': { fontSize: { xs: '11px', sm: '14px' }, minWidth: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 } } }}
+            sx={{ '& .MuiPaginationItem-root': { fontSize: { xs: '12px', sm: '12px' }, minWidth: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 } } }}
           />
-          <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '14px' } }}>
+          <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '11px' } }}>
             {sorted.length > 0 
               ? `${page * rowsPerPage + 1}-${Math.min((page + 1) * rowsPerPage, sorted.length)} из ${sorted.length}`
               : `0 из 0`
@@ -177,9 +177,9 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data, page: externalPage, se
                   key={col.key}
                   sortDirection={orderBy === col.key ? order : false}
                   sx={{
-                    fontSize: { xs: '0.75rem', sm: '0.9rem' },
+                    fontSize: { xs: '0.75rem', sm: '0.75rem' },
                     px: { xs: 0.5, sm: 1.5 },
-                    py: { xs: 0.5, sm: 1 },
+                    py: { xs: 0.25, sm: 0.5 },
                     fontWeight: 600
                   }}
                 >
@@ -198,7 +198,7 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data, page: externalPage, se
             {sorted.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
               <TableRow key={row.id} hover>
                 <TableCell
-  sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}
+  sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.25, sm: 0.5 } }}
 >
                   <Link
                     component="button"
@@ -210,28 +210,28 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data, page: externalPage, se
                   {row.docDate ? ` от ${new Date(row.docDate).toLocaleDateString('ru-RU')}` : ''}
                 </TableCell>
                 <TableCell
-  sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}
+  sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.25, sm: 0.5 } }}
 >{row.otsrochkaDay}</TableCell>
                 <TableCell
-  sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}
+  sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.25, sm: 0.5 } }}
 >{row.payDate ? new Date(row.payDate).toLocaleDateString('ru-RU') : ''}</TableCell>
                 <TableCell
-  sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}
+  sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.25, sm: 0.5 } }}
 >{row.ostatokDay}</TableCell>
                 <TableCell
-  sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}
+  sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.25, sm: 0.5 } }}
 >{row.prosrochkaDay}</TableCell>
                 <TableCell
-  sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}
+  sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.25, sm: 0.5 } }}
 >{row.sumDoc.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}</TableCell>
                 <TableCell
-  sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}
+  sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.25, sm: 0.5 } }}
 >{row.sumPaid.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}</TableCell>
                 <TableCell
-  sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}
+  sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.25, sm: 0.5 } }}
 >{row.clientName ?? ''}</TableCell>
                 <TableCell
-  sx={{ fontSize: { xs: '0.75rem', sm: '0.9rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.5, sm: 1 } }}
+  sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' }, px: { xs: 0.5, sm: 1.5 }, py: { xs: 0.25, sm: 0.5 } }}
 >{row.address ?? ''}</TableCell>
               </TableRow>
             ))}
