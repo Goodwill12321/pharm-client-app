@@ -95,6 +95,13 @@ const Invoices: React.FC = () => {
     return docNumMatch && addressMatch && addressSelected && selectedMatch;
   });
 
+  // Очищаем выбранную накладную если нет данных после фильтрации
+  useEffect(() => {
+    if (filteredInvoices.length === 0) {
+      setSelectedInvoice(null);
+    }
+  }, [filteredInvoices.length]);
+
   // Функция сравнения для сортировки
   function getComparator<Key extends keyof any>(order: Order, orderBy: Key) {
     return (a: { [key in Key]: any }, b: { [key in Key]: any }) => {
@@ -414,7 +421,21 @@ const Invoices: React.FC = () => {
                     <TableCell sx={{ width: { xs: 120, sm: 140 }, fontSize: { xs: '12px', sm: '14px' }, py: { xs: 0.25, sm: 0.375 }, px: { xs: 0.5, sm: 1.5 } }}>{typeof inv?.sumSNds === 'number' ? inv.sumSNds.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' }) : ''}</TableCell>
                     <TableCell sx={{ width: { xs: 96, sm: 120 }, fontSize: { xs: '14px', sm: '16px' }, py: { xs: 0.25, sm: 0.375 }, px: { xs: 0.5, sm: 1.5 } }}>
                       {inv?.status ? (
-                        <Chip label={inv.status} color={inv.status === 'Не подтвержден' ? 'error' : 'success'} size="small" />
+                        <Box 
+                          sx={{ 
+                            backgroundColor: inv.status === 'Не подтвержден' ? '#ffebee' : '#e8f5e8', 
+                            color: inv.status === 'Не подтвержден' ? '#c62828' : '#2e7d32',
+                            borderRadius: 1,
+                            px: 1,
+                            py: 0.5,
+                            fontSize: { xs: '11px', sm: '13px' },
+                            fontWeight: 500,
+                            display: 'inline-block',
+                            textAlign: 'center'
+                          }}
+                        >
+                          {inv.status}
+                        </Box>
                       ) : ''}
                     </TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap', width: { xs: 120, sm: 140 }, fontSize: { xs: '12px', sm: '14px' }, py: { xs: 0.25, sm: 0.375 }, px: { xs: 0.5, sm: 1.5 }, textAlign: 'right' }}>
