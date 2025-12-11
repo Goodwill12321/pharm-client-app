@@ -11,4 +11,5 @@ rsync -avz --delete \
   --exclude 'target' \
   --exclude '.git' \
   --exclude '.idea' \
+  --exclude '.env'
   ./ $REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH
