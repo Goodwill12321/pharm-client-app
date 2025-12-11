@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   preview: {
     host: true,
-    allowedHosts: ['localhost', '127.0.0.1', 'dockerserver05', 'service.alterserv.ru'],
+    allowedHosts: ['localhost', '127.0.0.1', 'dockerserver05', 'service.alterserv.ru','clientapp.alterserv.ru'],
     port: 5173,
   },
   plugins: [
@@ -41,7 +41,7 @@ export default defineConfig({
   ],
   server: {
     host: true,
-    allowedHosts: ['localhost', '127.0.0.1', 'dockerserver05', 'service.alterserv.ru'],
+    allowedHosts: ['localhost', '127.0.0.1', 'dockerserver05', 'service.alterserv.ru', 'clientapp.alterserv.ru'],
     port: 5173,
     open: false,
     proxy: {
