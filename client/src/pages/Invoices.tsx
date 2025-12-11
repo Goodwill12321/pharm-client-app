@@ -10,6 +10,8 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { InvoiceHeader, InvoiceLine } from '../types/invoice';
 import InvoiceForm from './InvoiceForm';
 
@@ -46,6 +48,7 @@ const Invoices: React.FC = () => {
   const [showAddressColumn, setShowAddressColumn] = useState(false);
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
+  const [isTableCollapsed, setIsTableCollapsed] = useState(false);
   const keyboardRef = useRef<HTMLDivElement | null>(null);
 
   const isSelected = (uid?: string) => !!uid && selectedUids.includes(uid);
@@ -126,6 +129,7 @@ const Invoices: React.FC = () => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (currentIndex < 0) {
+        // Если нет активной строки, выбираем первую
         setSelectedInvoice(pagedInvoices[0] ?? null);
       } else {
         const next = Math.min(currentIndex + 1, pagedInvoices.length - 1);
@@ -136,6 +140,7 @@ const Invoices: React.FC = () => {
     if (e.key === 'ArrowUp') {
       e.preventDefault();
       if (currentIndex < 0) {
+        // Если нет активной строки, выбираем последнюю
         setSelectedInvoice(pagedInvoices[pagedInvoices.length - 1] ?? null);
       } else {
         const prev = Math.max(currentIndex - 1, 0);
@@ -148,6 +153,15 @@ const Invoices: React.FC = () => {
       if (selectedInvoice?.uid) toggleSelected(selectedInvoice.uid);
       return;
     }
+  };
+
+  const handleRowClick = (inv: InvoiceHeader) => {
+    setSelectedInvoice(inv);
+  };
+
+  const handleTableDoubleClick = () => {
+    // Сохраняем текущую выбранную строку при сворачивании
+    setIsTableCollapsed(true);
   };
 
   const handleSort = (field: SortField) => {
@@ -268,7 +282,55 @@ const Invoices: React.FC = () => {
         </Box>
 
         <Box ref={keyboardRef} tabIndex={0} onKeyDown={handleKeyDown} onClick={() => keyboardRef.current?.focus()}>
-        <TableContainer sx={{ overflowX: 'auto' }}>
+        {isTableCollapsed && (
+          <Box 
+            sx={{ 
+              p: 1.5, 
+              bgcolor: 'grey.100', 
+              borderRadius: 1, 
+              mb: 1, 
+              position: 'relative',
+              cursor: 'pointer',
+              '&:hover': { bgcolor: 'grey.200' }
+            }}
+            onClick={() => setIsTableCollapsed(false)}
+          >
+            <Typography variant="body2" sx={{ fontSize: { xs: '13px', sm: '14px' }, fontWeight: 500, mb: 0.5 }}>
+              Таблица свернута • {pagedInvoices.length} строк на странице
+              {selectedUids.length > 0 && ` • Выбрано: ${selectedUids.length}`}
+              {showSelectedOnly && ' • Фильтр: выбранные'}
+            </Typography>
+            <Button 
+              size="small" 
+              startIcon={<ExpandMoreIcon />}
+              onClick={(e) => { e.stopPropagation(); setIsTableCollapsed(false); }}
+              sx={{ 
+                position: 'absolute',
+                bottom: -12,
+                left: 8,
+                fontSize: { xs: '11px', sm: '12px' }, 
+                fontWeight: 600,
+                bgcolor: 'background.paper',
+                boxShadow: 1,
+                borderRadius: 1,
+                px: 1.5,
+                zIndex: 1
+              }}
+            >
+              Развернуть
+            </Button>
+          </Box>
+        )}
+        <TableContainer 
+          sx={{ 
+            overflowX: 'auto',
+            maxHeight: isTableCollapsed && selectedInvoice ? '80px' : 'none',
+            overflow: isTableCollapsed && selectedInvoice ? 'hidden' : 'visible',
+            transition: 'all 0.3s ease-in-out',
+            cursor: isTableCollapsed ? 'pointer' : 'default'
+          }}
+          onDoubleClick={handleTableDoubleClick}
+        >
           <Table size="small" sx={{ tableLayout: 'fixed', minWidth: { xs: 900, sm: 1000 } }}>
             <TableHead>
               <TableRow>
@@ -323,8 +385,17 @@ const Invoices: React.FC = () => {
                   <TableCell sx={{ fontSize: { xs: '12px', sm: '14px' }, py: { xs: 0.25, sm: 0.375 }, px: { xs: 0.5, sm: 1.5 } }} colSpan={7} align="center">Нет данных</TableCell>
                 </TableRow>
               ) : (
-                pagedInvoices.map(inv => (
-                  <TableRow key={inv?.uid || Math.random()} hover selected={selectedInvoice?.uid === inv?.uid} onClick={() => inv && setSelectedInvoice(inv)} style={{ cursor: 'pointer' }}>
+                pagedInvoices.map((inv, index) => (
+                  <TableRow 
+                    key={inv?.uid || Math.random()} 
+                    hover 
+                    selected={selectedInvoice?.uid === inv?.uid} 
+                    onClick={() => handleRowClick(inv)} 
+                    style={{ 
+                      cursor: 'pointer',
+                      display: isTableCollapsed && selectedInvoice?.uid !== inv?.uid ? 'none' : 'table-row'
+                    }}
+                  >
                     <TableCell sx={{ width: { xs: 112, sm: 140 }, pr: 1, fontSize: { xs: '12px', sm: '14px' }, py: { xs: 0.25, sm: 0.375 }, px: { xs: 0.5, sm: 1.5 } }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                         <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleSelected(inv?.uid); }}>
