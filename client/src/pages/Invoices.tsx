@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, IconButton, TextField, Select, MenuItem, Button, Tooltip, Chip, TableSortLabel, Pagination, FormControlLabel, SelectChangeEvent } from '@mui/material';
 import { AddressFilter } from '../components/AddressFilter';
+import { SelectedFilterToggle } from '../components/SelectedFilterToggle';
 import { useClientsQuery } from '../hooks/useClientsQuery';
 import { useAddressFilter } from '../context/AddressFilterContext';
 import GetAppIcon from '@mui/icons-material/GetApp';
@@ -44,6 +45,8 @@ const Invoices: React.FC = () => {
   const [showClientColumn, setShowClientColumn] = useState(false);
   const [showAddressColumn, setShowAddressColumn] = useState(false);
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
+  const keyboardRef = useRef<HTMLDivElement | null>(null);
 
   const isSelected = (uid?: string) => !!uid && selectedUids.includes(uid);
   const toggleSelected = (uid?: string) => {
@@ -54,7 +57,7 @@ const Invoices: React.FC = () => {
   // Сброс страницы при изменении фильтров/поиска
   useEffect(() => {
     setPage(1);
-  }, [docNumFilter, addressFilter, statusFilter, dateFrom, dateTo, selectedAddresses, rowsPerPage]);
+  }, [docNumFilter, addressFilter, statusFilter, dateFrom, dateTo, selectedAddresses, rowsPerPage, showSelectedOnly]);
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
@@ -84,7 +87,9 @@ const Invoices: React.FC = () => {
     const addressMatch = addressFilter === '' || addressText.includes(addressFilter.toLowerCase());
     // Если выбран фильтр адресов (из AddressFilter), оставляем только те, чей clientUid входит в выбранные адреса
     const addressSelected = selectedAddresses.length === 0 || selectedAddresses.includes(inv.clientUid);
-    return docNumMatch && addressMatch && addressSelected;
+    // Фильтрация по выбранным галочкам
+    const selectedMatch = !showSelectedOnly || selectedUids.includes(inv.uid);
+    return docNumMatch && addressMatch && addressSelected && selectedMatch;
   });
 
   // Функция сравнения для сортировки
@@ -114,6 +119,36 @@ const Invoices: React.FC = () => {
   const sortedInvoices = [...filteredInvoices].sort(getComparator(order, orderBy));
   const totalPages = Math.max(1, Math.ceil(sortedInvoices.length / rowsPerPage));
   const pagedInvoices = sortedInvoices.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+  const currentIndex = selectedInvoice ? pagedInvoices.findIndex(inv => inv?.uid === selectedInvoice?.uid) : -1;
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (pagedInvoices.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (currentIndex < 0) {
+        setSelectedInvoice(pagedInvoices[0] ?? null);
+      } else {
+        const next = Math.min(currentIndex + 1, pagedInvoices.length - 1);
+        setSelectedInvoice(pagedInvoices[next] ?? null);
+      }
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (currentIndex < 0) {
+        setSelectedInvoice(pagedInvoices[pagedInvoices.length - 1] ?? null);
+      } else {
+        const prev = Math.max(currentIndex - 1, 0);
+        setSelectedInvoice(pagedInvoices[prev] ?? null);
+      }
+      return;
+    }
+    if (e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      if (selectedInvoice?.uid) toggleSelected(selectedInvoice.uid);
+      return;
+    }
+  };
 
   const handleSort = (field: SortField) => {
     if (orderBy === field) {
@@ -137,6 +172,11 @@ const Invoices: React.FC = () => {
       <Paper sx={{ mb: 2, p: 2 }}>
         <Box display="flex" alignItems="center" flexWrap="wrap" gap={1} mb={1.5} sx={{ '& .MuiTextField-root, & .MuiSelect-root': { fontSize: { xs: '11px', sm: '14px' }, minHeight: '28px', '& .MuiInputBase-input': { fontSize: { xs: '11px', sm: '14px' }, py: 0.5 } }, '& .MuiInputLabel-root': { fontSize: { xs: '12px', sm: '15px' }, top: '-4px' }, '& .MuiMenuItem-root': { fontSize: { xs: '11px', sm: '14px' }, minHeight: '28px' }, '& .MuiButton-root': { fontSize: { xs: '8px', sm: '9px' }, minHeight: { xs: '24px', sm: '32px' }, px: { xs: 0.6, sm: 1.4 }, py: { xs: 0.2, sm: 0.6 }, '& .MuiButton-startIcon, & .MuiButton-endIcon': { mr: 0.3, '& svg': { fontSize: 18 } } } }}>
           <AddressFilter addresses={addressOptions} />
+          <SelectedFilterToggle
+            showSelectedOnly={showSelectedOnly}
+            onToggle={setShowSelectedOnly}
+            selectedCount={selectedUids.length}
+          />
           <TextField
             label="Поиск по номеру накладной"
             size="small"
@@ -227,6 +267,7 @@ const Invoices: React.FC = () => {
           </Typography>
         </Box>
 
+        <Box ref={keyboardRef} tabIndex={0} onKeyDown={handleKeyDown} onClick={() => keyboardRef.current?.focus()}>
         <TableContainer sx={{ overflowX: 'auto' }}>
           <Table size="small" sx={{ tableLayout: 'fixed', minWidth: { xs: 900, sm: 1000 } }}>
             <TableHead>
@@ -318,6 +359,7 @@ const Invoices: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        </Box>
       </Paper>
       {selectedInvoice && <InvoiceForm invoice={selectedInvoice} />}
     </Box>
