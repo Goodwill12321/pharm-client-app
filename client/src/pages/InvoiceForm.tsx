@@ -105,14 +105,14 @@ const InvoiceForm: React.FC<Props> = ({ invoice }) => {
         <Select value={markedOnly} onChange={(e) => setMarkedOnly(e.target.value as 'all' | 'marked' | 'unmarked')} size="small" sx={{ fontSize: { xs: '12px', sm: '11px' } }}>
           <MenuItem value="all" sx={{ fontSize: { xs: '12px', sm: '11px' } }}>Все</MenuItem>
           <MenuItem value="marked" sx={{ fontSize: { xs: '12px', sm: '11px' } }}>Только маркированные</MenuItem>
-          <MenuItem value="unmarked" sx={{ fontSize: { xs: '12px', sm: '11px' } }}>Только немаркированные</MenuItem>
+          <MenuItem value="unmarked" sx={{ fontSize: { xs: '12px', sm: '11px' } }}>Только немарк.</MenuItem>
         </Select>
       </Box>
       <TableContainer sx={{ overflowX: 'auto' }}>
         <Table size="small" sx={{ tableLayout: 'fixed', minWidth: { xs: 900, sm: 1200 } }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ width: { xs: 300, sm: '40%' }, fontSize: { xs: '12px', sm: '11px' }, fontWeight: 'bold', py: { xs: 0.25, sm: 0.375 }, px: { xs: 0.5, sm: 1.5 } }}>
+              <TableCell sx={{ minWidth: 150, width: { xs: 300, sm: 300 }, fontSize: { xs: '12px', sm: '11px' }, fontWeight: 'bold', py: { xs: 0.25, sm: 0.375 }, px: { xs: 0.5, sm: 1.5 } }}>
                 <TableSortLabel active={orderBy === 'goodName'} direction={orderBy === 'goodName' ? order : 'asc'} onClick={() => handleSort('goodName')}>Товар</TableSortLabel>
               </TableCell>
               <TableCell sx={{ width: { xs: 80, sm: 100 }, fontSize: { xs: '12px', sm: '13px' }, fontWeight: 'bold', py: { xs: 0.25, sm: 0.375 }, px: { xs: 0.5, sm: 1.5 } }}>
@@ -153,7 +153,7 @@ const InvoiceForm: React.FC<Props> = ({ invoice }) => {
           <TableBody>
             {sortedLines.map(line => (
               <TableRow key={line.uidLine}>
-                <TableCell sx={{ width: { xs: 300, sm: '40%' }, fontSize: { xs: '12px', sm: '13px' }, py: { xs: 0.25, sm: 0.375 }, px: { xs: 0.5, sm: 1.5 }, whiteSpace: 'normal', wordBreak: 'break-word' }}>{line.goodName}</TableCell>
+                <TableCell sx={{ minWidth: 150, width: { xs: 300, sm: 300 }, fontSize: { xs: '12px', sm: '13px' }, py: { xs: 0.25, sm: 0.375 }, px: { xs: 0.5, sm: 1.5 }, whiteSpace: 'normal', wordBreak: 'break-word' }}>{line.goodName}</TableCell>
                 <TableCell sx={{ width: { xs: 80, sm: 100 }, fontSize: { xs: '12px', sm: '13px' }, py: { xs: 0.25, sm: 0.375 }, px: { xs: 0.5, sm: 1.5 } }}><Checkbox checked={!!line.isMarked} disabled /></TableCell>
                 <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '12px', sm: '13px' }, py: { xs: 0.25, sm: 0.375 }, px: { xs: 0.5, sm: 1.5 } }}>{line.seriesName}</TableCell>
                 <TableCell sx={{ width: { xs: 100, sm: 120 }, fontSize: { xs: '14px', sm: '15px' }, py: { xs: 0.25, sm: 0.375 }, px: { xs: 0.5, sm: 1.5 } }}>{formatDate(line.dateExpBefore)}</TableCell>
