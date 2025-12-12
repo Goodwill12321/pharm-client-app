@@ -269,22 +269,22 @@ const Debts: React.FC = () => {
       )}
 
       {type === 'overdue' && (
-        <Typography sx={{ mb: 2, fontSize: { xs: '14px', sm: '13px' } }}>
+        <Typography sx={{ mb: 2, fontSize: { xs: '18px', sm: '13px' } }}>
           Всего просроченных документов: <b>{summary.overdueAll.docCount}</b> &nbsp; | &nbsp; Сумма: <b>{summary.overdueAll.sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}</b>
         </Typography>
       )}
       {type === 'today' && (
-        <Typography sx={{ mb: 2, fontSize: { xs: '14px', sm: '13px' } }}>
+        <Typography sx={{ mb: 2, fontSize: { xs: '18px', sm: '13px' } }}>
           Платежей на сегодня: <b>{summary.today.docCount}</b> &nbsp; | &nbsp; Сумма: <b>{summary.today.sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}</b>
         </Typography>
       )}
       {type === 'notdue' && (
-        <Typography sx={{ mb: 2, fontSize: { xs: '14px', sm: '13px' } }}>
+        <Typography sx={{ mb: 2, fontSize: { xs: '18px', sm: '13px' } }}>
           Не просроченных документов: <b>{summary.notDue.docCount}</b> &nbsp; | &nbsp; Сумма: <b>{summary.notDue.sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}</b>
         </Typography>
       )}
       {(!type || type === 'all') && (
-        <Typography sx={{ mb: 2, fontSize: { xs: '14px', sm: '13px' } }}>
+        <Typography sx={{ mb: 2, fontSize: { xs: '18px', sm: '13px' } }}>
           Всего документов: <b>{summary.all.docCount}</b> &nbsp; | &nbsp; Сумма: <b>{summary.all.sum.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}</b>
         </Typography>
       )}
@@ -294,7 +294,7 @@ const Debts: React.FC = () => {
         <PdzTable data={filteredData} page={page} setPage={setPage} />
       )}
       {!isLoading && !error && filteredData.length === 0 && (
-        <Typography sx={{ mt: 3, fontSize: { xs: '14px', sm: '13px' } }}>Нет документов по выбранным фильтрам</Typography>
+        <Typography sx={{ mt: 3, fontSize: { xs: '18px', sm: '13px' } }}>Нет документов по выбранным фильтрам</Typography>
       )}
 
     </Box>

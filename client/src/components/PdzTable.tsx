@@ -59,7 +59,7 @@ export const PdzTable: React.FC<PdzTableProps> = ({ data, page: externalPage, se
 
   const handleSort = (field: SortField) => {
     if (orderBy === field) {
-      setOrder(order === 'asc' ? 'asc' : 'desc');
+      setOrder(order === 'asc' ? 'desc' : 'asc');
     } else {
       setOrderBy(field);
       // default ascending when switching column
