@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Increment frontend build number and time before committing
-# Ensure dependencies are installed in client if needed (optional fast check)
-if [ -f "client/package.json" ]; then
+# Check if any files in client/ directory are being committed
+if git diff --cached --name-only | grep -q "^client/"; then
+  # Increment frontend build number and time before committing
   npm --prefix client run bump || {
     echo "[husky] bump failed" >&2
     exit 1
@@ -12,4 +12,6 @@ if [ -f "client/package.json" ]; then
   if [ -f "client/build-info.json" ]; then
     git add client/build-info.json
   fi
+else
+  echo "[husky] No changes in client/ directory, skipping bump"
 fi
