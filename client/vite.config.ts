@@ -35,7 +35,7 @@ export default defineConfig({
     {
       name: 'startup-logger',
       configureServer() {
-        // This runs on the Vite server side
+        // This runs on vite dev
         const buildTime = buildInfo.buildTime ? 
             new Date(buildInfo.buildTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }) : 
             new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
@@ -45,6 +45,19 @@ export default defineConfig({
           build: buildInfo.build ?? 0,
           buildTime: buildTime,
           mode: process.env.NODE_ENV || 'development'
+        });
+      },
+      configurePreviewServer() {
+        // This runs on vite preview
+        const buildTime = buildInfo.buildTime ? 
+            new Date(buildInfo.buildTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }) : 
+            new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+
+        console.log(`[${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}] VITE: Frontend preview starting`, {
+          version: pkg.version ?? '0.0.0',
+          build: buildInfo.build ?? 0,
+          buildTime: buildTime,
+          mode: 'preview'
         });
       }
     },
