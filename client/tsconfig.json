@@ -14,9 +14,10 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "disableSolutionSearching": true,
-    "disableReferencedProjectLoad": true
+    "disableReferencedProjectLoad": true,
+    
   },
   "include": ["src"],
   "exclude": ["node_modules"]

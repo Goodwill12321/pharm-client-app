@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Increment frontend build number and time before committing
+# Ensure dependencies are installed in client if needed (optional fast check)
+if [ -f "client/package.json" ]; then
+  npm --prefix client run bump || {
+    echo "[husky] bump failed" >&2
+    exit 1
+  }
+  # Stage updated build-info.json
+  if [ -f "client/build-info.json" ]; then
+    git add client/build-info.json
+  fi
+fi

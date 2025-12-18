@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext .ts,.tsx"
+    "lint": "eslint . --ext .ts,.tsx",
+    "bump": "node scripts/bump-build.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -25,6 +26,7 @@
     "react-router-dom": "^6.23.0"
   },
   "devDependencies": {
+    "@types/node": "^25.0.3",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.0.0",

@@ -1,6 +1,28 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
+ import { defineConfig } from 'vite';
+ import react from '@vitejs/plugin-react';
+ import { VitePWA } from 'vite-plugin-pwa';
+ import fs from 'fs';
+ import path from 'path';
+
+ // Read package.json and build-info.json to expose version/build to the app
+ const pkgJsonPath = path.resolve(process.cwd(), 'package.json');
+ const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8')) as { version?: string };
+ const buildInfoPath = path.resolve(process.cwd(), 'build-info.json');
+ let buildInfo: { build?: number; buildTime?: string } = {};
+ try {
+   if (fs.existsSync(buildInfoPath)) {
+     buildInfo = JSON.parse(fs.readFileSync(buildInfoPath, 'utf-8'));
+   }
+ } catch {}
+
+ // Log startup info to Vite console
+const startupInfo = {
+  version: pkg.version ?? '0.0.0',
+  build: buildInfo.build ?? 0,
+  buildTime: buildInfo.buildTime ?? new Date().toISOString(),
+  timestamp: new Date().toISOString()
+};
+
 
 export default defineConfig({
   preview: {
@@ -10,6 +32,22 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    {
+      name: 'startup-logger',
+      configureServer() {
+        // This runs on the Vite server side
+        const buildTime = buildInfo.buildTime ? 
+            new Date(buildInfo.buildTime).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }) : 
+            new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+
+        console.log(`[${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}] VITE: Frontend application starting`, {
+          version: pkg.version ?? '0.0.0',
+          build: buildInfo.build ?? 0,
+          buildTime: buildTime,
+          mode: process.env.NODE_ENV || 'development'
+        });
+      }
+    },
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
@@ -60,6 +98,11 @@ export default defineConfig({
       },
     }),
   ],
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version ?? '0.0.0'),
+    __BUILD_NUMBER__: JSON.stringify(String(buildInfo.build ?? 0)),
+    __BUILD_TIME__: JSON.stringify(buildInfo.buildTime ?? new Date().toISOString()),
+  },
   server: {
     host: true,
     allowedHosts: ['localhost', '127.0.0.1', 'dockerserver05', 'service.alterserv.ru', 'clientapp.alterserv.ru'],

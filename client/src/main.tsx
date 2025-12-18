@@ -7,8 +7,17 @@ import './index.css';
 import './styles/global.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { logger } from './utils/logger';
 
 setupAutoUpdateSW();
+
+ // Log app startup with version/build info
+ logger.info('Frontend application started', {
+   version: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0',
+   build: typeof __BUILD_NUMBER__ !== 'undefined' ? __BUILD_NUMBER__ : '0',
+   buildTime: typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : new Date().toISOString(),
+   mode: import.meta.env.MODE,
+ });
 
 const queryClient = new QueryClient();
 

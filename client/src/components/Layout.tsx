@@ -243,6 +243,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </Toolbar>
       </AppBar>
       <Box sx={{ p: { xs: 1, sm: 2 } }}>{children}</Box>
+      <Box sx={{ px: { xs: 1, sm: 2 }, pb: 1, pt: 0 }}>
+        <Typography
+          variant="caption"
+          sx={{ display: 'block', textAlign: 'center', color: 'text.secondary', fontSize: '0.75rem' }}
+        >
+          v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'} (build {typeof __BUILD_NUMBER__ !== 'undefined' ? __BUILD_NUMBER__ : '0'}) • {typeof __BUILD_TIME__ !== 'undefined' ? new Date(__BUILD_TIME__).toLocaleString('ru-RU') : new Date().toLocaleString('ru-RU')}
+        </Typography>
+      </Box>
     </>
   );
 };
