@@ -1,9 +1,11 @@
 import React from 'react';
-import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Select, MenuItem, TextField, Checkbox, TableSortLabel } from '@mui/material';
+import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Select, MenuItem, TextField, Checkbox, TableSortLabel, Button, IconButton } from '@mui/material';
 import { InvoiceHeader, InvoiceLine } from '../types/invoice';
+import DescriptionIcon from '@mui/icons-material/Description';
 
 // Импортируем хук для загрузки строк накладной с сервера
 import { useInvoiceLinesQuery } from '../hooks/useInvoiceLinesQuery';
+import { exportInvoiceToExcel } from '../utils/excelExport';
 
 interface Props {
   invoice?: InvoiceHeader;
@@ -90,33 +92,51 @@ const InvoiceForm: React.FC<Props> = ({ invoice }) => {
     }
   };
 
+  // Функция выгрузки накладной в Excel
+  const handleExportToExcel = () => {
+    if (lines.length > 0) {
+      exportInvoiceToExcel(invoice, lines);
+    }
+  };
+
   return (
     <Paper sx={{ p: 2, mt: 2 }}>
       <Typography variant="h6" mb={1.2} sx={{ fontSize: { xs: '17px', sm: '15px' } }}>Детализация накладной №{invoice.docNum}</Typography>
-      <Box mb={1.5} display="flex" alignItems="center" gap={{ xs: 1, sm: 2 }} flexWrap="wrap">
-        <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '11px' } }}>Дата: {invoice.docDate}</Typography>
-        <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '11px' } }}>Статус: 
-          {invoice.status ? (
-            <Box 
-              component="span" 
-              sx={{ 
-                backgroundColor: invoice.status === 'Не подтвержден' ? '#ffebee' : '#e8f5e8', 
-                color: invoice.status === 'Не подтвержден' ? '#c62828' : '#2e7d32',
-                borderRadius: 1,
-                px: 1,
-                py: 0.5,
-                fontSize: { xs: '11px', sm: '11px' },
-                fontWeight: 500,
-                display: 'inline-block',
-                textAlign: 'center',
-                ml: 0.5
-              }}
-            >
-              {invoice.status}
-            </Box>
-          ) : ''}
-        </Typography>
-        <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '11px' } }}>Комментарий: {invoice.comment || '—'}</Typography>
+      <Box mb={1.5} display="flex" alignItems="center" justifyContent="space-between" gap={{ xs: 1, sm: 2 }} flexWrap="wrap">
+        <Box display="flex" alignItems="center" gap={{ xs: 1, sm: 2 }} flexWrap="wrap">
+          <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '11px' } }}>Дата: {invoice.docDate}</Typography>
+          <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '11px' } }}>Статус: 
+            {invoice.status ? (
+              <Box 
+                component="span" 
+                sx={{ 
+                  backgroundColor: invoice.status === 'Не подтвержден' ? '#ffebee' : '#e8f5e8', 
+                  color: invoice.status === 'Не подтвержден' ? '#c62828' : '#2e7d32',
+                  borderRadius: 1,
+                  px: 1,
+                  py: 0.5,
+                  fontSize: { xs: '11px', sm: '11px' },
+                  fontWeight: 500,
+                  display: 'inline-block',
+                  textAlign: 'center',
+                  ml: 0.5
+                }}
+              >
+                {invoice.status}
+              </Box>
+            ) : ''}
+          </Typography>
+          <Typography variant="body2" sx={{ fontSize: { xs: '11px', sm: '11px' } }}>Комментарий: {invoice.comment || '—'}</Typography>
+        </Box>
+        <Button 
+          variant="outlined" 
+          startIcon={<DescriptionIcon />} 
+          onClick={handleExportToExcel}
+          disabled={lines.length === 0}
+          sx={{ fontSize: { xs: '10px', sm: '12px' }, py: { xs: 0.3, sm: 0.6 }, px: { xs: 1, sm: 1.5 } }}
+        >
+          Выгрузить в Excel
+        </Button>
       </Box>
       {/* Фильтры */}
       <Box mb={1} display={{ xs: 'block', sm: 'flex' }} gap={0.5} alignItems="center" sx={{ '& .MuiTextField-root, & .MuiSelect-root': { fontSize: { xs: '12px', sm: '11px' }, minHeight: '28px', '& .MuiInputBase-input': { fontSize: { xs: '12px', sm: '11px' }, py: 0.5 } }, '& .MuiInputLabel-root': { fontSize: { xs: '12px', sm: '11px' }, top: '-4px' }, '& .MuiMenuItem-root': { fontSize: { xs: '12px', sm: '11px' }, minHeight: '28px' } }}>

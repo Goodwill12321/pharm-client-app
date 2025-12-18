@@ -6,6 +6,7 @@ import { useClientsQuery } from '../hooks/useClientsQuery';
 import { useAddressFilter } from '../context/AddressFilterContext';
 import GetAppIcon from '@mui/icons-material/GetApp';
 import PrintIcon from '@mui/icons-material/Print';
+import DescriptionIcon from '@mui/icons-material/Description';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
@@ -15,8 +16,19 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { InvoiceHeader, InvoiceLine } from '../types/invoice';
 import InvoiceForm from './InvoiceForm';
 
+// Стили для анимации загрузки
+const spinKeyframes = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
 // Импортируем хук для загрузки накладных с сервера
 import { useInvoicesQuery } from '../hooks/useInvoicesQuery';
+import { useInvoiceLinesQuery } from '../hooks/useInvoiceLinesQuery';
+import { exportInvoicesListToExcel, exportInvoiceToExcel } from '../utils/excelExport';
+import { API_BASE_URL, apiFetch } from '../api/index';
 
 const Invoices: React.FC = () => {
   const { data: clients = [], isLoading: loadingClients, error: errorClients } = useClientsQuery();
@@ -50,6 +62,10 @@ const Invoices: React.FC = () => {
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
   const keyboardRef = useRef<HTMLDivElement | null>(null);
+  
+  // Состояние для хранения строк накладных
+  const [invoiceLinesCache, setInvoiceLinesCache] = useState<Record<string, InvoiceLine[]>>({});
+  const [loadingInvoices, setLoadingInvoices] = useState<Record<string, boolean>>({});
 
   const isSelected = (uid?: string) => !!uid && selectedUids.includes(uid);
   const toggleSelected = (uid?: string) => {
@@ -180,6 +196,52 @@ const Invoices: React.FC = () => {
     }
   };
 
+  // Функция выгрузки в Excel
+  const handleExportToExcel = () => {
+    const invoicesToExport = selectedUids.length > 0 
+      ? filteredInvoices.filter(inv => selectedUids.includes(inv.uid))
+      : filteredInvoices;
+    exportInvoicesListToExcel(invoicesToExport);
+  };
+
+  // Функция выгрузки конкретной накладной
+  const handleExportInvoiceToExcel = async (invoice: InvoiceHeader) => {
+    // Устанавливаем индикатор загрузки
+    setLoadingInvoices(prev => ({ ...prev, [invoice.uid]: true }));
+    
+    try {
+      // Проверяем, есть ли строки в кэше
+      if (invoiceLinesCache[invoice.uid]) {
+        exportInvoiceToExcel(invoice, invoiceLinesCache[invoice.uid]);
+        return;
+      }
+      
+      // Если нет в кэше, загружаем их через apiFetch с правильной авторизацией
+      console.log('Загружаем строки накладной:', invoice.uid);
+      const response = await apiFetch(`${API_BASE_URL}/invoicet/by-uid/${invoice.uid}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const lines: InvoiceLine[] = await response.json();
+      console.log('Получено строк:', lines.length);
+      
+      // Сохраняем в кэш
+      setInvoiceLinesCache(prev => ({ ...prev, [invoice.uid]: lines }));
+      
+      // Выгружаем в Excel
+      exportInvoiceToExcel(invoice, lines);
+      
+    } catch (error) {
+      console.error('Ошибка при загрузке строк накладной:', error);
+      alert('Ошибка при загрузке строк накладной. Попробуйте еще раз.');
+    } finally {
+      // Убираем индикатор загрузки
+      setLoadingInvoices(prev => ({ ...prev, [invoice.uid]: false }));
+    }
+  };
+
   // Опции клиентов для AddressFilter: глобально по загруженным накладным (без локальных фильтров/пагинации)
   const addressOptions = useMemo(() => {
     const presentClientUids = new Set(invoices.map(inv => inv.clientUid));
@@ -236,7 +298,7 @@ const Invoices: React.FC = () => {
             <MenuItem value="Отменен">Отменен</MenuItem>
           </Select>
           <Button variant="outlined" startIcon={<GetAppIcon />}>Скачать документы</Button>
-          <Button variant="outlined">Выгрузить в Excel</Button>
+          <Button variant="outlined" startIcon={<DescriptionIcon />} onClick={handleExportToExcel}>Выгрузить в Excel</Button>
         </Box>
 
         <Box display={{ xs: 'flex', sm: 'none' }} alignItems="center" gap={1} mb={1}>
@@ -442,7 +504,20 @@ const Invoices: React.FC = () => {
                       <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'nowrap' }}>
                         <Tooltip title="Детали"><span><IconButton size="small" disabled={!inv}><InfoOutlinedIcon fontSize="small" /></IconButton></span></Tooltip>
                         <Tooltip title="Скачать"><span><IconButton size="small" disabled={!inv}><GetAppIcon fontSize="small" /></IconButton></span></Tooltip>
-                        <Tooltip title="Печать"><span><IconButton size="small" disabled={!inv}><PrintIcon fontSize="small" /></IconButton></span></Tooltip>
+                        <Tooltip title="Выгрузить в Excel"><span><IconButton size="small" disabled={!inv || loadingInvoices[inv.uid]} onClick={(e) => { e.stopPropagation(); handleExportInvoiceToExcel(inv); }}>
+  {loadingInvoices[inv.uid] ? (
+    <div style={{ 
+      width: 16, 
+      height: 16, 
+      border: '2px solid #ccc', 
+      borderTop: '2px solid #1976d2', 
+      borderRadius: '50%', 
+      animation: 'spin 1s linear infinite' 
+    }} />
+  ) : (
+    <DescriptionIcon fontSize="small" />
+  )}
+</IconButton></span></Tooltip>
                       </Box>
                     </TableCell>
                   </TableRow>
