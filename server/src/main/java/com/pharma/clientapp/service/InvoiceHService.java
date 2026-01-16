@@ -35,9 +35,9 @@ public class InvoiceHService {
         java.time.LocalDateTime dateFromDT = dateFrom.atStartOfDay();
         java.time.LocalDateTime dateToDT = dateTo.plusDays(1).atStartOfDay();
         List<com.pharma.clientapp.dto.InvoiceHFilteredDto> list = invoiceHRepository.findFilteredDtoByClientUidsAndDates(allowedClients, dateFromDT, dateToDT);
-list.sort(java.util.Comparator.comparing(com.pharma.clientapp.dto.InvoiceHFilteredDto::getDocDate, java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder()))
-        .thenComparing(com.pharma.clientapp.dto.InvoiceHFilteredDto::getDocNum, java.util.Comparator.nullsLast(String::compareTo)));
-return list;
+        list.sort(java.util.Comparator.comparing(com.pharma.clientapp.dto.InvoiceHFilteredDto::getDocDate, java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder()))
+                    .thenComparing(com.pharma.clientapp.dto.InvoiceHFilteredDto::getDocNum, java.util.Comparator.nullsLast(String::compareTo)));
+        return list;
     }
 
     public Optional<InvoiceH> findById(String uid) {
