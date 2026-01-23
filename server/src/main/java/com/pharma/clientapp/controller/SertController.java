@@ -30,11 +30,20 @@ public class SertController {
 
     @PostMapping
     /**
- * Добавляет новый сертификат (Sert) или обновляет существующий по uid (upsert).
- * Если uid уже есть в базе — запись обновляется, иначе создается новая.
- */
-public Sert upsertSert(@RequestBody Sert sert) {
+     * Добавляет новый сертификат (Sert) или обновляет существующий по uid (upsert).
+     * Если uid уже есть в базе — запись обновляется, иначе создается новая.
+     */
+    public Sert upsertSert(@RequestBody Sert sert) {
         return sertService.save(sert);
+    }
+
+    @PostMapping("/add_batch")
+    /**
+     * Добавляет или обновляет список сертификатов (batch upsert).
+     * Если uid уже есть в базе — запись обновляется, иначе создается новая.
+     */
+    public List<Sert> upsertSertsBatch(@RequestBody List<Sert> serts) {
+        return sertService.saveAll(serts);
     }
 
     @DeleteMapping("/{uid}")

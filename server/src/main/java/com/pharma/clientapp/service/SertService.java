@@ -30,4 +30,12 @@ public class SertService {
     public void deleteById(String uid) {
         sertRepository.deleteById(uid);
     }
+
+    /**
+     * Сохраняет список сертификатов (batch insert/update).
+     * Если uid уже есть в базе — запись обновляется, иначе создается новая.
+     */
+    public List<Sert> saveAll(List<Sert> serts) {
+        return sertRepository.saveAll(serts);
+    }
 }
