@@ -1,7 +1,7 @@
 // Автоматическое обновление PWA: обновление при открытии или простое
 // Показывает уведомление, если скачана новая версия, и обновляет страницу при бездействии или при открытии
 
-const AUTO_UPDATE_DELAY = 600000; // 10 минут после простоя (можно увеличить)
+const AUTO_UPDATE_DELAY = 0; // обновлять сразу, чтобы пользователи не сидели на старой версии
 
 function listenForWaitingServiceWorker(reg: ServiceWorkerRegistration, callback: () => void) {
   if (!reg) return;
@@ -27,6 +27,8 @@ function listenForWaitingServiceWorker(reg: ServiceWorkerRegistration, callback:
 export function setupAutoUpdateSW() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.ready.then(reg => {
+      // Принудительно проверить обновление при старте
+      reg.update().catch(() => undefined);
       listenForWaitingServiceWorker(reg, () => {
         // Если пользователь неактивен или только что открыл вкладку — обновить
         let idleTimeout = setTimeout(() => {

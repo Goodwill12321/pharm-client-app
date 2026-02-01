@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
+import { debtColors } from '../theme/theme';
 
 interface OverdueBadgeButtonProps {
   sum: number;
@@ -11,7 +12,7 @@ interface OverdueBadgeButtonProps {
 export const OverdueBadgeButton: React.FC<OverdueBadgeButtonProps> = ({ sum, docCount, onClick, loading }) => (
   <Box
     sx={{
-      bgcolor: '#d32f2f',
+      bgcolor: debtColors.overdue,
       color: '#fff',
       borderRadius: 2,
       p: 2,
@@ -43,10 +44,11 @@ export const OverdueBadgeButton: React.FC<OverdueBadgeButtonProps> = ({ sum, doc
         fontWeight: 600,
         fontSize: '1rem',
         letterSpacing: 0.5,
-        backgroundColor: '#d32f2f',
+        backgroundColor: debtColors.overdue,
         color: '#fff',
         '&:hover': {
-          backgroundColor: '#b71c1c',
+          backgroundColor: debtColors.overdue,
+          opacity: 0.9,
         },
       }}
     >

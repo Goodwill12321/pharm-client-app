@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useClientsQuery } from '../hooks/useClientsQuery';
 import { AddressFilter } from '../components/AddressFilter';
 import { useAddressFilter } from '../context/AddressFilterContext';
+import { debtColors } from '../theme/theme';
 
 // Тип для одной записи дебиторки
 type Debitorka = {
@@ -100,7 +101,7 @@ const Dashboard: React.FC = () => {
           label="Общая задолженность"
           sum={sumAll}
           docCount={countAll}
-          color="#1976d2"
+          color={debtColors.all}
           loading={allLoading}
           onClick={() => handleTileClick('all')}
         />
@@ -114,7 +115,7 @@ const Dashboard: React.FC = () => {
           label="Подошедшие платежи (сегодня)"
           sum={sumToday}
           docCount={countToday}
-          color="#ffa000"
+          color={debtColors.today}
           loading={allLoading}
           onClick={() => handleTileClick('today')}
         />
@@ -122,7 +123,7 @@ const Dashboard: React.FC = () => {
           label="Не просроченная задолженность"
           sum={sumNotDue}
           docCount={countNotDue}
-          color="#388e3c"
+          color={debtColors.notDue}
           loading={allLoading}
           onClick={() => handleTileClick('notdue')}
         />
