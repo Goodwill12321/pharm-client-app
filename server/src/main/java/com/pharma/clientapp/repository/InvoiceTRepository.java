@@ -23,4 +23,11 @@ public interface InvoiceTRepository extends JpaRepository<InvoiceT, String> {
     java.util.List<InvoiceTWithNamesDto> findWithNamesByUid(@Param("uid") String uid);
 
     List<InvoiceT> findByUid(String uid);
+    
+    // Поиск UID товаров и серий по UID накладной (для поиска сертификатов)
+    @Query("SELECT DISTINCT t.goodUid FROM InvoiceT t WHERE t.uid IN :invoiceUids AND t.goodUid IS NOT NULL")
+    List<String> findGoodUidsByInvoiceUids(@Param("invoiceUids") List<String> invoiceUids);
+    
+    @Query("SELECT DISTINCT t.seriesUid FROM InvoiceT t WHERE t.uid IN :invoiceUids AND t.seriesUid IS NOT NULL")
+    List<String> findSeriesUidsByInvoiceUids(@Param("invoiceUids") List<String> invoiceUids);
 }

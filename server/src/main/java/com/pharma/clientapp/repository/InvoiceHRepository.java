@@ -26,4 +26,12 @@ public interface InvoiceHRepository extends JpaRepository<InvoiceH, String> {
     );
 
     List<InvoiceH> findByClientUidIn(List<String> clientUids);
+    
+    // Поиск номеров накладных по части строки с параметризованным LIMIT (для автодополнения)
+    @Query("SELECT i FROM InvoiceH i WHERE LOWER(i.docNum) LIKE LOWER(CONCAT('%', :query, '%')) ORDER BY i.docNum LIMIT :limit")
+    List<InvoiceH> findByDocNumContainingIgnoreCaseWithLimit(@Param("query") String query, @Param("limit") int limit);
+    
+    // Поиск UID накладных по номеру 
+    @Query("SELECT i.uid FROM InvoiceH i WHERE LOWER(i.docNum) LIKE LOWER(CONCAT('%', :docNum, '%'))")
+    List<String> findUidsByDocNumContainingIgnoreCase(@Param("docNum") String docNum);
 }
