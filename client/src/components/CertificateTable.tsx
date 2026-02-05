@@ -17,6 +17,11 @@ import {
 import { Download as DownloadIcon, Description as FileIcon } from '@mui/icons-material';
 import { CertificateInfoDto } from '../api/certificates';
 
+// Уменьшенные размеры шрифтов
+const FONT_SIZE_BASE = 13; // вместо 16
+const FONT_SIZE_SMALL = 11; // вместо 14
+const FONT_SIZE_XSMALL = 10; // вместо 12
+
 interface CertificateTableProps {
   certificates: CertificateInfoDto[];
   loading?: boolean;
@@ -87,8 +92,8 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
   }
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Typography variant="h6" sx={{ mb: 2, color: '#2E7D32', fontWeight: 500 }}>
+    <Paper sx={{ p: 1.5 }}>
+      <Typography variant="h6" sx={{ mb: 1.5, color: '#2E7D32', fontWeight: 500, fontSize: (FONT_SIZE_BASE + 1) + 'px' }}>
         Найденные сертификаты ({certificates.length})
       </Typography>
       
@@ -96,16 +101,19 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
         <Table>
           <TableHead>
             <TableRow sx={{ bgcolor: '#f4f6fa' }}>
-              <TableCell sx={{ fontWeight: 600, color: '#212121' }}>
-                Наименование товара/серии
+              <TableCell sx={{ fontWeight: 600, color: '#212121', fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
+                Наименование товара
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#212121' }}>
+              <TableCell sx={{ fontWeight: 600, color: '#212121', fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
+                Серия
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#212121', fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
                 Номер сертификата
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#212121' }}>
+              <TableCell sx={{ fontWeight: 600, color: '#212121', fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
                 Тип привязки
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#212121' }}>
+              <TableCell sx={{ fontWeight: 600, color: '#212121', fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
                 Файл сертификата
               </TableCell>
             </TableRow>
@@ -118,24 +126,22 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
                   '&:hover': { bgcolor: 'rgba(46, 125, 50, 0.04)' },
                 }}
               >
-                <TableCell>
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {getDisplayName(cert)}
-                    </Typography>
-                    {cert.productUid && (
-                      <Typography variant="caption" sx={{ color: '#757575' }}>
-                        UID: {cert.productUid}
-                      </Typography>
-                    )}
-                  </Box>
+                <TableCell sx={{ fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 500, fontSize: FONT_SIZE_SMALL + 'px' }}>
+                    {cert.productName || '—'}
+                  </Typography>
                 </TableCell>
-                <TableCell>
-                  <Typography variant="body2">
+                <TableCell sx={{ fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
+                  <Typography variant="body2" sx={{ fontSize: FONT_SIZE_SMALL + 'px' }}>
+                    {cert.seriesName || '—'}
+                  </Typography>
+                </TableCell>
+                <TableCell sx={{ fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
+                  <Typography variant="body2" sx={{ fontSize: FONT_SIZE_SMALL + 'px' }}>
                     {cert.certificateNumber || '—'}
                   </Typography>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
                   <Chip
                     label={getLinkTypeLabel(cert.linkType)}
                     size="small"
@@ -143,13 +149,15 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
                       bgcolor: getLinkTypeColor(cert.linkType),
                       color: 'white',
                       fontWeight: 500,
+                      fontSize: FONT_SIZE_XSMALL + 'px',
+                      height: 24,
                     }}
                   />
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
                   {cert.imagePath ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <FileIcon sx={{ color: '#2E7D32', fontSize: 20 }} />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <FileIcon sx={{ color: '#2E7D32', fontSize: 16 }} />
                       <Link
                         component="button"
                         variant="body2"
@@ -157,6 +165,7 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
                         sx={{
                           color: '#2E7D32',
                           textDecoration: 'none',
+                          fontSize: FONT_SIZE_SMALL + 'px',
                           '&:hover': {
                             textDecoration: 'underline',
                             color: '#1B5E20',
@@ -170,16 +179,17 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
                         onClick={() => handleDownload(cert.imagePath!)}
                         sx={{
                           color: '#2E7D32',
+                          padding: 0.5,
                           '&:hover': {
                             backgroundColor: 'rgba(46, 125, 50, 0.08)',
                           },
                         }}
                       >
-                        <DownloadIcon fontSize="small" />
+                        <DownloadIcon fontSize="inherit" sx={{ fontSize: 16 }} />
                       </IconButton>
                     </Box>
                   ) : (
-                    <Typography variant="body2" sx={{ color: '#757575' }}>
+                    <Typography variant="body2" sx={{ color: '#757575', fontSize: FONT_SIZE_SMALL + 'px' }}>
                       Нет файла
                     </Typography>
                   )}

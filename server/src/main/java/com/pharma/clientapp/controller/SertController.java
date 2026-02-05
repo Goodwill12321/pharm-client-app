@@ -133,21 +133,27 @@ public class SertController {
     }
     
     /**
-     * Автодополнение для полей поиска
+     * Автодополнение для полей поиска с иерархической фильтрацией
      * @param type Тип данных (INVOICE, PRODUCT, SERIES, CERTIFICATE)
      * @param query Строка поиска (минимум 3 символа)
+     * @param invoiceNumber Опциональный фильтр по номеру накладной
+     * @param productName Опциональный фильтр по наименованию товара
+     * @param seriesName Опциональный фильтр по наименованию серии
      * @return Список предложений для автодополнения
      */
     @GetMapping("/autocomplete")
     public ResponseEntity<List<CertificateAutocompleteDto>> autocomplete(
             @RequestParam String type,
-            @RequestParam String query) {
+            @RequestParam String query,
+            @RequestParam(required = false) String invoiceNumber,
+            @RequestParam(required = false) String productName,
+            @RequestParam(required = false) String seriesName) {
         try {
             if (query == null || query.length() < 3) {
                 return ResponseEntity.ok(List.of());
             }
             
-            List<CertificateAutocompleteDto> results = sertService.autocomplete(type, query);
+            List<CertificateAutocompleteDto> results = sertService.autocomplete(type, query, invoiceNumber, productName, seriesName);
             return ResponseEntity.ok(results);
         } catch (Exception e) {
             System.err.println("Autocomplete error: " + e.getMessage());

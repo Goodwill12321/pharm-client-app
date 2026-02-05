@@ -11,6 +11,19 @@ public interface GoodRepository extends JpaRepository<Good, String> {
     @Query("SELECT g FROM Good g WHERE LOWER(g.name) LIKE LOWER(CONCAT('%', :query, '%')) ORDER BY g.name LIMIT :limit")
     List<Good> findByNameContainingIgnoreCaseWithLimit(@Param("query") String query, @Param("limit") int limit);
     
+    // Поиск товаров по части наименования и накладной с параметризованным LIMIT (для иерархического автодополнения)
+    @Query(value = """
+        SELECT DISTINCT g.* 
+        FROM goods g
+        JOIN invoice_t it ON it.good_uid = g.uid
+        JOIN invoice_h ih ON ih.uid = it.uid
+        WHERE LOWER(g.name) LIKE LOWER(CONCAT('%', :query, '%'))
+        AND LOWER(ih.docnum) = LOWER(:invoiceNumber)
+        ORDER BY g.name 
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<Good> findByNameContainingIgnoreCaseAndInvoiceWithLimit(@Param("query") String query, @Param("invoiceNumber") String invoiceNumber, @Param("limit") int limit);
+    
     // Поиск UID товаров по наименованию 
     @Query("SELECT g.uid FROM Good g WHERE LOWER(g.name) LIKE LOWER(CONCAT('%', :name, '%'))")
     List<String> findUidsByNameContainingIgnoreCase(@Param("name") String name);

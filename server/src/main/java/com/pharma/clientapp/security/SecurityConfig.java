@@ -39,6 +39,7 @@ public class SecurityConfig {
                         "/actuator/health",
                         "/actuator/info"
                     ).permitAll();
+                
                 if (isDev) {
                     auth.requestMatchers("/api/hot-reload-info/history", "/profile").permitAll();
                 }

@@ -287,22 +287,38 @@ public class SertService {
      * @return Список предложений для автодополнения
      */
     public List<CertificateAutocompleteDto> autocomplete(String type, String query) {
-        return autocomplete(type, query, 10); // по умолчанию 10 результатов
+        return autocomplete(type, query, null, null, null, 10); // по умолчанию 10 результатов
     }
     
     /**
-     * Автодополнение для полей поиска с настраиваемым лимитом
+     * Автодополнение для полей поиска с иерархической фильтрацией
      * @param type Тип данных (INVOICE, PRODUCT, SERIES, CERTIFICATE)
      * @param query Строка поиска
+     * @param invoiceNumber Опциональный фильтр по номеру накладной
+     * @param productName Опциональный фильтр по наименованию товара
+     * @param seriesName Опциональный фильтр по наименованию серии
+     * @return Список предложений для автодополнения
+     */
+    public List<CertificateAutocompleteDto> autocomplete(String type, String query, String invoiceNumber, String productName, String seriesName) {
+        return autocomplete(type, query, invoiceNumber, productName, seriesName, 10); // по умолчанию 10 результатов
+    }
+    
+    /**
+     * Автодополнение для полей поиска с иерархической фильтрацией и настраиваемым лимитом
+     * @param type Тип данных (INVOICE, PRODUCT, SERIES, CERTIFICATE)
+     * @param query Строка поиска
+     * @param invoiceNumber Опциональный фильтр по номеру накладной
+     * @param productName Опциональный фильтр по наименованию товара
+     * @param seriesName Опциональный фильтр по наименованию серии
      * @param limit Максимальное количество результатов
      * @return Список предложений для автодополнения
      */
-    public List<CertificateAutocompleteDto> autocomplete(String type, String query, int limit) {
+    public List<CertificateAutocompleteDto> autocomplete(String type, String query, String invoiceNumber, String productName, String seriesName, int limit) {
         List<CertificateAutocompleteDto> results = new ArrayList<>();
         
         switch (type.toUpperCase()) {
             case "INVOICE":
-                // Эффективный запрос с параметризованным LIMIT на уровне БД
+                // Для накладной игнорируем другие фильтры, так как это верхний уровень иерархии
                 List<InvoiceH> invoices = invoiceHRepository.findByDocNumContainingIgnoreCaseWithLimit(query, limit);
                 
                 for (InvoiceH inv : invoices) {
@@ -311,8 +327,13 @@ public class SertService {
                 break;
                 
             case "PRODUCT":
-                // Эффективный запрос с параметризованным LIMIT на уровне БД
-                List<Good> goods = goodRepository.findByNameContainingIgnoreCaseWithLimit(query, limit);
+                // Фильтруем товары по накладной, если она указана
+                List<Good> goods;
+                if (invoiceNumber != null && !invoiceNumber.trim().isEmpty()) {
+                    goods = goodRepository.findByNameContainingIgnoreCaseAndInvoiceWithLimit(query, invoiceNumber, limit);
+                } else {
+                    goods = goodRepository.findByNameContainingIgnoreCaseWithLimit(query, limit);
+                }
                 
                 for (Good good : goods) {
                     results.add(new CertificateAutocompleteDto(good.getName(), "PRODUCT"));
@@ -320,8 +341,17 @@ public class SertService {
                 break;
                 
             case "SERIES":
-                // Эффективный запрос с параметризованным LIMIT на уровне БД
-                List<Series> seriesList = seriesRepository.findByNameContainingIgnoreCaseWithLimit(query, limit);
+                // Фильтруем серии по накладной и/или товару, если они указаны
+                List<Series> seriesList;
+                if (invoiceNumber != null && !invoiceNumber.trim().isEmpty() && productName != null && !productName.trim().isEmpty()) {
+                    seriesList = seriesRepository.findByNameContainingIgnoreCaseAndInvoiceAndProductWithLimit(query, invoiceNumber, productName, limit);
+                } else if (invoiceNumber != null && !invoiceNumber.trim().isEmpty()) {
+                    seriesList = seriesRepository.findByNameContainingIgnoreCaseAndInvoiceWithLimit(query, invoiceNumber, limit);
+                } else if (productName != null && !productName.trim().isEmpty()) {
+                    seriesList = seriesRepository.findByNameContainingIgnoreCaseAndProductWithLimit(query, productName, limit);
+                } else {
+                    seriesList = seriesRepository.findByNameContainingIgnoreCaseWithLimit(query, limit);
+                }
                 
                 for (Series series : seriesList) {
                     results.add(new CertificateAutocompleteDto(series.getName(), "SERIES"));
@@ -329,8 +359,27 @@ public class SertService {
                 break;
                 
             case "CERTIFICATE":
-                // Эффективный запрос с параметризованным LIMIT на уровне БД
-                List<Sert> serts = sertRepository.findBySertNoContainingIgnoreCaseWithLimit(query, limit);
+                // Фильтруем сертификаты по всем указанным параметрам
+                List<Sert> serts;
+                if (invoiceNumber != null && !invoiceNumber.trim().isEmpty() && 
+                    productName != null && !productName.trim().isEmpty() && 
+                    seriesName != null && !seriesName.trim().isEmpty()) {
+                    serts = sertRepository.findBySertNoContainingIgnoreCaseAndInvoiceAndProductAndSeriesWithLimit(query, invoiceNumber, productName, seriesName, limit);
+                } else if (invoiceNumber != null && !invoiceNumber.trim().isEmpty() && productName != null && !productName.trim().isEmpty()) {
+                    serts = sertRepository.findBySertNoContainingIgnoreCaseAndInvoiceAndProductWithLimit(query, invoiceNumber, productName, limit);
+                } else if (invoiceNumber != null && !invoiceNumber.trim().isEmpty() && seriesName != null && !seriesName.trim().isEmpty()) {
+                    serts = sertRepository.findBySertNoContainingIgnoreCaseAndInvoiceAndSeriesWithLimit(query, invoiceNumber, seriesName, limit);
+                } else if (productName != null && !productName.trim().isEmpty() && seriesName != null && !seriesName.trim().isEmpty()) {
+                    serts = sertRepository.findBySertNoContainingIgnoreCaseAndProductAndSeriesWithLimit(query, productName, seriesName, limit);
+                } else if (invoiceNumber != null && !invoiceNumber.trim().isEmpty()) {
+                    serts = sertRepository.findBySertNoContainingIgnoreCaseAndInvoiceWithLimit(query, invoiceNumber, limit);
+                } else if (productName != null && !productName.trim().isEmpty()) {
+                    serts = sertRepository.findBySertNoContainingIgnoreCaseAndProductWithLimit(query, productName, limit);
+                } else if (seriesName != null && !seriesName.trim().isEmpty()) {
+                    serts = sertRepository.findBySertNoContainingIgnoreCaseAndSeriesWithLimit(query, seriesName, limit);
+                } else {
+                    serts = sertRepository.findBySertNoContainingIgnoreCaseWithLimit(query, limit);
+                }
                 
                 for (Sert sert : serts) {
                     results.add(new CertificateAutocompleteDto(sert.getSertNo(), "CERTIFICATE"));
