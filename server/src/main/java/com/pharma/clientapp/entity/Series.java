@@ -16,6 +16,13 @@ public class Series {
     @Column(length = 50)
     private String name;
 
+    @Column(name = "good_uid", length = 36)
+    private String goodUid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "good_uid", referencedColumnName = "uid", insertable = false, updatable = false)
+    private Good good;
+
     @Column(name = "date_expbefore")
     private LocalDateTime dateExpBefore;
 
