@@ -33,6 +33,19 @@ public class ClameTController {
         return clameTService.save(clameT);
     }
 
+    @PutMapping("/{uidLine}")
+    public ResponseEntity<ClameT> updateClameT(@PathVariable String uidLine, @RequestBody ClameT patch) {
+        return clameTService.findById(uidLine)
+                .map(existing -> {
+                    if (patch.getQnt() != null) existing.setQnt(patch.getQnt());
+                    if (patch.getTypeClame() != null) existing.setTypeClame(patch.getTypeClame());
+                    if (patch.getComment() != null) existing.setComment(patch.getComment());
+                    if (patch.getResult() != null) existing.setResult(patch.getResult());
+                    return ResponseEntity.ok(clameTService.save(existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("/{uidLine}")
     public ResponseEntity<Void> deleteClameT(@PathVariable String uidLine) {
         clameTService.deleteById(uidLine);

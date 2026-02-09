@@ -287,7 +287,7 @@ public class SertService {
      * @return Список предложений для автодополнения
      */
     public List<CertificateAutocompleteDto> autocomplete(String type, String query) {
-        return autocomplete(type, query, null, null, null, 10); // по умолчанию 10 результатов
+         return autocomplete(type, query, null, null, null, 10); // по умолчанию 10 результатов
     }
     
     /**

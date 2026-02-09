@@ -18,12 +18,15 @@ export const AddressFilter: React.FC<AddressFilterProps> = ({ addresses }) => {
   // Найти выбранные объекты адресов по id
   const selectedObjs = addresses.filter(a => selectedAddresses.includes(a.id));
 
+  // Сортируем адреса по алфавиту по возрастанию
+  const sortedAddresses = [...addresses].sort((a, b) => a.name.localeCompare(b.name, 'ru', { sensitivity: 'base' }));
+
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'nowrap', flexDirection: { xs: 'column', sm: 'row' }, m: 0, mb: 0, mr: 0, ml: 0, px: 0, py: 0, width: 'auto' }}>
       <Autocomplete
         multiple
         size="small"
-        options={addresses}
+        options={sortedAddresses}
         getOptionLabel={(option) => option.name}
         sx={{
           p: 0,

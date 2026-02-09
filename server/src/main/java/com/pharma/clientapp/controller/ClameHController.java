@@ -33,6 +33,13 @@ public class ClameHController {
         return clameHService.save(clameH);
     }
 
+    @PutMapping("/{uid}")
+    public ResponseEntity<ClameH> updateClameH(@PathVariable String uid, @RequestBody ClameH patch) {
+        return clameHService.update(uid, patch)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("/{uid}")
     public ResponseEntity<Void> deleteClameH(@PathVariable String uid) {
         clameHService.deleteById(uid);

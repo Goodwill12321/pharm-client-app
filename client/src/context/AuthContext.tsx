@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
+  currentUserName: string | null;
   login: (login: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
@@ -15,6 +16,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentUserName, setCurrentUserName] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('jwt');
@@ -25,6 +27,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.addEventListener('logout', handler);
     return () => window.removeEventListener('logout', handler);
   }, []);
+
+  useEffect(() => {
+    const fetchMe = async () => {
+      if (!token) {
+        setCurrentUserName(null);
+        return;
+      }
+      try {
+        const { apiFetch } = await import('../api');
+        const res = await apiFetch('/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          setCurrentUserName(data.name ?? data.login ?? null);
+        } else {
+          setCurrentUserName(null);
+        }
+      } catch {
+        setCurrentUserName(null);
+      }
+    };
+    fetchMe();
+  }, [token]);
 
   const login = async (login: string, password: string) => {
     setLoading(true);
@@ -66,10 +90,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     localStorage.removeItem('jwt');
     setToken(null);
+    setCurrentUserName(null);
   };
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, login, logout, loading, error }}>
+    <AuthContext.Provider value={{ token, isAuthenticated: !!token, currentUserName, login, logout, loading, error }}>
       {children}
     </AuthContext.Provider>
   );

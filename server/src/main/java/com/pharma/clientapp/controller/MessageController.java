@@ -33,6 +33,18 @@ public class MessageController {
         return messageService.save(message);
     }
 
+    @PutMapping("/{uid}")
+    public ResponseEntity<Message> updateMessage(@PathVariable String uid, @RequestBody Message patch) {
+        return messageService.findById(uid)
+                .map(existing -> {
+                    if (patch.getMessage() != null) existing.setMessage(patch.getMessage());
+                    if (patch.getReadTime() != null) existing.setReadTime(patch.getReadTime());
+                    if (patch.getSender() != null) existing.setSender(patch.getSender());
+                    return ResponseEntity.ok(messageService.save(existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("/{uid}")
     public ResponseEntity<Void> deleteMessage(@PathVariable String uid) {
         messageService.deleteById(uid);
