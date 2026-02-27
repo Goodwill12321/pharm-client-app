@@ -30,13 +30,16 @@ services:
       - JWT_SECRET=Qv6rT8zj3Lw2Yx1B9dK4nV7eP5aS0fG6
       - TZ=Europe/Moscow
     volumes:
-      - ./server:/app
+      # Монтируем только исходный код, исключая скомпилированные файлы
+      - ./server/src:/app/src
+      - ./server/pom.xml:/app/pom.xml
+      - ./server/logs:/app/logs
       - /var/run/docker.sock:/var/run/docker.sock
       - ~/.m2:/root/.m2
-      - ./server/logs:/app/logs
       - ./server/data/certs:/data/certs
       - ./server/data/chat_images:/data/chat_images
-      #- ./server/src/main/resources/application.properties:/app/src/main/resources/application.properties:ro
+      # НЕ монтируем /app/target - пусть Maven компилирует внутри контейнера
+      #- ./server:/app  # ❌ УБРАЛИ ПРОБЛЕМНЫЙ VOLUME
     mem_limit: 1200m
     
     depends_on:
