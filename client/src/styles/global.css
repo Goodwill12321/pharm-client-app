@@ -43,3 +43,183 @@ button, input, select, textarea {
     font-size: 20px;
   }
 }
+
+/* Стили для полей ввода */
+.form-input {
+  font-size: 13px;
+}
+
+.form-input .MuiInputBase-input {
+  font-size: 13px;
+}
+
+.form-input .MuiOutlinedInput-input {
+  font-size: 13px;
+}
+
+.form-input .MuiInputLabel-root {
+  font-size: 13px;
+}
+
+/* Стили для полей ввода с крупным текстом */
+.form-input-large {
+  font-size: 14px;
+}
+
+.form-input-large .MuiInputBase-input {
+  font-size: 14px;
+}
+
+.form-input-large .MuiOutlinedInput-input {
+  font-size: 14px;
+}
+
+.form-input-large .MuiInputLabel-root {
+  font-size: 14px;
+}
+
+/* Стили для полей ввода с мелким текстом */
+.form-input-small {
+  font-size: 11px;
+}
+
+.form-input-small .MuiInputBase-input {
+  font-size: 11px;
+}
+
+.form-input-small .MuiOutlinedInput-input {
+  font-size: 11px;
+}
+
+.form-input-small .MuiInputLabel-root {
+  font-size: 11px;
+}
+
+/* Стили для полей ввода с очень мелким текстом */
+.form-input-xs {
+  font-size: 10px;
+}
+
+.form-input-xs .MuiInputBase-input {
+  font-size: 10px;
+}
+
+.form-input-xs .MuiOutlinedInput-input {
+  font-size: 10px;
+}
+
+.form-input-xs .MuiInputLabel-root {
+  font-size: 10px;
+}
+
+/* Стили для полей ввода дат */
+.date-input .MuiInputBase-input {
+  font-size: 15px;
+}
+
+.date-input .MuiInputLabel-root {
+  font-size: 14px;
+}
+
+/* Стили для Autocomplete */
+.autocomplete-input {
+  font-size: 14px;
+}
+
+.autocomplete-input .MuiInputBase-input {
+  font-size: 14px;
+}
+
+.autocomplete-input .MuiOutlinedInput-input {
+  font-size: 14px;
+}
+
+.autocomplete-input .MuiInputLabel-root {
+  font-size: 13px;
+}
+
+.autocomplete-list {
+  font-size: 13px;
+}
+
+.autocomplete-list .MuiList-root .MuiMenuItem-root,
+.autocomplete-list li {
+  font-size: 13px;
+  line-height: 1.1;
+}
+
+/* Стили для Select */
+.select-input {
+  font-size: 13px;
+}
+
+.select-input .MuiInputBase-input {
+  font-size: 13px;
+}
+
+.select-input .MuiOutlinedInput-input {
+  font-size: 13px;
+}
+
+.select-input .MuiInputLabel-root {
+  font-size: 13px;
+}
+
+.select-menu {
+  font-size: 13px;
+}
+
+.select-menu .MuiList-root .MuiMenuItem-root,
+.select-menu li {
+  font-size: 13px;
+  line-height: 1.1;
+}
+
+/* Стили для кнопок */
+.button-small {
+  font-size: 13px;
+}
+
+.button-medium {
+  font-size: 14px;
+}
+
+.button-large {
+  font-size: 16px;
+}
+
+/* Стили для таблиц */
+.table-compact .MuiTableCell-root {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.table-compact .MuiTableHead-root .MuiTableCell-root {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.table-compact .MuiTableRow-root {
+  height: auto;
+}
+
+.table-compact .MuiIconButton-root {
+  padding: 4px;
+}
+
+/* Стили для заголовков */
+.typography-small {
+  font-size: 12px;
+}
+
+.typography-medium {
+  font-size: 13px;
+}
+
+.typography-large {
+  font-size: 14px;
+}
+
+.typography-xl {
+  font-size: 16px;
+}
