@@ -2,7 +2,10 @@ import { API_BASE_URL, apiFetch } from './index';
 
 export type FileDto = {
   uid: string;
-  files?: string;
+  fileName?: string;
+  filePath?: string;
+  contentType?: string;
+  sizeBytes?: number;
   createTime?: string;
   updateTime?: string;
 };

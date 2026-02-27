@@ -32,17 +32,18 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { useNavigate } from 'react-router-dom';
 import { useClientsQuery } from '../hooks/useClientsQuery';
-import { AddressFilter } from '../components/AddressFilter';
 import { useAddressFilter } from '../context/AddressFilterContext';
+import { AddressFilter } from '../components/AddressFilter';
 import { useInvoicesQuery } from '../hooks/useInvoicesQuery';
 import type { InvoiceHeader } from '../types/invoice';
 import type { ClameH } from '../types/clame';
 import { useClaimsQuery } from '../hooks/useClaimsQuery';
 import { createClaim } from '../api/claims';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import '../styles/global.css';
 
 type Order = 'asc' | 'desc';
-type SortField = 'code' | 'docNum' | 'docDate' | 'status' | 'comment';
+type SortField = 'code' | 'docNum' | 'docDate' | 'status' | 'comment' | 'clientName' | 'deliveryAddress';
 
 const Claims: React.FC = () => {
   const navigate = useNavigate();
@@ -248,8 +249,8 @@ const Claims: React.FC = () => {
               size="small"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              InputLabelProps={{ shrink: true, sx: { fontSize: '14px' } }}
-              InputProps={{ sx: { fontSize: '15px' } }}
+              InputLabelProps={{ shrink: true }}
+              className="date-input"
             />
             <TextField
               label="по"
@@ -257,40 +258,27 @@ const Claims: React.FC = () => {
               size="small"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              InputLabelProps={{ shrink: true, sx: { fontSize: '14px' } }}
-              InputProps={{ sx: { fontSize: '15px' } }}
+              InputLabelProps={{ shrink: true }}
+              className="date-input"
             />
             
             <Autocomplete
               size="small"
-              sx={{ minWidth: 340, fontSize: '13px' }}
+              sx={{ minWidth: 340 }}
               value={invoiceOptions.find((i) => i.uid === selectedInvoiceUid) || null}
               onChange={(_, value) => setSelectedInvoiceUid(value?.uid ?? '')}
               getOptionLabel={(option) => option ? `${option.docNum} от ${option.docDate ? new Date(option.docDate).toLocaleDateString('ru-RU') : ''} — ${option.deliveryAddress}` : ''}
               options={filteredInvoiceOptions}
+              className="autocomplete-input"
               renderInput={(params) => (
                 <TextField
                   {...params}
                   label="Накладная"
                   size="small"
-                  InputLabelProps={{ sx: { fontSize: '13px' } }}
-                  sx={{
-                    '& .MuiInputBase-input': {
-                      fontSize: '14px',
-                    },
-                    '& .MuiOutlinedInput-input': {
-                      fontSize: '14px',
-                    },
-                  }}
                 />
               )}
               ListboxProps={{
-                sx: {
-                  fontSize: '13px',
-                  '& li': {
-                    fontSize: '13px',
-                  },
-                },
+                className: 'autocomplete-list',
               }}
             />
             
@@ -299,14 +287,15 @@ const Claims: React.FC = () => {
               size="small"
               value={createComment}
               onChange={(e) => setCreateComment(e.target.value)}
-              sx={{ minWidth: 320, flexGrow: 1, fontSize: '13px' }}
-              InputLabelProps={{ sx: { fontSize: '13px' } }}
+              className="form-input"
+              sx={{ minWidth: 320, flexGrow: 1 }}
             />
             <Button
               variant="contained"
               onClick={handleCreate}
               disabled={createMutation.isPending}
-              sx={{ minWidth: 160, fontSize: '13px' }}
+              className="button-medium"
+              sx={{ minWidth: 160 }}
             >
               Создать
             </Button>
@@ -325,7 +314,8 @@ const Claims: React.FC = () => {
           size="small"
           value={searchFilter}
           onChange={(e) => setSearchFilter(e.target.value)}
-          InputLabelProps={{ sx: { fontSize: '13px' } }}
+          className="form-input"
+          sx={{ minWidth: 260 }}
           InputProps={{
             endAdornment: searchFilter ? (
               <IconButton size="small" onClick={() => setSearchFilter('')} aria-label="Очистить">
@@ -333,49 +323,47 @@ const Claims: React.FC = () => {
               </IconButton>
             ) : undefined,
           }}
-          sx={{ minWidth: 260, fontSize: '13px' }}
         />
         <Select
           size="small"
           value={statusFilter}
           onChange={(e: SelectChangeEvent<string>) => setStatusFilter(e.target.value)}
           displayEmpty
-          sx={{ minWidth: 220, fontSize: '13px' }}
+          className="select-input"
+          sx={{ minWidth: 220 }}
           MenuProps={{
-            PaperProps: {
-              sx: { fontSize: '13px' }
-            }
+            className: 'select-menu',
           }}
         >
           <MenuItem value="">Все статусы</MenuItem>
           {availableStatuses.map((s) => (
-            <MenuItem key={s} value={s} sx={{ fontSize: '13px' }}>
+            <MenuItem key={s} value={s}>
               {s}
             </MenuItem>
           ))}
         </Select>
-        <Button variant="outlined" size="small" startIcon={<ReplayIcon />} onClick={handleRefresh} sx={{ fontSize: '13px' }}>
+        <Button variant="outlined" size="small" startIcon={<ReplayIcon />} onClick={handleRefresh} className="button-small">
           Обновить
         </Button>
-        <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '12px' }}>
+        <Typography variant="body2" className="typography-small" sx={{ color: 'text.secondary' }}>
           Найдено: {sortedClaims.length}
         </Typography>
       </Box>
 
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center', mb: 1 }}>
-        <Button variant="contained" size="small" onClick={() => setCreateExpanded(true)} sx={{ minWidth: 180, fontSize: '13px' }}>
+        <Button variant="contained" size="small" onClick={() => setCreateExpanded(true)} className="button-small" sx={{ minWidth: 180 }}>
           Оформить претензию
         </Button>
-        <Button variant="outlined" size="small" startIcon={<DescriptionIcon />} disabled sx={{ fontSize: '13px' }}>
+        <Button variant="outlined" size="small" startIcon={<DescriptionIcon />} disabled className="button-small">
           Возвратные документы
         </Button>
-        <Button variant="outlined" size="small" disabled sx={{ fontSize: '13px' }}>
+        <Button variant="outlined" size="small" disabled className="button-small">
           Отозвать претензию
         </Button>
-        <Button variant="outlined" size="small" startIcon={<PrintIcon />} disabled sx={{ fontSize: '13px' }}>
+        <Button variant="outlined" size="small" startIcon={<PrintIcon />} disabled className="button-small">
           Распечатать
         </Button>
-        <Button variant="outlined" size="small" startIcon={<GetAppIcon />} disabled sx={{ fontSize: '13px' }}>
+        <Button variant="outlined" size="small" startIcon={<GetAppIcon />} disabled className="button-small">
           Выгрузить в Excel
         </Button>
       </Box>
@@ -412,11 +400,11 @@ const Claims: React.FC = () => {
         </Alert>
       )}
 
-      <TableContainer component={Paper} sx={{ mt: 1 }}>
+      <TableContainer component={Paper} className="table-compact">
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', width: '6%' }}>
+              <TableCell sortDirection={orderBy === 'code' ? order : false} sx={{ width: '8%' }}>
                 <TableSortLabel
                   active={orderBy === 'code'}
                   direction={orderBy === 'code' ? order : 'asc'}
@@ -425,18 +413,7 @@ const Claims: React.FC = () => {
                   №
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', width: '12%' }}>
-                <TableSortLabel
-                  active={orderBy === 'docNum'}
-                  direction={orderBy === 'docNum' ? order : 'asc'}
-                  onClick={() => handleSort('docNum')}
-                >
-                  Накладная
-                </TableSortLabel>
-              </TableCell>
-              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', width: '18%' }}>Клиент</TableCell>
-              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', width: '24%' }}>Адрес доставки</TableCell>
-              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', width: '10%' }}>
+              <TableCell sortDirection={orderBy === 'docDate' ? order : false} sx={{ width: '10%' }}>
                 <TableSortLabel
                   active={orderBy === 'docDate'}
                   direction={orderBy === 'docDate' ? order : 'asc'}
@@ -445,7 +422,16 @@ const Claims: React.FC = () => {
                   Дата
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', width: '10%' }}>
+              <TableCell sortDirection={orderBy === 'docNum' ? order : false} sx={{ width: '12%' }}>
+                <TableSortLabel
+                  active={orderBy === 'docNum'}
+                  direction={orderBy === 'docNum' ? order : 'asc'}
+                  onClick={() => handleSort('docNum')}
+                >
+                  Накладная
+                </TableSortLabel>
+              </TableCell>
+              <TableCell sortDirection={orderBy === 'status' ? order : false} sx={{ width: '12%' }}>
                 <TableSortLabel
                   active={orderBy === 'status'}
                   direction={orderBy === 'status' ? order : 'asc'}
@@ -454,15 +440,34 @@ const Claims: React.FC = () => {
                   Статус
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', width: '20%' }}>
+              <TableCell sortDirection={orderBy === 'clientName' ? order : false} sx={{ width: '18%' }}>
+                <TableSortLabel
+                  active={orderBy === 'clientName'}
+                  direction={orderBy === 'clientName' ? order : 'asc'}
+                  onClick={() => handleSort('clientName')}
+                >
+                  Клиент
+                </TableSortLabel>
+              </TableCell>
+              <TableCell sortDirection={orderBy === 'deliveryAddress' ? order : false} sx={{ width: '24%' }}>
+                <TableSortLabel
+                  active={orderBy === 'deliveryAddress'}
+                  direction={orderBy === 'deliveryAddress' ? order : 'asc'}
+                  onClick={() => handleSort('deliveryAddress')}
+                >
+                  Адрес доставки
+                </TableSortLabel>
+              </TableCell>
+              <TableCell sortDirection={orderBy === 'comment' ? order : false} sx={{ width: '16%' }}>
                 <TableSortLabel
                   active={orderBy === 'comment'}
                   direction={orderBy === 'comment' ? order : 'asc'}
                   onClick={() => handleSort('comment')}
                 >
-                  Текст
+                  Комментарий
                 </TableSortLabel>
               </TableCell>
+              <TableCell sx={{ width: '5%' }}></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -476,7 +481,9 @@ const Claims: React.FC = () => {
                 sx={{ cursor: 'pointer' }}
               >
                 <TableCell sx={{ fontSize: '0.75rem' }}>{c.code || c.uid.slice(0, 8)}</TableCell>
+                <TableCell sx={{ fontSize: '0.75rem' }}>{c.docDate ? new Date(c.docDate).toLocaleDateString('ru-RU') : ''}</TableCell>
                 <TableCell sx={{ fontSize: '0.75rem' }}>{c.docNum ?? ''}</TableCell>
+                <TableCell sx={{ fontSize: '0.75rem' }}>{c.status ?? ''}</TableCell>
                 <TableCell sx={{ fontSize: '0.75rem' }}>{inv?.clientName ?? ''}</TableCell>
                 <TableCell sx={{ fontSize: '0.75rem' }}>{inv?.deliveryAddress ?? ''}</TableCell>
                 <TableCell sx={{ fontSize: '0.75rem' }}>

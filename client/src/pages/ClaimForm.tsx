@@ -39,6 +39,8 @@ import { useFilesClameQuery } from '../hooks/useFilesClameQuery';
 import { useFilesQuery } from '../hooks/useFilesQuery';
 import { createFile } from '../api/files';
 import { createFilesClame } from '../api/filesClame';
+import { useClaimAttachmentsQuery } from '../hooks/useClaimAttachmentsQuery';
+import { deleteClaimAttachment, getClaimAttachmentDownloadUrl, uploadClaimAttachment } from '../api/claimAttachments';
 
 const OBJECT_TYPE = 'CLAME';
 
@@ -55,6 +57,7 @@ const ClaimForm: React.FC = () => {
   const { data: allMessages = [] } = useMessagesQuery();
   const { data: filesClame = [] } = useFilesClameQuery();
   const { data: allFiles = [] } = useFilesQuery();
+  const { data: attachments = [] } = useClaimAttachmentsQuery(claim?.uid);
 
   const claimLines = useMemo(() => {
     if (!claim?.uid) return [];
@@ -183,7 +186,7 @@ const ClaimForm: React.FC = () => {
   const linkFileMutation = useMutation({
     mutationFn: async () => {
       if (!claim?.uid) throw new Error('Claim uid is required');
-      const created = await createFile({ files: fileMeta });
+      const created = await createFile({ fileName: fileMeta });
       await createFilesClame({ uidClame: claim.uid, uidFile: created.uid });
       return created;
     },
@@ -235,6 +238,37 @@ const ClaimForm: React.FC = () => {
 
   const [localImages, setLocalImages] = useState<{ id: string; name: string; url: string }[]>([]);
   const [localImageError, setLocalImageError] = useState<string | null>(null);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
+
+  const uploadAttachmentMutation = useMutation({
+    mutationFn: async (file: globalThis.File) => {
+      if (!claim?.uid) throw new Error('Claim uid is required');
+      return uploadClaimAttachment(claim.uid, file);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['claimAttachments', claim?.uid] });
+      setAttachmentError(null);
+    },
+    onError: (e: any) => setAttachmentError(e?.message || 'Не удалось загрузить файл'),
+  });
+
+  const deleteAttachmentMutation = useMutation({
+    mutationFn: async (fileUid: string) => {
+      if (!claim?.uid) throw new Error('Claim uid is required');
+      await deleteClaimAttachment(claim.uid, fileUid);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['claimAttachments', claim?.uid] });
+    },
+    onError: (e: any) => setAttachmentError(e?.message || 'Не удалось удалить файл'),
+  });
+
+  const handleUploadSelectedFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const f = files[0];
+    setAttachmentError(null);
+    uploadAttachmentMutation.mutate(f);
+  };
 
   const addLocalFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -632,23 +666,23 @@ const ClaimForm: React.FC = () => {
               }}
               onDrop={(e) => {
                 e.preventDefault();
-                addLocalFiles(e.dataTransfer.files);
+                handleUploadSelectedFiles(e.dataTransfer.files);
               }}
             >
               <Typography sx={{ fontSize: '13px', color: 'text.secondary', mb: 1 }}>
-                Перетащи изображения сюда или выбери файлы (заглушка, пока не сохраняем)
+                Перетащи файл сюда или выбери файл (сохраняем в хранилище)
               </Typography>
-              <Button variant="outlined" component="label" size="small">
-                Выбрать изображения
+              <Button variant="outlined" component="label" size="small" disabled={uploadAttachmentMutation.isPending}>
+                Выбрать файл
                 <input
                   type="file"
-                  accept="image/*"
-                  multiple
+                  multiple={false}
                   hidden
-                  onChange={(e) => addLocalFiles(e.target.files)}
+                  onChange={(e) => handleUploadSelectedFiles(e.target.files)}
                 />
               </Button>
               {localImageError && <Alert severity="error" sx={{ mt: 1 }}>{localImageError}</Alert>}
+              {attachmentError && <Alert severity="error" sx={{ mt: 1 }}>{attachmentError}</Alert>}
               {localImages.length > 0 && (
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
                   {localImages.map((img) => (
@@ -677,6 +711,62 @@ const ClaimForm: React.FC = () => {
                 </Box>
               )}
             </Paper>
+
+            <Typography sx={{ fontSize: '13px', color: 'text.secondary', mb: 1 }}>
+              Файлы в хранилище
+            </Typography>
+            <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>Имя</TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>Размер</TableCell>
+                    <TableCell sx={{ width: 110 }} />
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {attachments.map((a) => (
+                    <TableRow key={a.uid} hover>
+                      <TableCell sx={{ fontSize: '0.75rem' }}>{a.fileName ?? ''}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>{a.sizeBytes ?? ''}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem' }}>
+                        <Button
+                          size="small"
+                          variant="text"
+                          onClick={async () => {
+                            if (!claim?.uid) return;
+                            try {
+                              const url = await getClaimAttachmentDownloadUrl(claim.uid, a.uid);
+                              window.open(url, '_blank', 'noopener,noreferrer');
+                            } catch (e: any) {
+                              setAttachmentError(e?.message || 'Не удалось получить ссылку на скачивание');
+                            }
+                          }}
+                        >
+                          Скачать
+                        </Button>
+                        <Button
+                          size="small"
+                          color="error"
+                          variant="text"
+                          disabled={deleteAttachmentMutation.isPending}
+                          onClick={() => deleteAttachmentMutation.mutate(a.uid)}
+                        >
+                          Удалить
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {attachments.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3} sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
+                        Пока нет файлов
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
 
             <Typography sx={{ fontSize: '13px', color: 'text.secondary', mb: 1 }}>
               Привязанные метаданные (в БД)
@@ -713,7 +803,7 @@ const ClaimForm: React.FC = () => {
                 <TableBody>
                   {linkedFiles.map((f) => (
                     <TableRow key={f.uid} hover>
-                      <TableCell sx={{ fontSize: '0.75rem' }}>{f.files ?? ''}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem' }}>{f.fileName ?? ''}</TableCell>
                       <TableCell sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>{f.uid}</TableCell>
                     </TableRow>
                   ))}
