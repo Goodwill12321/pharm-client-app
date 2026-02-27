@@ -1,64 +1,80 @@
 package com.pharma.clientapp.service;
 
-import com.pharma.clientapp.dto.SertLinksRequest;
+import com.pharma.clientapp.dto.SertImageLinksRequest;
 import com.pharma.clientapp.dto.CertificateSearchRequest;
 import com.pharma.clientapp.dto.CertificateInfoDto;
 import com.pharma.clientapp.dto.CertificateAutocompleteDto;
-import com.pharma.clientapp.entity.Sert;
-import com.pharma.clientapp.entity.SertGoods;
-import com.pharma.clientapp.entity.SertGoodsId;
-import com.pharma.clientapp.entity.SertSeries;
-import com.pharma.clientapp.entity.SertSeriesId;
 import com.pharma.clientapp.entity.Good;
 import com.pharma.clientapp.entity.Series;
 import com.pharma.clientapp.entity.InvoiceH;
-import com.pharma.clientapp.repository.SertRepository;
-import com.pharma.clientapp.repository.SertGoodsRepository;
-import com.pharma.clientapp.repository.SertSeriesRepository;
-import com.pharma.clientapp.repository.InvoiceHRepository;
+import com.pharma.clientapp.entity.SertImage;
+import com.pharma.clientapp.entity.SertImageGoods;
+import com.pharma.clientapp.entity.SertImageGoodsId;
+import com.pharma.clientapp.entity.SertImageSeries;
+import com.pharma.clientapp.entity.SertImageSeriesId;
+import com.pharma.clientapp.entity.Sert;
 import com.pharma.clientapp.repository.GoodRepository;
+import com.pharma.clientapp.repository.InvoiceHRepository;
+import com.pharma.clientapp.repository.SertBatchRepositoryImpl;
+import com.pharma.clientapp.repository.SertImageGoodsBatchRepositoryImpl;
+import com.pharma.clientapp.repository.SertImageGoodsRepository;
+import com.pharma.clientapp.repository.SertImageRepository;
+import com.pharma.clientapp.repository.SertImageSeriesBatchRepositoryImpl;
+import com.pharma.clientapp.repository.SertImageSeriesRepository;
+import com.pharma.clientapp.repository.SertRepository;
 import com.pharma.clientapp.repository.SeriesRepository;
-import com.pharma.clientapp.repository.SertGoodsBatchRepositoryImpl;
-import com.pharma.clientapp.repository.SertSeriesBatchRepositoryImpl;
+import com.pharma.clientapp.repository.SertImageBatchRepositoryImpl;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class SertService {
     private final SertRepository sertRepository;
-    private final SertGoodsRepository sertGoodsRepository;
-    private final SertSeriesRepository sertSeriesRepository;
+    private final SertImageRepository sertImageRepository;
+    private final SertImageBatchRepositoryImpl sertImageBatchRepository;
+    private final SertBatchRepositoryImpl sertBatchRepository;
+    private final SertImageGoodsRepository sertImageGoodsRepository;
+    private final SertImageSeriesRepository sertImageSeriesRepository;
     private final InvoiceHRepository invoiceHRepository;
     private final GoodRepository goodRepository;
     private final SeriesRepository seriesRepository;
-    private final SertGoodsBatchRepositoryImpl sertGoodsBatchRepository;
-    private final SertSeriesBatchRepositoryImpl sertSeriesBatchRepository;
+    private final SertImageGoodsBatchRepositoryImpl sertImageGoodsBatchRepository;
+    private final SertImageSeriesBatchRepositoryImpl sertImageSeriesBatchRepository;
     
     @PersistenceContext
     private EntityManager entityManager;
 
     public SertService(SertRepository sertRepository,
-                      SertGoodsRepository sertGoodsRepository,
-                      SertSeriesRepository sertSeriesRepository,
+                      SertImageRepository sertImageRepository,
+                      SertImageGoodsRepository sertImageGoodsRepository,
+                      SertImageSeriesRepository sertImageSeriesRepository,
                       InvoiceHRepository invoiceHRepository,
                       GoodRepository goodRepository,
                       SeriesRepository seriesRepository,
-                      SertGoodsBatchRepositoryImpl sertGoodsBatchRepository,
-                      SertSeriesBatchRepositoryImpl sertSeriesBatchRepository) {
+                      SertImageBatchRepositoryImpl sertImageBatchRepository,
+                      SertBatchRepositoryImpl sertBatchRepository,
+                      SertImageGoodsBatchRepositoryImpl sertImageGoodsBatchRepository,
+                      SertImageSeriesBatchRepositoryImpl sertImageSeriesBatchRepository) {
         this.sertRepository = sertRepository;
-        this.sertGoodsRepository = sertGoodsRepository;
-        this.sertSeriesRepository = sertSeriesRepository;
+        this.sertImageRepository = sertImageRepository;
+        this.sertImageGoodsRepository = sertImageGoodsRepository;
+        this.sertImageSeriesRepository = sertImageSeriesRepository;
         this.invoiceHRepository = invoiceHRepository;
         this.goodRepository = goodRepository;
         this.seriesRepository = seriesRepository;
-        this.sertGoodsBatchRepository = sertGoodsBatchRepository;
-        this.sertSeriesBatchRepository = sertSeriesBatchRepository;
+        this.sertImageBatchRepository = sertImageBatchRepository;
+        this.sertBatchRepository = sertBatchRepository;
+        this.sertImageGoodsBatchRepository = sertImageGoodsBatchRepository;
+        this.sertImageSeriesBatchRepository = sertImageSeriesBatchRepository;
     }
 
     public List<Sert> findAll() {
@@ -69,6 +85,7 @@ public class SertService {
         return sertRepository.findById(uid);
     }
 
+    @Transactional
     public Sert save(Sert sert) {
         return sertRepository.save(sert);
     }
@@ -81,6 +98,7 @@ public class SertService {
      * Сохраняет список сертификатов (batch insert/update).
      * Если uid уже есть в базе — запись обновляется, иначе создается новая.
      */
+    @Transactional
     public List<Sert> saveAll(List<Sert> serts) {
         return sertRepository.saveAll(serts);
     }
@@ -91,67 +109,52 @@ public class SertService {
      * @return The updated Sert entity
      */
     @Transactional
-    public Sert updateSertWithLinks(SertLinksRequest request) {
-        // 1. Update or create the Sert
-        Sert existingSert = sertRepository.findById(request.getSertUid())
-                .orElse(new Sert());
-        
-        existingSert.setUid(request.getSertUid());
-        existingSert.setImage(request.getImage());
-        existingSert.setSertNo(request.getSertNo());
-        Sert sert = sertRepository.save(existingSert);
-        
-        // 2. Handle SertGoods associations
-        if (request.getGoodUids() != null) {
-            // Then add all new associations
-            if (!request.getGoodUids().isEmpty()) {
-                List<SertGoods> toAdd = request.getGoodUids().stream()
-                        .map(uid -> {
-                            SertGoods sg = new SertGoods();
-                            sg.setSert(sert);
-                            Good good = new Good();
-                            good.setUid(uid);
-                            sg.setGood(good);
-                            return sg;
-                        })
-                        .collect(Collectors.toList());
-                
-                if (!toAdd.isEmpty()) {
-                    try {
-                        sertGoodsRepository.saveAll(toAdd);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Failed to save SertGoods associations. Make sure all good UIDs exist.", e);
-                    }
-                }
-            }
+    public SertImage updateSertWithLinks(SertImageLinksRequest request) {
+        if (request == null || request.getUidImage() == null || request.getUidImage().isBlank()) {
+            throw new IllegalArgumentException("uidImage is required");
         }
-        
-        // 3. Handle SertSeries associations
-        if (request.getSeriesUids() != null) {
-            // Then add all new associations
-            if (!request.getSeriesUids().isEmpty()) {
-                List<SertSeries> toAdd = request.getSeriesUids().stream()
-                        .map(uid -> {
-                            SertSeries ss = new SertSeries();
-                            ss.setSert(sert);
-                            Series series = new Series();
-                            series.setUid(uid);
-                            ss.setSeries(series);
-                            return ss;
-                        })
-                        .collect(Collectors.toList());
-                
-                if (!toAdd.isEmpty()) {
-                    try {
-                        sertSeriesRepository.saveAll(toAdd);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Failed to save SertSeries associations. Make sure all series UIDs exist.", e);
-                    }
-                }
-            }
+
+        Sert sert = upsertSertBySertNo(request.getSertNo());
+
+        SertImage image = sertImageRepository.findById(request.getUidImage())
+                .orElseGet(SertImage::new);
+        image.setUid(request.getUidImage());
+        image.setImage(request.getImage());
+        image.setSert(sert);
+        image.setIsDel(false);
+        SertImage savedImage = sertImageRepository.save(image);
+
+        // Links to goods
+        if (request.getGoodUids() != null && !request.getGoodUids().isEmpty()) {
+            List<SertImageGoods> toAdd = request.getGoodUids().stream()
+                    .map(goodUid -> {
+                        SertImageGoods sg = new SertImageGoods();
+                        sg.setSertImage(savedImage);
+                        Good good = entityManager.getReference(Good.class, goodUid);
+                        sg.setGood(good);
+                        sg.setId(new SertImageGoodsId(savedImage.getUid(), goodUid));
+                        return sg;
+                    })
+                    .collect(Collectors.toList());
+            sertImageGoodsRepository.saveAll(toAdd);
         }
-        
-        return sert;
+
+        // Links to series
+        if (request.getSeriesUids() != null && !request.getSeriesUids().isEmpty()) {
+            List<SertImageSeries> toAdd = request.getSeriesUids().stream()
+                    .map(seriesUid -> {
+                        SertImageSeries ss = new SertImageSeries();
+                        ss.setSertImage(savedImage);
+                        Series series = entityManager.getReference(Series.class, seriesUid);
+                        ss.setSeries(series);
+                        ss.setId(new SertImageSeriesId(savedImage.getUid(), seriesUid));
+                        return ss;
+                    })
+                    .collect(Collectors.toList());
+            sertImageSeriesRepository.saveAll(toAdd);
+        }
+
+        return savedImage;
     }
     
     /**
@@ -161,83 +164,155 @@ public class SertService {
      * @return List of updated certificates
      */
     @Transactional
-    public List<Sert> batchUpdateSertsWithLinks(List<Sert> serts, Map<String, SertLinksRequest> links) {
-        if (serts == null || serts.isEmpty()) {
+    public List<SertImage> batchUpdateSertsWithLinks(List<SertImage> images, Map<String, SertImageLinksRequest> links) {
+        if (images == null || images.isEmpty()) {
             return Collections.emptyList();
         }
+
+        log.info("Starting batch update with {} images and {} links", images.size(), links.size());
         
-        // 1. Save all certificates first
-        List<Sert> savedSerts = sertRepository.saveAll(serts);
-        Map<String, Sert> sertMap = savedSerts.stream()
-                .collect(Collectors.toMap(Sert::getUid, Function.identity()));
+        // Debug: log incoming images
+        for (int i = 0; i < Math.min(images.size(), 3); i++) {
+            SertImage img = images.get(i);
+            log.debug("Incoming image {}: uid={}, image={}", i, img.getUid(), img.getImage());
+        }
+
+        // Upsert images in bulk (sert will be created/updated as needed)
+        // First, collect all unique sertNos that need to be created/updated
+        Set<String> sertNosToProcess = new HashSet<>();
+        Map<String, SertImageLinksRequest> linkMap = new HashMap<>();
         
-        // 2. Process all goods links directly using only UIDs
-        List<SertGoods> allGoodsLinks = new ArrayList<>();
-        List<SertSeries> allSeriesLinks = new ArrayList<>();
-        
-        links.forEach((sertUid, linkRequest) -> {
-            Sert sert = sertMap.get(sertUid);
-            if (sert == null) return;
+        for (SertImage img : images) {
+            SertImageLinksRequest lr = links.get(img.getUid());
+            String sertNo = lr != null ? normalizeSertNo(lr.getSertNo()) : null;
             
-            // Process goods links - create proxies with only UID
+            if (sertNo != null) {
+                sertNosToProcess.add(sertNo);
+                linkMap.put(sertNo, lr);
+            }
+        }
+        
+        log.info("Processing {} unique sertNos: {}", sertNosToProcess.size(), sertNosToProcess);
+        
+        // Batch upsert Serts for all needed sertNos
+        Map<String, String> sertNoToUidMap = new HashMap<>();
+        if (!sertNosToProcess.isEmpty()) {
+            List<SertBatchRepositoryImpl.SertRow> sertRows = new ArrayList<>();
+            for (String sertNo : sertNosToProcess) {
+                String uid = UUID.randomUUID().toString();
+                sertRows.add(new SertBatchRepositoryImpl.SertRow(uid, sertNo, null, false, false, LocalDateTime.now(), LocalDateTime.now()));
+                sertNoToUidMap.put(sertNo, uid);
+            }
+            sertBatchRepository.batchUpsertSerts(sertRows);
+        }
+        
+        // Load all existing Serts for the needed sertNos (including newly created)
+        List<Sert> existingSerts = sertRepository.findBySertNoIn(new ArrayList<>(sertNosToProcess));
+        Map<String, Sert> sertByNo = existingSerts.stream()
+                .collect(Collectors.toMap(Sert::getSertNo, Function.identity()));
+        
+        // Now create image rows with proper sert references (from memory, not DB)
+        List<SertImageBatchRepositoryImpl.SertImageRow> toUpsert = new ArrayList<>();
+        int skippedImages = 0;
+        int processedImages = 0;
+        int imagesWithoutCert = 0;
+        
+        for (SertImage img : images) {
+            SertImageLinksRequest lr = links.get(img.getUid());
+            String sertNo = lr != null ? normalizeSertNo(lr.getSertNo()) : null;
+            
+            // Find Sert by sertNo from memory map (existing or newly created)
+            Sert sert = sertNo != null ? sertByNo.get(sertNo) : null;
+            
+            if (sert != null) {
+                toUpsert.add(new SertImageBatchRepositoryImpl.SertImageRow(img.getUid(), sert.getUid(), img.getImage(), false));
+                processedImages++;
+            } else {
+                // Image without certificate - add with NULL sert_uid
+                toUpsert.add(new SertImageBatchRepositoryImpl.SertImageRow(img.getUid(), null, img.getImage(), false));
+                imagesWithoutCert++;
+            }
+        }
+        
+        log.info("Batch processing images: total={}, toUpsert={}, processed={}, skipped={}, without_cert={}", 
+                 images.size(), toUpsert.size(), processedImages, skippedImages, imagesWithoutCert);
+        
+        log.info("Batch upserting  SertImage rows: \n" + toUpsert.toString());
+        
+        if (!toUpsert.isEmpty()) {
+            sertImageBatchRepository.batchUpsertSertImages(toUpsert);
+        }
+
+        // Reload saved images
+        List<String> uidImages = images.stream().map(SertImage::getUid).toList();
+        List<SertImage> savedImages = sertImageRepository.findByUidIn(uidImages);
+        Map<String, SertImage> imageMap = savedImages.stream().collect(Collectors.toMap(SertImage::getUid, Function.identity()));
+
+        // Links in bulk
+        List<SertImageGoods> allGoodsLinks = new ArrayList<>();
+        List<SertImageSeries> allSeriesLinks = new ArrayList<>();
+
+        log.info("*** Processing  links: {}", links.toString());    
+
+        links.forEach((uidImage, linkRequest) -> {
+            SertImage img = imageMap.get(uidImage);
+            if (img == null) {
+                log.warn("Image {} not found in imageMap", uidImage);
+                return;
+            }
+            log.info("Processing image {} with good links: {}", uidImage, linkRequest.getGoodUids().toString());    
             if (linkRequest.getGoodUids() != null && !linkRequest.getGoodUids().isEmpty()) {
                 linkRequest.getGoodUids().forEach(goodUid -> {
-                    SertGoods sg = new SertGoods();
-                    sg.setSert(sert);
-                    
-                    // Create proxy Good without loading from DB
+                    SertImageGoods sg = new SertImageGoods();
+                    sg.setSertImage(img);
                     Good good = entityManager.getReference(Good.class, goodUid);
                     sg.setGood(good);
-                    
-                    // Set composite ID
-                    sg.setId(new SertGoodsId(sert.getUid(), goodUid));
-                    
+                    sg.setId(new SertImageGoodsId(img.getUid(), goodUid));
                     allGoodsLinks.add(sg);
                 });
             }
-            
-            // Process series links - create proxies with only UID
+            log.info("Processing image {} with series links: {}", uidImage, linkRequest.getSeriesUids().toString());    
             if (linkRequest.getSeriesUids() != null && !linkRequest.getSeriesUids().isEmpty()) {
                 linkRequest.getSeriesUids().forEach(seriesUid -> {
-                    SertSeries ss = new SertSeries();
-                    ss.setSert(sert);
-                    
-                    // Create proxy Series without loading from DB
+                    SertImageSeries ss = new SertImageSeries();
+                    ss.setSertImage(img);
                     Series series = entityManager.getReference(Series.class, seriesUid);
                     ss.setSeries(series);
-                    
-                    // Set composite ID
-                    ss.setId(new SertSeriesId(sert.getUid(), seriesUid));
-                    
+                    ss.setId(new SertImageSeriesId(img.getUid(), seriesUid));
                     allSeriesLinks.add(ss);
                 });
             }
         });
-        
-        // 3. Save all links in batches using upsert to handle duplicates
+    
+        log.info("Batch processing goods links: total links={}, toUpsert={}", 
+                 links.size(), allGoodsLinks.size());
+         
         if (!allGoodsLinks.isEmpty()) {
-            upsertSertGoods(allGoodsLinks);
+            upsertSertImageGoods(allGoodsLinks);
         }
-        
+
+        log.info("Batch processing series links: total links={}, toUpsert={}", 
+                 links.size(), allSeriesLinks.size());
+            
         if (!allSeriesLinks.isEmpty()) {
-            upsertSertSeries(allSeriesLinks);
+            upsertSertImageSeries(allSeriesLinks);
         }
-        
-        return savedSerts;
+
+        return savedImages;
     }
     
     /**
      * Upsert sert_goods records (insert or update on conflict) - TRUE BATCH version
      */
-    private void upsertSertGoods(List<SertGoods> sertGoods) {
-        sertGoodsBatchRepository.batchUpsertSertGoods(sertGoods);
+    private void upsertSertImageGoods(List<SertImageGoods> rows) {
+        sertImageGoodsBatchRepository.batchUpsertSertImageGoods(rows);
     }
     
     /**
      * Upsert sert_series records (insert or update on conflict) - TRUE BATCH version
      */
-    private void upsertSertSeries(List<SertSeries> sertSeries) {
-        sertSeriesBatchRepository.batchUpsertSertSeries(sertSeries);
+    private void upsertSertImageSeries(List<SertImageSeries> rows) {
+        sertImageSeriesBatchRepository.batchUpsertSertImageSeries(rows);
     }
     
     /**
@@ -266,7 +341,8 @@ public class SertService {
         List<CertificateInfoDto> result = new ArrayList<>();
         for (SertRepository.CertificateSearchRow row : rows) {
             result.add(new CertificateInfoDto(
-                row.getUid(),
+                row.getUidImage(),
+                row.getSertUid(),
                 row.getCertificateNumber(),
                 row.getImagePath(),
                 row.getLinkType(),
@@ -287,9 +363,9 @@ public class SertService {
      * @return Список предложений для автодополнения
      */
     public List<CertificateAutocompleteDto> autocomplete(String type, String query) {
-         return autocomplete(type, query, null, null, null, 10); // по умолчанию 10 результатов
+         return autocomplete(type, query, null, null, null, 20); // по умолчанию 20 результатов
     }
-    
+
     /**
      * Автодополнение для полей поиска с иерархической фильтрацией
      * @param type Тип данных (INVOICE, PRODUCT, SERIES, CERTIFICATE)
@@ -300,15 +376,14 @@ public class SertService {
      * @return Список предложений для автодополнения
      */
     public List<CertificateAutocompleteDto> autocomplete(String type, String query, String invoiceNumber, String productName, String seriesName) {
-        return autocomplete(type, query, invoiceNumber, productName, seriesName, 10); // по умолчанию 10 результатов
+        return autocomplete(type, query, invoiceNumber, productName, seriesName, 20); // по умолчанию 20 результатов
     }
-    
+
     /**
      * Автодополнение для полей поиска с иерархической фильтрацией и настраиваемым лимитом
      * @param type Тип данных (INVOICE, PRODUCT, SERIES, CERTIFICATE)
      * @param query Строка поиска
      * @param invoiceNumber Опциональный фильтр по номеру накладной
-     * @param productName Опциональный фильтр по наименованию товара
      * @param seriesName Опциональный фильтр по наименованию серии
      * @param limit Максимальное количество результатов
      * @return Список предложений для автодополнения
@@ -388,6 +463,28 @@ public class SertService {
         }
         
         return results;
+    }
+
+    private Sert upsertSertBySertNo(String sertNo) {
+        String normalized = normalizeSertNo(sertNo);
+        if (normalized == null) {
+            return null;
+        }
+
+        return sertRepository.findFirstBySertNoIgnoreCase(normalized)
+                .orElseGet(() -> createSertWithSertNo(normalized));
+    }
+
+    private Sert createSertWithSertNo(String sertNo) {
+        Sert s = new Sert();
+        s.setSertNo(sertNo);
+        return sertRepository.save(s);
+    }
+
+    private String normalizeSertNo(String sertNo) {
+        if (sertNo == null) return null;
+        String trimmed = sertNo.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }
 

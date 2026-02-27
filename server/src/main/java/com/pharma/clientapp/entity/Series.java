@@ -23,6 +23,13 @@ public class Series {
     @JoinColumn(name = "good_uid", referencedColumnName = "uid", insertable = false, updatable = false)
     private Good good;
 
+    @Column(name = "sert_uid", length = 36)
+    private String sertUid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sert_uid", referencedColumnName = "uid", insertable = false, updatable = false)
+    private Sert sert;
+
     @Column(name = "date_expbefore")
     private LocalDateTime dateExpBefore;
 

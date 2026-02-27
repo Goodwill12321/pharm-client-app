@@ -8,7 +8,8 @@ export interface CertificateSearchRequest {
 }
 
 export interface CertificateInfoDto {
-  uid: string;
+  uidImage: string;
+  sertUid?: string;
   certificateNumber?: string;
   imagePath?: string;
   productName?: string;

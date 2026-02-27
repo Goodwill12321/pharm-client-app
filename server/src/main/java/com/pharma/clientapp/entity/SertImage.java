@@ -1,28 +1,29 @@
 package com.pharma.clientapp.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.time.LocalDateTime;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @Data
 @Entity
-@Table(name = "sert")
-public class Sert {
+@Table(name = "sert_images")
+public class SertImage {
     @Id
-    @GeneratedValue
-    @org.hibernate.annotations.UuidGenerator
     @Column(length = 36, updatable = false, nullable = false)
+    @JsonProperty("uidImage")
     private String uid;
 
-    // TODO: legacy поле, изображения вынесены в таблицу sert_images. Удалить после миграции.
-    @Column(length = 300)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "uid_sert", nullable = true)
+    @Schema(hidden = true)
+    private Sert sert;
+
+    @Column(length = 300, nullable = false)
     private String image;
 
-    @Column(name = "sertno", length = 50)
-    private String sertNo;
-
-    // TODO: legacy поле, изображения вынесены в таблицу sert_images. Удалить после миграции.
     @Column(name = "image_loaded", insertable = false, updatable = true)
     private Boolean imageLoaded;
 

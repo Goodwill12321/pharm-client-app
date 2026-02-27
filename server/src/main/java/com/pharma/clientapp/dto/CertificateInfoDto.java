@@ -8,8 +8,11 @@ import java.time.LocalDateTime;
 @Schema(description = "DTO для информации о сертификате с связанными данными")
 public class CertificateInfoDto {
     
-    @Schema(description = "UID сертификата")
-    private String uid;
+    @Schema(description = "UID изображения (внешний идентификатор картинки)")
+    private String uidImage;
+    
+    @Schema(description = "UID сертификата (если привязан к изображению)")
+    private String sertUid;
     
     @Schema(description = "Номер сертификата")
     private String certificateNumber;
@@ -37,10 +40,11 @@ public class CertificateInfoDto {
 
     public CertificateInfoDto() {}
 
-    public CertificateInfoDto(String uid, String certificateNumber, String imagePath, 
+    public CertificateInfoDto(String uidImage, String sertUid, String certificateNumber, String imagePath, 
                             String linkType, String productName, String productUid, 
                             String seriesName, String seriesUid) {
-        this.uid = uid;
+        this.uidImage = uidImage;
+        this.sertUid = sertUid;
         this.certificateNumber = certificateNumber;
         this.imagePath = imagePath;
         this.linkType = linkType;

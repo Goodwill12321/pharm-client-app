@@ -1,12 +1,13 @@
 package com.pharma.clientapp.controller;
 
-import com.pharma.clientapp.dto.SertLinksRequest;
-import com.pharma.clientapp.dto.SertBatchLinksRequest;
+import com.pharma.clientapp.dto.SertImageLinksRequest;
+import com.pharma.clientapp.dto.SertImageBatchLinksRequest;
 import com.pharma.clientapp.dto.CertificateSearchRequest;
 import com.pharma.clientapp.dto.CertificateInfoDto;
 import com.pharma.clientapp.dto.CertificateAutocompleteDto;
 //import jakarta.validation.Valid;
 import com.pharma.clientapp.entity.Sert;
+import com.pharma.clientapp.entity.SertImage;
 import com.pharma.clientapp.service.SertService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -64,10 +65,10 @@ public class SertController {
      * @return The updated Sert entity with HTTP 200 status, or 404 if not found
      */
     @PutMapping("/add_with_links")
-    public ResponseEntity<Sert> updateSertWithLinks(@RequestBody SertLinksRequest request) {
+    public ResponseEntity<SertImage> updateSertWithLinks(@RequestBody SertImageLinksRequest request) {
         try {
-            Sert updatedSert = sertService.updateSertWithLinks(request);
-            return ResponseEntity.ok(updatedSert);
+            SertImage updated = sertService.updateSertWithLinks(request);
+            return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
@@ -80,13 +81,13 @@ public class SertController {
      */
     @PostMapping("/add_batch_with_links")
     public ResponseEntity<?> batchUpdateSertsWithLinks(
-            @RequestBody SertBatchLinksRequest batchRequest) {
+            @RequestBody SertImageBatchLinksRequest batchRequest) {
         try {
-            List<Sert> updatedSerts = sertService.batchUpdateSertsWithLinks(
-                batchRequest.getSerts(),
+            List<SertImage> updatedImages = sertService.batchUpdateSertsWithLinks(
+                batchRequest.getImages(),
                 batchRequest.getLinks()
             );
-            return ResponseEntity.ok(updatedSerts);
+            return ResponseEntity.ok(updatedImages);
                 } catch (RuntimeException e) {
             System.err.println("Batch update error: " + e.getMessage());
             
