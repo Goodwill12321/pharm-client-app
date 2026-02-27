@@ -74,7 +74,10 @@ CREATE TABLE IF NOT EXISTS client_contact (
 -- Таблица files
 CREATE TABLE IF NOT EXISTS files (
     uid varchar(36) PRIMARY KEY DEFAULT (gen_random_uuid()::text),
-    files varchar(200)
+    file_name varchar(255),
+    file_path varchar(2048),
+    content_type varchar(200),
+    size_bytes bigint
 );
 
 -- Таблица files_clame
