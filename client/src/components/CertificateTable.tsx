@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  Box,
   Paper,
   Typography,
   Table,
@@ -9,18 +8,30 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
   Chip,
-  Link,
   Alert,
+  Button,
+  Snackbar,
 } from '@mui/material';
-import { Download as DownloadIcon, Description as FileIcon } from '@mui/icons-material';
-import { CertificateInfoDto } from '../api/certificates';
+import { Archive as ZipIcon } from '@mui/icons-material';
+import { CertificateInfoDto, downloadCertificatesZip, CertificateZipRequest } from '../api/certificates';
 
 // Уменьшенные размеры шрифтов
 const FONT_SIZE_BASE = 13; // вместо 16
 const FONT_SIZE_SMALL = 11; // вместо 14
 const FONT_SIZE_XSMALL = 10; // вместо 12
+
+interface CertificateRow {
+  key: string;
+  productUid?: string;
+  productName: string;
+  seriesUid?: string;
+  seriesName: string;
+  certificateNumber: string;
+  linkType: CertificateInfoDto['linkType'];
+  imageUids: string[];
+  imagesCount: number;
+}
 
 interface CertificateTableProps {
   certificates: CertificateInfoDto[];
@@ -31,25 +42,74 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
   certificates,
   loading = false,
 }) => {
-  const getDisplayName = (cert: CertificateInfoDto) => {
-    if (cert.linkType === 'SERIES' && cert.seriesName) {
-      return `${cert.productName || ''} / ${cert.seriesName}`;
-    }
-    return cert.productName || 'Без названия';
-  };
+  const [downloading, setDownloading] = useState(false);
+  const [notification, setNotification] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
-  const getLinkTypeLabel = (linkType: string) => {
+  const rows: CertificateRow[] = useMemo(() => {
+    const map = new Map<string, CertificateRow>();
+
+    certificates.forEach((cert) => {
+      const productUid = cert.productUid || '';
+      const seriesUid = cert.seriesUid || '';
+      const certificateNumber = cert.certificateNumber || '';
+      const linkType = cert.linkType;
+
+      const key = `${productUid}::${seriesUid}::${certificateNumber}::${linkType}`;
+
+      const productName = cert.productName || '—';
+      const seriesName = cert.seriesName || '—';
+
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          productUid: cert.productUid,
+          productName,
+          seriesUid: cert.seriesUid,
+          seriesName,
+          certificateNumber: cert.certificateNumber || '—',
+          linkType,
+          imageUids: [],
+          imagesCount: 0,
+        });
+      }
+
+      const row = map.get(key)!;
+
+      // Считаем количество изображений по uidImage.
+      // imagePath может не приходить из search (или быть null), но для ZIP мы отправляем uidImage,
+      // а бэкенд сам найдет путь и соберет архив.
+      if (cert.uidImage) {
+        row.imageUids.push(cert.uidImage);
+      }
+    });
+
+    // Дедупликация uidImage внутри строки (на случай дублей из join-ов)
+    return Array.from(map.values()).map((row) => {
+      const unique = Array.from(new Set(row.imageUids));
+      return {
+        ...row,
+        imageUids: unique,
+        imagesCount: unique.length,
+      };
+    });
+  }, [certificates]);
+
+  const getLinkTypeLabel = (linkType: CertificateInfoDto['linkType']) => {
     switch (linkType) {
       case 'PRODUCT':
         return 'Товар';
       case 'SERIES':
         return 'Серия';
       default:
-        return 'Без привязки';
+        return 'Серт.';
     }
   };
 
-  const getLinkTypeColor = (linkType: string) => {
+  const getLinkTypeColor = (linkType: CertificateInfoDto['linkType']) => {
     switch (linkType) {
       case 'PRODUCT':
         return '#4CAF50';
@@ -60,20 +120,44 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
     }
   };
 
-  const handleDownload = (imagePath: string) => {
-    if (!imagePath) return;
-    
-    // Формируем URL для скачивания
-    const downloadUrl = `/api/files/${imagePath}`;
-    
-    // Создаем временную ссылку для скачивания
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = imagePath.split('/').pop() || 'certificate';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadRowZip = async (row: CertificateRow) => {
+    if (row.imageUids.length === 0) {
+      setNotification({
+        open: true,
+        message: 'Нет файлов для скачивания',
+        severity: 'error'
+      });
+      return;
+    }
+
+    setDownloading(true);
+    try {
+      const zipRequest: CertificateZipRequest = {
+        certificateImageUids: row.imageUids,
+      };
+      await downloadCertificatesZip(zipRequest);
+      setNotification({
+        open: true,
+        message: 'Архив успешно скачан',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error downloading certificates:', error);
+      setNotification({
+        open: true,
+        message: 'Ошибка при скачивании сертификатов',
+        severity: 'error'
+      });
+    } finally {
+      setDownloading(false);
+    }
   };
+
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
+  };
+
+  const groupedData = rows;
 
   if (loading) {
     return (
@@ -102,51 +186,54 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
           <TableHead>
             <TableRow sx={{ bgcolor: '#f4f6fa' }}>
               <TableCell sx={{ fontWeight: 600, color: '#212121', fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
-                Наименование товара
+                Товар
               </TableCell>
               <TableCell sx={{ fontWeight: 600, color: '#212121', fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
                 Серия
               </TableCell>
               <TableCell sx={{ fontWeight: 600, color: '#212121', fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
-                Номер сертификата
+                Номер серт.
               </TableCell>
               <TableCell sx={{ fontWeight: 600, color: '#212121', fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
-                Тип привязки
+                Тип
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#212121', fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
-                Файл сертификата
+              <TableCell sx={{ fontWeight: 600, color: '#212121', fontSize: FONT_SIZE_SMALL + 'px', py: 1, width: 120 }}>
+                Кол-во файлов
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#212121', fontSize: FONT_SIZE_SMALL + 'px', py: 1, width: 160 }}>
+                Скачать
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {certificates.map((cert, index) => (
+            {groupedData.map((row) => (
               <TableRow
-                key={`${cert.uid}-${index}`}
+                key={row.key}
                 sx={{
                   '&:hover': { bgcolor: 'rgba(46, 125, 50, 0.04)' },
                 }}
               >
                 <TableCell sx={{ fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
                   <Typography variant="body2" sx={{ fontWeight: 500, fontSize: FONT_SIZE_SMALL + 'px' }}>
-                    {cert.productName || '—'}
+                    {row.productName}
                   </Typography>
                 </TableCell>
                 <TableCell sx={{ fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
                   <Typography variant="body2" sx={{ fontSize: FONT_SIZE_SMALL + 'px' }}>
-                    {cert.seriesName || '—'}
+                    {row.seriesName}
                   </Typography>
                 </TableCell>
                 <TableCell sx={{ fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
                   <Typography variant="body2" sx={{ fontSize: FONT_SIZE_SMALL + 'px' }}>
-                    {cert.certificateNumber || '—'}
+                    {row.certificateNumber}
                   </Typography>
                 </TableCell>
                 <TableCell sx={{ fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
                   <Chip
-                    label={getLinkTypeLabel(cert.linkType)}
+                    label={getLinkTypeLabel(row.linkType)}
                     size="small"
                     sx={{
-                      bgcolor: getLinkTypeColor(cert.linkType),
+                      bgcolor: getLinkTypeColor(row.linkType),
                       color: 'white',
                       fontWeight: 500,
                       fontSize: FONT_SIZE_XSMALL + 'px',
@@ -155,50 +242,51 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
                   />
                 </TableCell>
                 <TableCell sx={{ fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
-                  {cert.imagePath ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <FileIcon sx={{ color: '#2E7D32', fontSize: 16 }} />
-                      <Link
-                        component="button"
-                        variant="body2"
-                        onClick={() => handleDownload(cert.imagePath!)}
-                        sx={{
-                          color: '#2E7D32',
-                          textDecoration: 'none',
-                          fontSize: FONT_SIZE_SMALL + 'px',
-                          '&:hover': {
-                            textDecoration: 'underline',
-                            color: '#1B5E20',
-                          },
-                        }}
-                      >
-                        Скачать
-                      </Link>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDownload(cert.imagePath!)}
-                        sx={{
-                          color: '#2E7D32',
-                          padding: 0.5,
-                          '&:hover': {
-                            backgroundColor: 'rgba(46, 125, 50, 0.08)',
-                          },
-                        }}
-                      >
-                        <DownloadIcon fontSize="inherit" sx={{ fontSize: 16 }} />
-                      </IconButton>
-                    </Box>
-                  ) : (
-                    <Typography variant="body2" sx={{ color: '#757575', fontSize: FONT_SIZE_SMALL + 'px' }}>
-                      Нет файла
-                    </Typography>
-                  )}
+                  <Typography variant="body2" sx={{ fontSize: FONT_SIZE_SMALL + 'px' }}>
+                    {row.imagesCount}
+                  </Typography>
+                </TableCell>
+                <TableCell sx={{ fontSize: FONT_SIZE_SMALL + 'px', py: 1 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<ZipIcon />}
+                    onClick={() => downloadRowZip(row)}
+                    disabled={downloading || row.imageUids.length === 0}
+                    sx={{
+                      borderColor: '#2E7D32',
+                      color: '#2E7D32',
+                      fontSize: FONT_SIZE_SMALL + 'px',
+                      '&:hover': {
+                        borderColor: '#1B5E20',
+                        backgroundColor: 'rgba(46, 125, 50, 0.04)',
+                      },
+                    }}
+                  >
+                    ZIP
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+      
+      {/* Уведомления */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleCloseNotification} 
+          severity={notification.severity} 
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Paper>
   );
 };

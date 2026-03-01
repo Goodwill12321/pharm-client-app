@@ -8,10 +8,12 @@ const Certificates: React.FC = () => {
   const [certificates, setCertificates] = useState<CertificateInfoDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentSearchCriteria, setCurrentSearchCriteria] = useState<CertificateSearchRequest>({});
 
   const handleSearch = async (criteria: CertificateSearchRequest) => {
     setLoading(true);
     setError(null);
+    setCurrentSearchCriteria(criteria);
     
     try {
       const results = await searchCertificates(criteria);
@@ -47,7 +49,10 @@ const Certificates: React.FC = () => {
         )}
         
         {!loading && !error && (
-          <CertificateTable certificates={certificates} loading={loading} />
+          <CertificateTable 
+            certificates={certificates} 
+            loading={loading} 
+          />
         )}
       </Box>
     </Container>

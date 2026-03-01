@@ -26,6 +26,12 @@ export interface CertificateAutocompleteDto {
   type: 'INVOICE' | 'PRODUCT' | 'SERIES' | 'CERTIFICATE';
 }
 
+export interface CertificateZipRequest {
+  certificateImageUids?: string[];
+  productUids?: string[];
+  invoiceNumber?: string;
+}
+
 export const searchCertificates = async (searchRequest: CertificateSearchRequest): Promise<CertificateInfoDto[]> => {
   const response = await apiFetch('/api/sert/search', {
     method: 'POST',
@@ -75,4 +81,33 @@ export const downloadCertificate = (imagePath: string): string => {
   
   // Иначе формируем URL для скачивания файла
   return `/api/files/${imagePath}`;
+};
+
+export const downloadCertificatesZip = async (zipRequest: CertificateZipRequest): Promise<void> => {
+  const response = await apiFetch('/api/sert/download-zip', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(zipRequest),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to download certificates ZIP: ${response.statusText}`);
+  }
+
+  // Получаем blob с ZIP-архивом
+  const blob = await response.blob();
+  
+  // Создаем временную ссылку для скачивания
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `certificates_${new Date().getTime()}.zip`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  // Очищаем URL
+  window.URL.revokeObjectURL(url);
 };
