@@ -1,6 +1,8 @@
+//t
 package com.pharma.clientapp.service;
 
 import com.pharma.clientapp.dto.SertImageLinksRequest;
+import com.pharma.clientapp.dto.SertImageRequestDto;
 import com.pharma.clientapp.dto.CertificateSearchRequest;
 import com.pharma.clientapp.dto.CertificateInfoDto;
 import com.pharma.clientapp.dto.CertificateAutocompleteDto;
@@ -105,28 +107,29 @@ public class SertService {
 
     /**
      * Updates a certificate and its associations with goods and series in a single transaction
-     * @param request The update request containing certificate and association data
-     * @return The updated Sert entity
+     * @param imageDto The image data containing uidImage, sertNo, image
+     * @param links The links data containing goodUids and seriesUids
+     * @return The updated SertImage entity
      */
     @Transactional
-    public SertImage updateSertWithLinks(SertImageLinksRequest request) {
-        if (request == null || request.getUidImage() == null || request.getUidImage().isBlank()) {
+    public SertImage updateSertWithLinks(SertImageRequestDto imageDto, SertImageLinksRequest links) {
+        if (imageDto == null || imageDto.getUidImage() == null || imageDto.getUidImage().isBlank()) {
             throw new IllegalArgumentException("uidImage is required");
         }
 
-        Sert sert = upsertSertBySertNo(request.getSertNo());
+        Sert sert = upsertSertBySertNo(imageDto.getSertNo());
 
-        SertImage image = sertImageRepository.findById(request.getUidImage())
+        SertImage image = sertImageRepository.findById(imageDto.getUidImage())
                 .orElseGet(SertImage::new);
-        image.setUid(request.getUidImage());
-        image.setImage(request.getImage());
+        image.setUid(imageDto.getUidImage());
+        image.setImage(imageDto.getImage());
         image.setSert(sert);
         image.setIsDel(false);
         SertImage savedImage = sertImageRepository.save(image);
 
         // Links to goods
-        if (request.getGoodUids() != null && !request.getGoodUids().isEmpty()) {
-            List<SertImageGoods> toAdd = request.getGoodUids().stream()
+        if (links != null && links.getGoodUids() != null && !links.getGoodUids().isEmpty()) {
+            List<SertImageGoods> toAdd = links.getGoodUids().stream()
                     .map(goodUid -> {
                         SertImageGoods sg = new SertImageGoods();
                         sg.setSertImage(savedImage);
@@ -140,8 +143,8 @@ public class SertService {
         }
 
         // Links to series
-        if (request.getSeriesUids() != null && !request.getSeriesUids().isEmpty()) {
-            List<SertImageSeries> toAdd = request.getSeriesUids().stream()
+        if (links != null && links.getSeriesUids() != null && !links.getSeriesUids().isEmpty()) {
+            List<SertImageSeries> toAdd = links.getSeriesUids().stream()
                     .map(seriesUid -> {
                         SertImageSeries ss = new SertImageSeries();
                         ss.setSertImage(savedImage);
@@ -164,31 +167,41 @@ public class SertService {
      * @return List of updated certificates
      */
     @Transactional
-    public List<SertImage> batchUpdateSertsWithLinks(List<SertImage> images, Map<String, SertImageLinksRequest> links) {
-        if (images == null || images.isEmpty()) {
+    public List<SertImage> batchUpdateSertsWithLinks(List<SertImageRequestDto> imageDtos, Map<String, SertImageLinksRequest> links) {
+        if (imageDtos == null || imageDtos.isEmpty()) {
             return Collections.emptyList();
         }
 
-        log.info("Starting batch update with {} images and {} links", images.size(), links.size());
+        log.info("Starting batch update with {} images and {} links", imageDtos.size(), links.size());
+        
+        // Convert DTOs to SertImage entities for processing
+        List<SertImage> images = imageDtos.stream()
+                .map(dto -> {
+                    SertImage img = new SertImage();
+                    img.setUid(dto.getUidImage());
+                    img.setImage(dto.getImage());
+                    return img;
+                })
+                .collect(Collectors.toList());
         
         // Debug: log incoming images
         for (int i = 0; i < Math.min(images.size(), 3); i++) {
             SertImage img = images.get(i);
-            log.debug("Incoming image {}: uid={}, image={}", i, img.getUid(), img.getImage());
+            SertImageRequestDto dto = imageDtos.get(i);
+            log.debug("Incoming image {}: uid={}, sertNo={}, image={}", 
+                     i, img.getUid(), dto.getSertNo(), img.getImage());
         }
 
         // Upsert images in bulk (sert will be created/updated as needed)
         // First, collect all unique sertNos that need to be created/updated
         Set<String> sertNosToProcess = new HashSet<>();
-        Map<String, SertImageLinksRequest> linkMap = new HashMap<>();
         
-        for (SertImage img : images) {
-            SertImageLinksRequest lr = links.get(img.getUid());
-            String sertNo = lr != null ? normalizeSertNo(lr.getSertNo()) : null;
+        for (int i = 0; i < imageDtos.size(); i++) {
+            SertImageRequestDto dto = imageDtos.get(i);
+            String sertNo = normalizeSertNo(dto.getSertNo());
             
             if (sertNo != null) {
                 sertNosToProcess.add(sertNo);
-                linkMap.put(sertNo, lr);
             }
         }
         
@@ -217,9 +230,10 @@ public class SertService {
         int processedImages = 0;
         int imagesWithoutCert = 0;
         
-        for (SertImage img : images) {
-            SertImageLinksRequest lr = links.get(img.getUid());
-            String sertNo = lr != null ? normalizeSertNo(lr.getSertNo()) : null;
+        for (int i = 0; i < imageDtos.size(); i++) {
+            SertImageRequestDto dto = imageDtos.get(i);
+            SertImage img = images.get(i);
+            String sertNo = normalizeSertNo(dto.getSertNo());
             
             // Find Sert by sertNo from memory map (existing or newly created)
             Sert sert = sertNo != null ? sertByNo.get(sertNo) : null;
@@ -237,7 +251,7 @@ public class SertService {
         log.info("Batch processing images: total={}, toUpsert={}, processed={}, skipped={}, without_cert={}", 
                  images.size(), toUpsert.size(), processedImages, skippedImages, imagesWithoutCert);
         
-        log.info("Batch upserting  SertImage rows: \n" + toUpsert.toString());
+        //log.info("Batch upserting  SertImage rows: \n" + toUpsert.toString());
         
         if (!toUpsert.isEmpty()) {
             sertImageBatchRepository.batchUpsertSertImages(toUpsert);
@@ -252,7 +266,7 @@ public class SertService {
         List<SertImageGoods> allGoodsLinks = new ArrayList<>();
         List<SertImageSeries> allSeriesLinks = new ArrayList<>();
 
-        log.info("*** Processing  links: {}", links.toString());    
+        //log.info("*** Processing  links: {}", links.toString());    
 
         links.forEach((uidImage, linkRequest) -> {
             SertImage img = imageMap.get(uidImage);
@@ -271,7 +285,7 @@ public class SertService {
                     allGoodsLinks.add(sg);
                 });
             }
-            log.info("Processing image {} with series links: {}", uidImage, linkRequest.getSeriesUids().toString());    
+            //log.info("Processing image {} with series links: {}", uidImage, linkRequest.getSeriesUids().toString());    
             if (linkRequest.getSeriesUids() != null && !linkRequest.getSeriesUids().isEmpty()) {
                 linkRequest.getSeriesUids().forEach(seriesUid -> {
                     SertImageSeries ss = new SertImageSeries();
@@ -283,38 +297,19 @@ public class SertService {
                 });
             }
         });
-    
-        log.info("Batch processing goods links: total links={}, toUpsert={}", 
-                 links.size(), allGoodsLinks.size());
-         
-        if (!allGoodsLinks.isEmpty()) {
-            upsertSertImageGoods(allGoodsLinks);
-        }
 
-        log.info("Batch processing series links: total links={}, toUpsert={}", 
-                 links.size(), allSeriesLinks.size());
-            
+        // Batch save links
+        if (!allGoodsLinks.isEmpty()) {
+            sertImageGoodsBatchRepository.batchUpsertSertImageGoods(allGoodsLinks);
+        }
         if (!allSeriesLinks.isEmpty()) {
-            upsertSertImageSeries(allSeriesLinks);
+            sertImageSeriesBatchRepository.batchUpsertSertImageSeries(allSeriesLinks);
         }
 
         return savedImages;
     }
     
-    /**
-     * Upsert sert_goods records (insert or update on conflict) - TRUE BATCH version
-     */
-    private void upsertSertImageGoods(List<SertImageGoods> rows) {
-        sertImageGoodsBatchRepository.batchUpsertSertImageGoods(rows);
-    }
-    
-    /**
-     * Upsert sert_series records (insert or update on conflict) - TRUE BATCH version
-     */
-    private void upsertSertImageSeries(List<SertImageSeries> rows) {
-        sertImageSeriesBatchRepository.batchUpsertSertImageSeries(rows);
-    }
-    
+        
     /**
      * Поиск сертификатов по различным фильтрам - МАКСИМАЛЬНО ОПТИМАЛЬНЫЙ ВАРИАНТ
      * @param searchRequest Параметры поиска
@@ -344,7 +339,7 @@ public class SertService {
                 row.getUidImage(),
                 row.getSertUid(),
                 row.getCertificateNumber(),
-                row.getImagePath(),
+                row.getImagePath(), // Исправлено: getImagePath() вместо getImage()
                 row.getLinkType(),
                 row.getProductName(),
                 row.getProductUid(),
@@ -485,6 +480,159 @@ public class SertService {
         if (sertNo == null) return null;
         String trimmed = sertNo.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+    
+    /**
+     * Находит информацию о сертификате по UID изображения
+     * @param imageUid UID изображения сертификата
+     * @return Optional с информацией о сертификате
+     */
+    public Optional<CertificateInfoDto> findCertificateByImageUid(String imageUid) {
+        return sertImageRepository.findById(imageUid)
+            .map(sertImage -> {
+                CertificateInfoDto dto = new CertificateInfoDto();
+                dto.setUidImage(sertImage.getUid());
+                dto.setImagePath(sertImage.getImage()); // Исправлено: getImage() вместо getImagePath()
+                dto.setCreateTime(sertImage.getCreateTime());
+                
+                // Получаем информацию о сертификате
+                if (sertImage.getSert() != null) {
+                    dto.setSertUid(sertImage.getSert().getUid());
+                    dto.setCertificateNumber(sertImage.getSert().getSertNo());
+                }
+                
+                // Получаем информацию о привязках к товарам
+                List<SertImageGoods> goodsLinks = sertImageGoodsRepository.findBySertImageUid(sertImage.getUid()); // Исправлено: через репозиторий
+                if (goodsLinks != null && !goodsLinks.isEmpty()) {
+                    SertImageGoods firstLink = goodsLinks.get(0); // Исправлено: get(0) вместо iterator()
+                    if (firstLink.getGood() != null) {
+                        dto.setProductUid(firstLink.getGood().getUid());
+                        dto.setProductName(firstLink.getGood().getName());
+                    }
+                }
+                
+                // Получаем информацию о привязках к сериям
+                List<SertImageSeries> seriesLinks = sertImageSeriesRepository.findBySertImageUid(sertImage.getUid()); // Исправлено: через репозиторий
+                if (seriesLinks != null && !seriesLinks.isEmpty()) {
+                    SertImageSeries firstLink = seriesLinks.get(0); // Исправлено: get(0) вместо iterator()
+                    if (firstLink.getSeries() != null) {
+                        dto.setSeriesUid(firstLink.getSeries().getUid());
+                        dto.setSeriesName(firstLink.getSeries().getName());
+                    }
+                }
+                
+                // Определяем тип привязки
+                if (dto.getSeriesUid() != null) {
+                    dto.setLinkType("SERIES");
+                } else if (dto.getProductUid() != null) {
+                    dto.setLinkType("PRODUCT");
+                } else {
+                    dto.setLinkType("NONE");
+                }
+                
+                return dto;
+            });
+    }
+    
+    /**
+     * Находит информацию о сертификатах по списку UID изображений
+     * @param imageUids список UID изображений сертификатов
+     * @return список информации о сертификатах
+     */
+    public List<CertificateInfoDto> findCertificatesByImageUids(List<String> imageUids) {
+        if (imageUids == null || imageUids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        
+        return sertImageRepository.findAllById(imageUids).stream()
+                .map(sertImage -> {
+                    CertificateInfoDto dto = new CertificateInfoDto();
+                    dto.setUidImage(sertImage.getUid());
+                    dto.setImagePath(sertImage.getImage());
+                    dto.setCreateTime(sertImage.getCreateTime());
+
+                    if (sertImage.getSert() != null) {
+                        dto.setSertUid(sertImage.getSert().getUid());
+                        dto.setCertificateNumber(sertImage.getSert().getSertNo());
+                    }
+
+                    List<SertImageGoods> goodsLinks = sertImageGoodsRepository.findBySertImageUid(sertImage.getUid());
+                    if (goodsLinks != null && !goodsLinks.isEmpty()) {
+                        SertImageGoods firstGoodsLink = goodsLinks.get(0);
+                        if (firstGoodsLink.getGood() != null) {
+                            dto.setProductUid(firstGoodsLink.getGood().getUid());
+                            dto.setProductName(firstGoodsLink.getGood().getName());
+                        }
+                    }
+
+                    List<SertImageSeries> seriesLinks = sertImageSeriesRepository.findBySertImageUid(sertImage.getUid());
+                    if (seriesLinks != null && !seriesLinks.isEmpty()) {
+                        SertImageSeries firstSeriesLink = seriesLinks.get(0);
+                        if (firstSeriesLink.getSeries() != null) {
+                            dto.setSeriesUid(firstSeriesLink.getSeries().getUid());
+                            dto.setSeriesName(firstSeriesLink.getSeries().getName());
+                        }
+                    }
+
+                    if (dto.getSeriesUid() != null) {
+                        dto.setLinkType("SERIES");
+                    } else if (dto.getProductUid() != null) {
+                        dto.setLinkType("PRODUCT");
+                    } else {
+                        dto.setLinkType("NONE");
+                    }
+
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<CertificateInfoDto> findCertificatesByProductUids(List<String> productUids) {
+        if (productUids == null || productUids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return sertImageRepository.findByProductUids(productUids).stream()
+                .map(sertImage -> {
+                    CertificateInfoDto dto = new CertificateInfoDto();
+                    dto.setUidImage(sertImage.getUid());
+                    dto.setImagePath(sertImage.getImage());
+                    dto.setCreateTime(sertImage.getCreateTime());
+
+                    if (sertImage.getSert() != null) {
+                        dto.setSertUid(sertImage.getSert().getUid());
+                        dto.setCertificateNumber(sertImage.getSert().getSertNo());
+                    }
+
+                    List<SertImageGoods> goodsLinks = sertImageGoodsRepository.findBySertImageUid(sertImage.getUid());
+                    if (goodsLinks != null && !goodsLinks.isEmpty()) {
+                        SertImageGoods firstGoodsLink = goodsLinks.get(0);
+                        if (firstGoodsLink.getGood() != null) {
+                            dto.setProductUid(firstGoodsLink.getGood().getUid());
+                            dto.setProductName(firstGoodsLink.getGood().getName());
+                        }
+                    }
+
+                    List<SertImageSeries> seriesLinks = sertImageSeriesRepository.findBySertImageUid(sertImage.getUid());
+                    if (seriesLinks != null && !seriesLinks.isEmpty()) {
+                        SertImageSeries firstSeriesLink = seriesLinks.get(0);
+                        if (firstSeriesLink.getSeries() != null) {
+                            dto.setSeriesUid(firstSeriesLink.getSeries().getUid());
+                            dto.setSeriesName(firstSeriesLink.getSeries().getName());
+                        }
+                    }
+
+                    if (dto.getSeriesUid() != null) {
+                        dto.setLinkType("SERIES");
+                    } else if (dto.getProductUid() != null) {
+                        dto.setLinkType("PRODUCT");
+                    } else {
+                        dto.setLinkType("NONE");
+                    }
+
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 }
 

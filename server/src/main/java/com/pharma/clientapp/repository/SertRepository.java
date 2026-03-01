@@ -142,7 +142,7 @@ public interface SertRepository extends JpaRepository<Sert, String> {
         String getUidImage();
         String getSertUid();
         String getCertificateNumber();
-        String getImagePath();
+        String getImagePath(); // Исправлено: getImagePath() для соответствия SQL запросу
         String getLinkType();
         String getProductName();
         String getProductUid();

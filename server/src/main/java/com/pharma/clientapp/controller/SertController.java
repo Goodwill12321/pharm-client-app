@@ -2,14 +2,20 @@ package com.pharma.clientapp.controller;
 
 import com.pharma.clientapp.dto.SertImageLinksRequest;
 import com.pharma.clientapp.dto.SertImageBatchLinksRequest;
+import com.pharma.clientapp.dto.SertImageRequestDto;
 import com.pharma.clientapp.dto.CertificateSearchRequest;
 import com.pharma.clientapp.dto.CertificateInfoDto;
 import com.pharma.clientapp.dto.CertificateAutocompleteDto;
+import com.pharma.clientapp.dto.CertificateZipRequest;
 //import jakarta.validation.Valid;
 import com.pharma.clientapp.entity.Sert;
 import com.pharma.clientapp.entity.SertImage;
 import com.pharma.clientapp.service.SertService;
+import com.pharma.clientapp.service.CertificateZipService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,9 +24,11 @@ import java.util.List;
 @RequestMapping("/api/sert")
 public class SertController {
     private final SertService sertService;
+    private final CertificateZipService certificateZipService;
 
-    public SertController(SertService sertService) {
+    public SertController(SertService sertService, CertificateZipService certificateZipService) {
         this.sertService = sertService;
+        this.certificateZipService = certificateZipService;
     }
 
     @GetMapping
@@ -61,13 +69,16 @@ public class SertController {
     
     /**
      * Updates a certificate and its associations with goods and series in a single transaction
-     * @param request The update request containing certificate and association data
-     * @return The updated Sert entity with HTTP 200 status, or 404 if not found
+     * @param imageDto The image data containing uidImage, sertNo, image
+     * @param links The links data containing goodUids and seriesUids
+     * @return The updated SertImage entity with HTTP 200 status, or 404 if not found
      */
     @PutMapping("/add_with_links")
-    public ResponseEntity<SertImage> updateSertWithLinks(@RequestBody SertImageLinksRequest request) {
+    public ResponseEntity<SertImage> updateSertWithLinks(
+            @RequestBody SertImageRequestDto imageDto,
+            @RequestBody(required = false) SertImageLinksRequest links) {
         try {
-            SertImage updated = sertService.updateSertWithLinks(request);
+            SertImage updated = sertService.updateSertWithLinks(imageDto, links);
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
@@ -84,8 +95,8 @@ public class SertController {
             @RequestBody SertImageBatchLinksRequest batchRequest) {
         try {
             List<SertImage> updatedImages = sertService.batchUpdateSertsWithLinks(
-                batchRequest.getImages(),
-                batchRequest.getLinks()
+                        batchRequest.getImages(),
+                        batchRequest.getLinks()
             );
             return ResponseEntity.ok(updatedImages);
                 } catch (RuntimeException e) {
@@ -160,6 +171,38 @@ public class SertController {
             System.err.println("Autocomplete error: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    /**
+     * Скачивание сертификатов в ZIP-архиве
+     * @param zipRequest Запрос с UID сертификатов или номером накладной
+     * @return ZIP-архив с сертификатами, организованными по папкам Товар/Серия
+     */
+    @PostMapping("/download-zip")
+    public ResponseEntity<Resource> downloadCertificatesZip(@RequestBody CertificateZipRequest zipRequest) {
+        try {
+            String zipFilePath = certificateZipService.createCertificatesZip(zipRequest);
+            Resource resource = new FileSystemResource(zipFilePath);
+            
+            if (!resource.exists()) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            String filename = "certificates_" + System.currentTimeMillis() + ".zip";
+            
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                    .body(resource);
+                    
+        } catch (IllegalArgumentException e) {
+            System.err.println("Bad request for ZIP download: " + e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            System.err.println("Error creating ZIP archive: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

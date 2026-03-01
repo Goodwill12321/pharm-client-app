@@ -47,7 +47,7 @@ public class SertBatchRepositoryImpl {
         String sql = """
             INSERT INTO sert (uid, sertno, image, image_loaded, is_del, create_time, update_time)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT (sertno) 
+            ON CONFLICT (sertno) WHERE sertno IS NOT NULL AND sertno <> ''
             DO UPDATE SET 
                 image = EXCLUDED.image,
                 image_loaded = EXCLUDED.image_loaded,
