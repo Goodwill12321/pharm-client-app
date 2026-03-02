@@ -9,6 +9,8 @@ export function useCreateDocUnloadTaskMutation() {
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['docUnloadTaskSummary'] });
       qc.invalidateQueries({ queryKey: ['docUnloadHistory', variables.docUid] });
+      qc.invalidateQueries({ queryKey: ['docUnloadTaskGlobalSummary'] });
+      qc.invalidateQueries({ queryKey: ['docUnloadTasksView'] });
     },
   });
 }
