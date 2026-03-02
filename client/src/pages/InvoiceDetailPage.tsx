@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchInvoiceHeader } from '../api/invoices';
 import InvoiceForm from './InvoiceForm';
@@ -7,6 +7,11 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 const InvoiceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const openUnloadHistory = React.useMemo(() => {
+    const sp = new URLSearchParams(location.search);
+    return sp.get('unloadHistory') === '1' || sp.get('unloadHistory') === 'true';
+  }, [location.search]);
 
   const { data: invoice, isLoading, isError, error } = useQuery({
     queryKey: ['invoiceHeader', id],
@@ -39,7 +44,7 @@ const InvoiceDetailPage: React.FC = () => {
     );
   }
 
-  return <InvoiceForm invoice={invoice} />;
+  return <InvoiceForm invoice={invoice} openUnloadHistory={openUnloadHistory} />;
 };
 
 export default InvoiceDetailPage;

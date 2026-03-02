@@ -7,14 +7,29 @@ import { useAddressFilter } from '../context/AddressFilterContext';
 import GetAppIcon from '@mui/icons-material/GetApp';
 import PrintIcon from '@mui/icons-material/Print';
 import DescriptionIcon from '@mui/icons-material/Description';
+import EmailIcon from '@mui/icons-material/Email';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import { Accordion, AccordionSummary, AccordionDetails, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { InvoiceHeader, InvoiceLine } from '../types/invoice';
 import InvoiceForm from './InvoiceForm';
+import { useInvoicesQuery } from '../hooks/useInvoicesQuery';
+import { useInvoiceLinesQuery } from '../hooks/useInvoiceLinesQuery';
+import { exportInvoicesListToExcel, exportInvoiceToExcel } from '../utils/excelExport';
+import { API_BASE_URL, apiFetch } from '../api/index';
+import { useDocUnloadTaskSummaryQuery } from '../hooks/useDocUnloadTaskSummaryQuery';
+import { useDocUnloadTaskGlobalSummaryQuery } from '../hooks/useDocUnloadTaskGlobalSummaryQuery';
+import { useCreateDocUnloadTaskMutation } from '../hooks/useCreateDocUnloadTaskMutation';
+import { useDocUnloadTasksViewQuery } from '../hooks/useDocUnloadTasksViewQuery';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { markDocUnloadTaskDeleted } from '../api/docUnloadTasks';
 
 // Стили для анимации загрузки
 const spinKeyframes = `
@@ -24,13 +39,9 @@ const spinKeyframes = `
   }
 `;
 
-// Импортируем хук для загрузки накладных с сервера
-import { useInvoicesQuery } from '../hooks/useInvoicesQuery';
-import { useInvoiceLinesQuery } from '../hooks/useInvoiceLinesQuery';
-import { exportInvoicesListToExcel, exportInvoiceToExcel } from '../utils/excelExport';
-import { API_BASE_URL, apiFetch } from '../api/index';
-
 const Invoices: React.FC = () => {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
   const { data: clients = [], isLoading: loadingClients, error: errorClients } = useClientsQuery();
   const { selectedAddresses } = useAddressFilter();
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceHeader | null>(null);
@@ -66,6 +77,18 @@ const Invoices: React.FC = () => {
   // Состояние для хранения строк накладных
   const [invoiceLinesCache, setInvoiceLinesCache] = useState<Record<string, InvoiceLine[]>>({});
   const [loadingInvoices, setLoadingInvoices] = useState<Record<string, boolean>>({});
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmInvoice, setConfirmInvoice] = useState<InvoiceHeader | null>(null);
+  const [pendingWarningOpen, setPendingWarningOpen] = useState(false);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [taskToCancel, setTaskToCancel] = useState<string | null>(null);
+
+  const [tasksPanelExpanded, setTasksPanelExpanded] = useState(false);
 
   const isSelected = (uid?: string) => !!uid && selectedUids.includes(uid);
   const toggleSelected = (uid?: string) => {
@@ -145,6 +168,79 @@ const Invoices: React.FC = () => {
   const sortedInvoices = [...filteredInvoices].sort(getComparator(order, orderBy));
   const totalPages = Math.max(1, Math.ceil(sortedInvoices.length / rowsPerPage));
   const pagedInvoices = sortedInvoices.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+  const pagedDocUids = useMemo(() => pagedInvoices.map(i => i.uid).filter(Boolean), [pagedInvoices]);
+  const { data: unloadSummary = [] } = useDocUnloadTaskSummaryQuery(pagedDocUids);
+  const { data: globalUnloadSummary = [] } = useDocUnloadTaskGlobalSummaryQuery();
+  const unloadSummaryByDocUid = useMemo(() => {
+    const m: Record<string, { total: number; done: number; pending: number }> = {};
+    for (const s of unloadSummary) {
+      m[s.docUid] = { total: s.total, done: s.done, pending: s.pending };
+    }
+    return m;
+  }, [unloadSummary]);
+
+  const globalUnloadTotals = useMemo(() => {
+    if (globalUnloadSummary.length === 0) return { total: 0, done: 0, pending: 0 };
+    const summary = globalUnloadSummary[0];
+    const total = summary.total;
+    const done = summary.done;
+    const pending = summary.pending;
+    return { total, done, pending };
+  }, [globalUnloadSummary]);
+
+  const handleOpenConfirmForInvoice = (inv: InvoiceHeader) => {
+    const summary = inv.uid ? unloadSummaryByDocUid[inv.uid] : undefined;
+    if ((summary?.pending ?? 0) > 0) {
+      setPendingWarningOpen(true);
+      return;
+    }
+    setConfirmInvoice(inv);
+    setConfirmOpen(true);
+  };
+
+  const createUnloadTaskMutation = useCreateDocUnloadTaskMutation();
+  const cancelUnloadTaskMutation = useMutation({
+    mutationFn: (uid: string) => markDocUnloadTaskDeleted(uid),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['docUnloadTasks'] });
+      qc.invalidateQueries({ queryKey: ['docUnloadTasksView'] });
+      qc.invalidateQueries({ queryKey: ['docUnloadTaskSummary'] });
+      qc.invalidateQueries({ queryKey: ['docUnloadTaskGlobalSummary'] });
+    },
+  });
+  const monthFilters = useMemo(() => {
+    const to = new Date();
+    const from = new Date();
+    from.setDate(to.getDate() - 30);
+    const fmt = (d: Date) => {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+    return { requestFrom: fmt(from), requestTo: fmt(to) };
+  }, []);
+
+  const { data: unloadTasksList = [], isLoading: unloadTasksLoading } = useDocUnloadTasksViewQuery(monthFilters, tasksPanelExpanded);
+
+  const handleCancelUnloadTask = (uid: string) => {
+    setTaskToCancel(uid);
+    setCancelConfirmOpen(true);
+  };
+
+  const handleConfirmCancel = () => {
+    if (taskToCancel) {
+      cancelUnloadTaskMutation.mutate(taskToCancel);
+      setCancelConfirmOpen(false);
+      setTaskToCancel(null);
+    }
+  };
+
+  const handleCancelCancel = () => {
+    setCancelConfirmOpen(false);
+    setTaskToCancel(null);
+  };
+
   const currentIndex = selectedInvoice ? pagedInvoices.findIndex(inv => inv?.uid === selectedInvoice?.uid) : -1;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -180,6 +276,30 @@ const Invoices: React.FC = () => {
 
   const handleRowClick = (inv: InvoiceHeader) => {
     setSelectedInvoice(inv);
+  };
+
+  const handleRequestUnload = async (invoice: InvoiceHeader) => {
+    try {
+      await createUnloadTaskMutation.mutateAsync({
+        docType: 'Электронная накладная',
+        docUid: invoice.uid,
+        docNum: invoice.docNum,
+        docDate: invoice.docDate,
+      });
+      setSnackbarSeverity('success');
+      setSnackbarMessage('Запрос на выгрузку создан');
+      setSnackbarOpen(true);
+    } catch (e) {
+      const status = (e as any)?.status;
+      if (status === 409) {
+        setSnackbarSeverity('error');
+        setSnackbarMessage('Уже есть невыполненный запрос на выгрузку по этой накладной');
+      } else {
+        setSnackbarSeverity('error');
+        setSnackbarMessage('Не удалось создать запрос на выгрузку');
+      }
+      setSnackbarOpen(true);
+    }
   };
 
   const handleTableDoubleClick = () => {
@@ -252,6 +372,81 @@ const Invoices: React.FC = () => {
   return (
     <Box p={2}>
       <Typography variant="h5" mb={1.5} sx={{ fontSize: { xs: '18px', sm: '20px' } }}>Накладные</Typography>
+
+      <Accordion expanded={tasksPanelExpanded} onChange={(_e, expanded) => setTasksPanelExpanded(expanded)} sx={{ mb: 2 }}>
+        <AccordionSummary
+          expandIcon={tasksPanelExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          className="doc-unload-history-header"
+        >
+          <Typography sx={{ fontSize: { xs: '12px', sm: '13px' }, fontWeight: 500 }}>
+            История запросов выгрузки за последний месяц (по вашим документам)
+            {`: всего ${globalUnloadTotals.total}, выполнено ${globalUnloadTotals.done}, ожидание ${globalUnloadTotals.pending}`}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          {unloadTasksLoading ? (
+            <Typography variant="body2" sx={{ fontSize: { xs: '12px', sm: '13px' } }}>Загрузка...</Typography>
+          ) : unloadTasksList.length === 0 ? (
+            <Typography variant="body2" sx={{ fontSize: { xs: '12px', sm: '13px' } }}>Нет запросов</Typography>
+          ) : (
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size="small" sx={{ tableLayout: 'fixed', minWidth: { xs: 700, sm: 900 } }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontSize: { xs: '12px', sm: '12px' }, fontWeight: 'bold' }}>Дата запроса</TableCell>
+                    <TableCell sx={{ fontSize: { xs: '12px', sm: '12px' }, fontWeight: 'bold' }}>Кто запросил</TableCell>
+                    <TableCell sx={{ fontSize: { xs: '12px', sm: '12px' }, fontWeight: 'bold' }}>Накладная</TableCell>
+                    <TableCell sx={{ fontSize: { xs: '12px', sm: '12px' }, fontWeight: 'bold' }}>Статус</TableCell>
+                    <TableCell sx={{ fontSize: { xs: '12px', sm: '12px' }, fontWeight: 'bold' }}>Комментарий</TableCell>
+                    <TableCell sx={{ fontSize: { xs: '12px', sm: '12px' }, fontWeight: 'bold' }} />
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {unloadTasksList.slice(0, 50).map(t => (
+                    <TableRow
+                      key={t.uid}
+                      hover
+                    >
+                      <TableCell sx={{ fontSize: { xs: '12px', sm: '12px' } }}>{t.requestTime ? new Date(t.requestTime).toLocaleString('ru-RU') : ''}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '12px', sm: '12px' } }}>{t.contactName || t.contactUid || '—'}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '12px', sm: '12px' } }}>
+                        {t.docUid ? (
+                          <RouterLink className="doc-unload-doc-link" to={`/invoices/${t.docUid}?unloadHistory=1`}>
+                            №{t.docNum || ''}
+                          </RouterLink>
+                        ) : (
+                          `№${t.docNum || ''}`
+                        )}
+                      </TableCell>
+                      <TableCell sx={{ fontSize: { xs: '12px', sm: '12px' } }}>{t.isUnloaded ? 'Выгружено' : 'Ожидает'}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '12px', sm: '12px' }, whiteSpace: 'normal', wordBreak: 'break-word' }}>{t.unloadComment || '—'}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '12px', sm: '12px' } }}>
+                        {!t.isUnloaded && (
+                          <Tooltip title="Отменить запрос">
+                            <span>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCancelUnloadTask(t.uid);
+                                }}
+                                disabled={cancelUnloadTaskMutation.isPending}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </AccordionDetails>
+      </Accordion>
+
       <Paper sx={{ mb: 2, p: 2 }}>
         <Box display="flex" alignItems="center" flexWrap="wrap" gap={1} mb={1.5} sx={{ '& .MuiTextField-root, & .MuiSelect-root': { fontSize: { xs: '11px', sm: '14px' }, minHeight: '28px', '& .MuiInputBase-input': { fontSize: { xs: '11px', sm: '14px' }, py: 0.5 } }, '& .MuiInputLabel-root': { fontSize: { xs: '12px', sm: '15px' }, top: '-4px' }, '& .MuiMenuItem-root': { fontSize: { xs: '11px', sm: '14px' }, minHeight: '28px' }, '& .MuiButton-root': { fontSize: { xs: '8px', sm: '9px' }, minHeight: { xs: '24px', sm: '32px' }, px: { xs: 0.6, sm: 1.4 }, py: { xs: 0.2, sm: 0.6 }, '& .MuiButton-startIcon, & .MuiButton-endIcon': { mr: 0.3, '& svg': { fontSize: 18 } } } }}>
           <AddressFilter addresses={addressOptions} />
@@ -518,7 +713,28 @@ const Invoices: React.FC = () => {
     <DescriptionIcon fontSize="small" />
   )}
 </IconButton></span></Tooltip>
+
+                        <Tooltip title="Запросить выгрузку на e-mail">
+                          <span>
+                            <IconButton
+                              size="small"
+                              disabled={!inv || createUnloadTaskMutation.isPending}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenConfirmForInvoice(inv);
+                              }}
+                            >
+                              <EmailIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
                       </Box>
+
+                      {inv?.uid && unloadSummaryByDocUid[inv.uid] && (
+                        <Typography variant="caption" sx={{ display: 'block', textAlign: 'left', fontSize: { xs: '10px', sm: '11px' }, mt: 0.25 }}>
+                          Запросы: {unloadSummaryByDocUid[inv.uid].total} (вып: {unloadSummaryByDocUid[inv.uid].done} / ожид: {unloadSummaryByDocUid[inv.uid].pending})
+                        </Typography>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
@@ -529,6 +745,63 @@ const Invoices: React.FC = () => {
         </Box>
       </Paper>
       {selectedInvoice && <InvoiceForm invoice={selectedInvoice} />}
+
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Запросить выгрузку?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ fontSize: { xs: '12px', sm: '13px' } }}>
+            {confirmInvoice ? `Накладная №${confirmInvoice.docNum} от ${confirmInvoice.docDate ? new Date(confirmInvoice.docDate).toLocaleDateString('ru-RU') : ''}.` : ''}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)}>Отмена</Button>
+          <Button
+            variant="contained"
+            onClick={async () => {
+              const inv = confirmInvoice;
+              setConfirmOpen(false);
+              setConfirmInvoice(null);
+              if (inv) await handleRequestUnload(inv);
+            }}
+            disabled={createUnloadTaskMutation.isPending}
+          >
+            Запросить
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={pendingWarningOpen} onClose={() => setPendingWarningOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Выгрузка уже запрошена</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ fontSize: { xs: '12px', sm: '13px' } }}>
+            По этой накладной уже есть невыполненный запрос на выгрузку.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={() => setPendingWarningOpen(false)}>Понятно</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={cancelConfirmOpen} onClose={handleCancelCancel} maxWidth="xs" fullWidth>
+        <DialogTitle>Подтверждение отмены</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ fontSize: { xs: '12px', sm: '13px' } }}>
+            Вы действительно хотите отменить этот запрос на выгрузку?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelCancel}>Нет</Button>
+          <Button variant="contained" onClick={handleConfirmCancel} disabled={cancelUnloadTaskMutation.isPending}>
+            Да, отменить
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar open={snackbarOpen} autoHideDuration={3500} onClose={() => setSnackbarOpen(false)}>
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

@@ -20,6 +20,23 @@ a {
   text-decoration: none;
 }
 
+ .doc-unload-history-header {
+   background-color: #f0f2f6;
+ }
+
+ .doc-unload-history-header.Mui-expanded {
+   background-color: #e6e9f0;
+ }
+
+ .doc-unload-doc-link {
+   color: #1976d2;
+   text-decoration: underline;
+ }
+
+ .doc-unload-doc-link:visited {
+   color: #1976d2;
+ }
+
 button, input, select, textarea {
   font-family: inherit;
   font-size: 1rem;
