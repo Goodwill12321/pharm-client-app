@@ -3,33 +3,29 @@
 This file provides guidance to WARP (warp.dev) when working with code in this repository.
 
 Project overview
-- Monorepo with two apps and Docker Compose orchestration:
-  - client/ — React + Vite + TypeScript PWA (Material UI, React Query). Dev server runs on 5173 and proxies /api and /auth to the backend.
-  - server/ — Spring Boot 3 (Java 17), layered architecture (controller → service → repository → entity), JWT auth, JPA/Hibernate, Flyway, Actuator, OpenAPI.
+- Monorepo with two apps and Docker Compose orchestration on a **remote server** (remote-first):
+  - client/ — React + Vite + TypeScript PWA (Material UI, React Query). Dev server runs on remote port 5173 and proxies /api and /auth to the backend.
+  - server/ — Spring Boot 3 (Java 17), layered architecture (controller → service → repository → entity), JWT auth, JPA/Hibernate, Flyway, Actuator, OpenAPI. **Compiled and run inside Docker on remote** (Maven in container).
   - docker-compose.yml selects an environment via ENV (default dev-secure) and starts: frontend (pharmopt-pa-frontend), backend (pharmopt-pa-backend), db (pharmopt-pa-db).
 
-Common commands
-- Frontend (run from client/)
-  - Install deps: npm ci
-  - Dev (Vite, PWA, proxy to backend): npm run dev
-  - Build: npm run build
-  - Preview built app: npm run preview
-  - Lint (ESLint): npm run lint
-- Backend (run from server/)
-  - Build JAR and run tests: mvn -q clean package
-  - Run app (local, uses your env/profiles): mvn spring-boot:run
-  - Run with profiles (example dev,secure): SPRING_PROFILES_ACTIVE=dev,secure mvn spring-boot:run
-  - Run all tests: mvn -q test
-  - Run a single test class: mvn -q -Dtest=ClientControllerTest test
-  - Run a single test method: mvn -q -Dtest=ClientControllerTest#testCreateClient test
-  - From repo root, target server module: mvn -q -pl server -Dtest=... test
-  - Integration tests use Testcontainers (Docker must be available)
-- Docker Compose (from repo root)
-  - Start default dev-secure stack: docker-compose up -d
-  - Switch environment (examples):
-    - ENV=dev-dbfull docker-compose up -d      # full DB rights for migrations (dev)
-    - ENV=prod-secure docker-compose up -d     # prod-like, limited DB rights
-  - Stop: docker-compose down
+Remote development model
+- Edit code locally; sync with **`./scripts/dev.sh sync`** or **`sync-restart`**.
+- Config: `scripts/dev.env` (from `scripts/dev.env.example`) — host `alterserv.ru`, path `/home/projects/pharm-client-app`.
+- docker compose, mvn test, swarm deploy: via **`scripts/dev.sh`** (remote by default) or SSH to server.
+- Remote debug: **`./scripts/dev.sh tunnel`**, IDE attach to localhost:5005.
+- Local OK: `./scripts/dev.sh lint` or `cd client && npm run lint`.
+
+Common commands (from repo root)
+- Sync + restart backend: ./scripts/dev.sh sync-restart
+- Rsync only: ./scripts/dev.sh sync  (alias: rsync-to-remote)
+- Restart backend: ./scripts/dev.sh restart-backend  (alias: remote-docker-rebuild)
+- Swarm rebuild: ./scripts/dev.sh swarm-rebuild
+- SSH tunnel: ./scripts/dev.sh tunnel
+- Backend tests (remote): ./scripts/dev.sh test
+- Frontend lint (local): ./scripts/dev.sh lint
+- Docker Compose on remote: ./scripts/dev.sh up [ENV]   e.g. ./scripts/dev.sh up dev-dbfull
+- Logs: ./scripts/dev.sh logs backend
+- Optional local Docker: set DEV_TARGET=local in scripts/dev.env
 
 Key runtime details
 - Ports
@@ -41,9 +37,9 @@ Key runtime details
   - JWT secret comes from env var JWT_SECRET; Compose sets a development value. Do not hardcode secrets.
 - OpenAPI/Swagger
   - Swagger UI and OpenAPI JSON are enabled by springdoc; public paths are permitted in SecurityConfig.
-- Dev hot reload
+- Dev hot reload (on remote)
   - Frontend: Vite dev server with volumes mounted in docker-compose.dev-dbfull.yml.
-  - Backend: Spring DevTools enabled in application-dev.properties; dockerized backend starts with DEV=true for hot reload and debug port 5005 in dev-dbfull.
+  - Backend: Spring DevTools in application-dev.properties; container starts with DEV=true, JDWP on 5005 in dev-dbfull. Maven runs inside container.
 - Database/migrations (see DATABASE_INIT.md for full matrix)
   - Two operating modes via profiles:
     - dbfull: uses postgres user; Flyway enabled for schema changes (development/migrations only).
@@ -69,5 +65,5 @@ High-level architecture
 
 Important project rules (from .cursor/rules)
 - Target users often have slow internet, old hardware/OS, and low technical proficiency. Favor lightweight, compatible, and simple UX in changes.
-- Deployment and dev flows are Docker-first; three containers (frontend/backend/db) with volumes; hot reload enabled in dev.
+- Deployment and dev flows are **remote Docker-first**; compile, test, and debug on remote server; local lint only for frontend.
 - Communicate changes step-by-step. Before applying changes that were not discussed, ask for confirmation and explain the rationale.

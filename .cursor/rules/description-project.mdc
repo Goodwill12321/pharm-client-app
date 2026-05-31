@@ -10,8 +10,13 @@ alwaysApply: true
  - претензии на пришедший товар или недовоз
 - запросы на выгрузку электронных накладных
 и пр.
-Мой проект запускается в Docker либо на удаленном сервере (remote debug attach)
-Там 3 контейнера: backend (называется pharmopt-pa-backend), frontend (называется pharmopt-pa-frontend) и db (называется pharmopt-pa-db)
+Мой проект запускается **на удалённом сервере** `alterserv.ru` в Docker. Локально — правка кода и синхронизация через **`./scripts/dev.sh`**.
+
+- `./scripts/dev.sh sync-restart` — rsync + restart backend (основной цикл)
+- `./scripts/dev.sh tunnel` — SSH tunnel для remote debug (5005) и UI
+- Конфиг: `scripts/dev.env` (из `scripts/dev.env.example`)
+
+Там 3 контейнера: backend (`pharmopt-pa-backend`), frontend (`pharmopt-pa-frontend`), db (`pharmopt-pa-db`).
 У них настроены volume для проброса исходного кода, логов и др. файлов. В режиме DEV настроен hot-reload в Spring и в Vite.
 
 Отвечай пошагово.
