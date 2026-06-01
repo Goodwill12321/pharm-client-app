@@ -49,6 +49,13 @@ Auth endpoints: `/auth/login`, `/auth/refresh` (public). Most `/api/**` need `Au
 - CSRF disabled (stateless API)
 - Authorization ad hoc (e.g. `exchange_1c` login check), not role-based Spring Security
 
+## Интеграция 1С
+
+- 1С — HTTP-клиент того же REST API, не отдельный протокол.
+- UID из 1С = PK в БД (`varchar(36)`).
+- `NumberFormatConfig` принимает `.` и `,` в числах — не ломать для 1С.
+- Роль `exchange_1c` проверяется по `contact.getLogin()`, не через `@PreAuthorize` (пример — `DocUnloadTaskController`).
+
 ## Errors
 
 `GlobalExceptionHandler` → JSON `{timestamp, status, error, message}`. Logs user + IP from `RequestContext`.

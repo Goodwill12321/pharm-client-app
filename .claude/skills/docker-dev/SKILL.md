@@ -38,11 +38,7 @@ After code sync to remote, backend restarts automatically (DevTools) or: `docker
 
 ## Remote debug
 
-1. Stack with `DEV=true` (e.g. `ENV=dev-dbfull`)
-2. From **local** machine: `ssh -L 5005:127.0.0.1:5005 user@REMOTE_HOST`
-3. IDE attach to `localhost:5005`
-
-Full details: skill **`remote-dev`**
+Stack with `DEV=true` (e.g. `ENV=dev-dbfull`) → JDWP on **5005**. Tunnel + IDE attach: skill **`remote-dev`** (`./scripts/dev.sh tunnel`).
 
 ## Useful commands (remote)
 

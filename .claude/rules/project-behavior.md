@@ -16,19 +16,4 @@
 3. Не создавать коммиты, если пользователь явно не попросил.
 4. Не создавать markdown-документы, если пользователь не просил.
 
-## Инфраструктура
-
-- **Primary tool:** `./scripts/dev.sh` — rsync, restart, tunnel, tests (see `scripts/dev.env.example`).
-- Sync workflow: edit locally → `./scripts/dev.sh sync-restart` → remote Docker recompiles/restarts.
-- Tests (JUnit, Testcontainers, manual API/browser): **remote only**.
-- Local machine: edit code; frontend **`npm run lint`** is OK locally.
-- Dev on remote: hot-reload Spring DevTools (`DEV=true`) + Vite HMR; source via volumes.
-- Remote debug: JDWP port **5005** — attach from local IDE via SSH tunnel. See skill `remote-dev`.
-- Logs on remote: `server/logs/`, `docker compose logs`, MDC with user/IP via `RequestContext`.
-
-## Интеграция 1С
-
-- 1С — HTTP-клиент, не отдельный протокол.
-- UID из 1С = PK в БД (`varchar(36)`).
-- `NumberFormatConfig` принимает `.` и `,` в числах — не ломать для 1С.
-- Роль `exchange_1c` проверяется по `contact.getLogin()`, не через `@PreAuthorize`.
+> Инфраструктура (remote-first, `./scripts/dev.sh`, порты, контейнеры) — в `CLAUDE.md` и skills `remote-dev`/`docker-dev`. Интеграция 1С — в `.claude/rules/backend-java.md`.

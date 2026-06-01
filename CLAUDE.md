@@ -8,7 +8,7 @@
 - **Remote-first:** приложение **работает на удалённом сервере** в Docker. Сборка backend, запуск, **тесты и ручная проверка — только на remote**. Локально — правка кода и (опционально) `npm run lint`.
 - **Remote debug:** IDE подключается к JDWP **5005** на сервере (обычно через SSH tunnel). См. skill `remote-dev`.
 - **Docker-first:** 3 контейнера — `pharmopt-pa-frontend`, `pharmopt-pa-backend`, `pharmopt-pa-db`.
-- **Перед неожиданными изменениями** — спросить пользователя: зачем и почему.
+- **Перед неожиданными изменениями** — спросить пользователя: зачем и почему (см. `.claude/rules/project-behavior.md`).
 - **Отвечать пошагово** на русском, если пользователь пишет по-русски.
 
 ## Структура репозитория
@@ -19,65 +19,27 @@ server/          Spring Boot 3.2.7, Java 17, JPA, Flyway, JWT, PostgreSQL 15
 docker-compose.* ENV переключает окружение (по умолчанию dev-secure)
 ```
 
-Подробнее: `@WARP.md`, `@DATABASE_INIT.md`, `@.cursor/rules/description-project.mdc`
+## Цикл разработки
 
 ## Команды (удалённый сервер + локальная синхронизация)
-
-> Основной инструмент: **`./scripts/dev.sh`**. Конфиг: `scripts/dev.env` (скопировать из `scripts/dev.env.example`).
-
-### Типичный цикл разработки
+> Основной инструмент: **`./scripts/dev.sh`** (remote: `alterserv.ru:/home/projects/pharm-client-app`).
+> Конфиг: `scripts/dev.env` (скопировать из `scripts/dev.env.example`). Порты: frontend `5173`, backend `8383`, debug `5005` (JDWP), PostgreSQL `5333`.
 
 ```bash
 cp scripts/dev.env.example scripts/dev.env   # один раз
-./scripts/dev.sh sync-restart              # rsync → remote + restart backend
-./scripts/dev.sh tunnel                    # SSH tunnel для debug / localhost:8383
-./scripts/dev.sh test                      # mvn test в контейнере на remote
+./scripts/dev.sh sync-restart              # rsync → remote + restart backend (основной цикл)
+./scripts/dev.sh tunnel                    # SSH tunnel: debug 5005 + localhost:8383/5173
+./scripts/dev.sh test                      # mvn test в backend-контейнере на remote
 cd client && npm run lint                  # lint локально
 ```
 
-### Команды dev.sh (аналог Run Script)
-
-| Команда | Run Script alias | Действие |
-|---------|------------------|----------|
-| `sync` | rsync-to-remote | rsync на `alterserv.ru:/home/projects/pharm-client-app/` |
-| `restart-backend` | remote-docker-rebuild | `docker compose restart backend` на remote |
-| `swarm-rebuild` | remote-swarm-rebuild | `docker compose build` + `docker stack deploy` |
-| `sync-restart` | — | sync + restart backend |
-| `tunnel` | — | SSH `-L 5005,8383,5173` для debug и UI |
-| `up [ENV]` | — | `docker compose up -d` (напр. `up dev-dbfull`) |
-| `logs [svc]` | — | `docker compose logs -f` |
-| `test [args]` | — | `docker exec … mvn test` на remote |
-
-`DEV_TARGET=local` в `dev.env` — docker compose локально (опционально).
-
-### Docker на remote (напрямую по SSH)
-
-```bash
-ENV=dev-dbfull docker compose up -d    # hot-reload + Flyway + debug 5005
-ENV=dev-secure docker compose up -d
-docker compose logs -f backend
-```
-
-Порты на сервере: frontend **5173**, backend **8383**, debug **5005**, PostgreSQL **5333**.
-
-### Remote debug
-
-```bash
-./scripts/dev.sh tunnel
-# IDE: Attach to localhost:5005
-```
-
-### Swagger / API
-
-`http://alterserv.ru:8383/swagger-ui/` (или через tunnel: `localhost:8383`)
-
-Подробно: skill **`remote-dev`**, конфиг **`scripts/dev.env.example`**
+Полный список команд, remote debug, Swagger, troubleshooting — skills **`remote-dev`** и **`docker-dev`**.
 
 ## Архитектура (кратко)
 
 ### Backend — REST sync hub
 
-- Слои: `controller` → `service` → `repository` → `entity`
+- Слои: `controller` → `service` → `repository` → `entity`. Пакет `com.pharma.clientapp`.
 - **Auth:** stateless JWT. `POST /auth/login`, refresh в HttpOnly cookie. Principal = `Contact`.
 - **1С:** тот же REST API под тех. пользователем `exchange_1c`. Upsert по UID, batch (`/add_batch`), full replace (`/replace/{key}`).
 - **Flyway:** `server/src/main/resources/db/migration/V*.sql`. `ddl-auto=none`.
@@ -103,15 +65,17 @@ docker compose logs -f backend
 
 1. Минимальный diff — только запрошенное.
 2. Новая миграция Flyway — только в `dev-dbfull`, см. skill `flyway-migration`.
-3. Новый API: entity → repository → service → controller → `client/src/api/` → hook → page.
+3. Новый API: entity → repository → service → controller → `client/src/api/` → hook → page (skill `add-api-feature`).
 4. Не хардкодить секреты (`JWT_SECRET` из env).
-5. Тесты: `@WebMvcTest` / Testcontainers — **запускать на remote** (`docker exec ... mvn test`), не локально по умолчанию.
+5. Тесты: `@WebMvcTest` / Testcontainers — **запускать на remote** (`./scripts/dev.sh test`), не локально.
 
-## Дополнительный контекст (загружается по scope)
+## Контекст по scope (загружается по необходимости)
 
 - **Backend Java:** `.claude/rules/backend-java.md` — при работе с `server/**`
 - **Frontend React:** `.claude/rules/frontend-react.md` — при работе с `client/**`
-- **Skills:** `.claude/skills/` — **`remote-dev`**, миграции, Docker, добавление фичи
+- **Поведение/UX/процесс:** `.claude/rules/project-behavior.md`
+- **Skills:** `.claude/skills/` — `remote-dev`, `docker-dev`, `flyway-migration`, `add-api-feature`
+- **Справочно (по запросу):** `WARP.md`, `DATABASE_INIT.md`, `.cursor/rules/description-project.mdc`
 
 ## Память (auto memory)
 
